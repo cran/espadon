@@ -1,0 +1,734 @@
+<!DOCTYPE html>
+
+<html>
+
+<head>
+
+<meta charset="utf-8" />
+<meta name="generator" content="pandoc" />
+<meta http-equiv="X-UA-Compatible" content="IE=EDGE" />
+
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+
+<meta name="author" content="Cathy &amp; Jean-Marc Fontbonne" />
+
+<meta name="date" content="2022-06-20" />
+
+<title>espadon overview</title>
+
+<script>// Pandoc 2.9 adds attributes on both header and div. We remove the former (to
+// be compatible with the behavior of Pandoc < 2.8).
+document.addEventListener('DOMContentLoaded', function(e) {
+  var hs = document.querySelectorAll("div.section[class*='level'] > :first-child");
+  var i, h, a;
+  for (i = 0; i < hs.length; i++) {
+    h = hs[i];
+    if (!/^h[1-6]$/i.test(h.tagName)) continue;  // it should be a header h1-h6
+    a = h.attributes;
+    while (a.length > 0) h.removeAttribute(a[0].name);
+  }
+});
+</script>
+
+<style type="text/css">
+  code{white-space: pre-wrap;}
+  span.smallcaps{font-variant: small-caps;}
+  span.underline{text-decoration: underline;}
+  div.column{display: inline-block; vertical-align: top; width: 50%;}
+  div.hanging-indent{margin-left: 1.5em; text-indent: -1.5em;}
+  ul.task-list{list-style: none;}
+    </style>
+
+
+
+<style type="text/css">
+  code {
+    white-space: pre;
+  }
+  .sourceCode {
+    overflow: visible;
+  }
+</style>
+<style type="text/css" data-origin="pandoc">
+pre > code.sourceCode { white-space: pre; position: relative; }
+pre > code.sourceCode > span { display: inline-block; line-height: 1.25; }
+pre > code.sourceCode > span:empty { height: 1.2em; }
+.sourceCode { overflow: visible; }
+code.sourceCode > span { color: inherit; text-decoration: inherit; }
+div.sourceCode { margin: 1em 0; }
+pre.sourceCode { margin: 0; }
+@media screen {
+div.sourceCode { overflow: auto; }
+}
+@media print {
+pre > code.sourceCode { white-space: pre-wrap; }
+pre > code.sourceCode > span { text-indent: -5em; padding-left: 5em; }
+}
+pre.numberSource code
+  { counter-reset: source-line 0; }
+pre.numberSource code > span
+  { position: relative; left: -4em; counter-increment: source-line; }
+pre.numberSource code > span > a:first-child::before
+  { content: counter(source-line);
+    position: relative; left: -1em; text-align: right; vertical-align: baseline;
+    border: none; display: inline-block;
+    -webkit-touch-callout: none; -webkit-user-select: none;
+    -khtml-user-select: none; -moz-user-select: none;
+    -ms-user-select: none; user-select: none;
+    padding: 0 4px; width: 4em;
+    color: #aaaaaa;
+  }
+pre.numberSource { margin-left: 3em; border-left: 1px solid #aaaaaa;  padding-left: 4px; }
+div.sourceCode
+  {   }
+@media screen {
+pre > code.sourceCode > span > a:first-child::before { text-decoration: underline; }
+}
+code span.al { color: #ff0000; font-weight: bold; } /* Alert */
+code span.an { color: #60a0b0; font-weight: bold; font-style: italic; } /* Annotation */
+code span.at { color: #7d9029; } /* Attribute */
+code span.bn { color: #40a070; } /* BaseN */
+code span.bu { } /* BuiltIn */
+code span.cf { color: #007020; font-weight: bold; } /* ControlFlow */
+code span.ch { color: #4070a0; } /* Char */
+code span.cn { color: #880000; } /* Constant */
+code span.co { color: #60a0b0; font-style: italic; } /* Comment */
+code span.cv { color: #60a0b0; font-weight: bold; font-style: italic; } /* CommentVar */
+code span.do { color: #ba2121; font-style: italic; } /* Documentation */
+code span.dt { color: #902000; } /* DataType */
+code span.dv { color: #40a070; } /* DecVal */
+code span.er { color: #ff0000; font-weight: bold; } /* Error */
+code span.ex { } /* Extension */
+code span.fl { color: #40a070; } /* Float */
+code span.fu { color: #06287e; } /* Function */
+code span.im { } /* Import */
+code span.in { color: #60a0b0; font-weight: bold; font-style: italic; } /* Information */
+code span.kw { color: #007020; font-weight: bold; } /* Keyword */
+code span.op { color: #666666; } /* Operator */
+code span.ot { color: #007020; } /* Other */
+code span.pp { color: #bc7a00; } /* Preprocessor */
+code span.sc { color: #4070a0; } /* SpecialChar */
+code span.ss { color: #bb6688; } /* SpecialString */
+code span.st { color: #4070a0; } /* String */
+code span.va { color: #19177c; } /* Variable */
+code span.vs { color: #4070a0; } /* VerbatimString */
+code span.wa { color: #60a0b0; font-weight: bold; font-style: italic; } /* Warning */
+
+</style>
+<script>
+// apply pandoc div.sourceCode style to pre.sourceCode instead
+(function() {
+  var sheets = document.styleSheets;
+  for (var i = 0; i < sheets.length; i++) {
+    if (sheets[i].ownerNode.dataset["origin"] !== "pandoc") continue;
+    try { var rules = sheets[i].cssRules; } catch (e) { continue; }
+    for (var j = 0; j < rules.length; j++) {
+      var rule = rules[j];
+      // check if there is a div.sourceCode rule
+      if (rule.type !== rule.STYLE_RULE || rule.selectorText !== "div.sourceCode") continue;
+      var style = rule.style.cssText;
+      // check if color or background-color is set
+      if (rule.style.color === '' && rule.style.backgroundColor === '') continue;
+      // replace div.sourceCode by a pre.sourceCode rule
+      sheets[i].deleteRule(j);
+      sheets[i].insertRule('pre.sourceCode{' + style + '}', j);
+    }
+  }
+})();
+</script>
+
+
+
+
+<style type="text/css">body {
+background-color: #fff;
+margin: 1em auto;
+max-width: 700px;
+overflow: visible;
+padding-left: 2em;
+padding-right: 2em;
+font-family: "Open Sans", "Helvetica Neue", Helvetica, Arial, sans-serif;
+font-size: 14px;
+line-height: 1.35;
+}
+#TOC {
+clear: both;
+margin: 0 0 10px 10px;
+padding: 4px;
+width: 400px;
+border: 1px solid #CCCCCC;
+border-radius: 5px;
+background-color: #f6f6f6;
+font-size: 13px;
+line-height: 1.3;
+}
+#TOC .toctitle {
+font-weight: bold;
+font-size: 15px;
+margin-left: 5px;
+}
+#TOC ul {
+padding-left: 40px;
+margin-left: -1.5em;
+margin-top: 5px;
+margin-bottom: 5px;
+}
+#TOC ul ul {
+margin-left: -2em;
+}
+#TOC li {
+line-height: 16px;
+}
+table {
+margin: 1em auto;
+border-width: 1px;
+border-color: #DDDDDD;
+border-style: outset;
+border-collapse: collapse;
+}
+table th {
+border-width: 2px;
+padding: 5px;
+border-style: inset;
+}
+table td {
+border-width: 1px;
+border-style: inset;
+line-height: 18px;
+padding: 5px 5px;
+}
+table, table th, table td {
+border-left-style: none;
+border-right-style: none;
+}
+table thead, table tr.even {
+background-color: #f7f7f7;
+}
+p {
+margin: 0.5em 0;
+}
+blockquote {
+background-color: #f6f6f6;
+padding: 0.25em 0.75em;
+}
+hr {
+border-style: solid;
+border: none;
+border-top: 1px solid #777;
+margin: 28px 0;
+}
+dl {
+margin-left: 0;
+}
+dl dd {
+margin-bottom: 13px;
+margin-left: 13px;
+}
+dl dt {
+font-weight: bold;
+}
+ul {
+margin-top: 0;
+}
+ul li {
+list-style: circle outside;
+}
+ul ul {
+margin-bottom: 0;
+}
+pre, code {
+background-color: #f7f7f7;
+border-radius: 3px;
+color: #333;
+white-space: pre-wrap; 
+}
+pre {
+border-radius: 3px;
+margin: 5px 0px 10px 0px;
+padding: 10px;
+}
+pre:not([class]) {
+background-color: #f7f7f7;
+}
+code {
+font-family: Consolas, Monaco, 'Courier New', monospace;
+font-size: 85%;
+}
+p > code, li > code {
+padding: 2px 0px;
+}
+div.figure {
+text-align: center;
+}
+img {
+background-color: #FFFFFF;
+padding: 2px;
+border: 1px solid #DDDDDD;
+border-radius: 3px;
+border: 1px solid #CCCCCC;
+margin: 0 5px;
+}
+h1 {
+margin-top: 0;
+font-size: 35px;
+line-height: 40px;
+}
+h2 {
+border-bottom: 4px solid #f7f7f7;
+padding-top: 10px;
+padding-bottom: 2px;
+font-size: 145%;
+}
+h3 {
+border-bottom: 2px solid #f7f7f7;
+padding-top: 10px;
+font-size: 120%;
+}
+h4 {
+border-bottom: 1px solid #f7f7f7;
+margin-left: 8px;
+font-size: 105%;
+}
+h5, h6 {
+border-bottom: 1px solid #ccc;
+font-size: 105%;
+}
+a {
+color: #0033dd;
+text-decoration: none;
+}
+a:hover {
+color: #6666ff; }
+a:visited {
+color: #800080; }
+a:visited:hover {
+color: #BB00BB; }
+a[href^="http:"] {
+text-decoration: underline; }
+a[href^="https:"] {
+text-decoration: underline; }
+
+code > span.kw { color: #555; font-weight: bold; } 
+code > span.dt { color: #902000; } 
+code > span.dv { color: #40a070; } 
+code > span.bn { color: #d14; } 
+code > span.fl { color: #d14; } 
+code > span.ch { color: #d14; } 
+code > span.st { color: #d14; } 
+code > span.co { color: #888888; font-style: italic; } 
+code > span.ot { color: #007020; } 
+code > span.al { color: #ff0000; font-weight: bold; } 
+code > span.fu { color: #900; font-weight: bold; } 
+code > span.er { color: #a61717; background-color: #e3d2d2; } 
+</style>
+
+
+
+
+</head>
+
+<body>
+
+
+
+
+<h1 class="title toc-ignore">espadon overview</h1>
+<h4 class="author">Cathy &amp; Jean-Marc Fontbonne</h4>
+<h4 class="date">2022-06-20</h4>
+
+
+
+<div id="easy-study-of-patient-dicom-data-in-oncology" class="section level2">
+<h2>Easy Study of Patient DICOM Data in Oncology</h2>
+<p>Espadon is a package simplifying the use and exploitation of DICOM
+data in radiotherapy. Espadon works in a native way (user friendly):</p>
+<ul>
+<li>on images (CT, MR, PT) and fully manages changes of frame of
+reference (REG)</li>
+<li>on dosimetry (rt-dose, rt-plan)</li>
+<li>on structures (rt-struct)</li>
+</ul>
+<p>It is also able to use any DICOM format file, as long as the user
+knows where to look for the information.In addition to the simplified
+use of the above-mentioned files, espadon contains many functions that
+allow the user to rework documents to produce new features that can be
+integrated into machine learning.</p>
+<p>Among other features, espadon is suitable for pseudonymizing DICOM,
+decoding them, visualizing them and producing dosimetry data in relation
+to clinical data.</p>
+<p>Also see <a href="https://espadon.cnrs.fr" class="uri">https://espadon.cnrs.fr</a>.</p>
+</div>
+<div id="input-data" class="section level2">
+<h2>Input data</h2>
+<p>The espadon package acts directly on the DICOM files or the folders
+containing them, thanks to espadon functions whose names contain the
+word “dicom”. For example, to load an imaging volume from a CT or MR,
+simply execute the following instruction:</p>
+<div class="sourceCode" id="cb1"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb1-1"><a href="#cb1-1" aria-hidden="true" tabindex="-1"></a>vol <span class="ot">&lt;-</span> <span class="fu">load.obj.from.dicom</span> (image_path)</span></code></pre></div>
+<p>image_path represents either the image folder path, or a vector of
+all the image DICOM file path.</p>
+<p>To speed up the loading of data when studying a patient’s images in
+depth, espadon offers the
+<strong><em>dicom.to.Rdcm.converter</em></strong> data pre-formatting
+function. This function creates files that are smaller than the original
+files, without loss of information, and prepares the data for use by
+espadon’s analysis and display functions. The new data format is a Rdcm
+format.</p>
+<div class="sourceCode" id="cb2"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb2-1"><a href="#cb2-1" aria-hidden="true" tabindex="-1"></a><span class="fu">dicom.to.Rdcm.converter</span>(<span class="st">&quot;D:/dcm/patient001&quot;</span>, <span class="st">&quot;D:/Rdcm/patient001“)</span></span></code></pre></div>
+</div>
+<div id="dicom-handling" class="section level2">
+<h2>DICOM Handling</h2>
+<p>The espadon package allows direct analysis of DICOM files. The
+following instructions, for example, create a table (R dataframe), and
+thus to have a synthetic view of the DICOM file content.</p>
+<div class="sourceCode" id="cb3"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb3-1"><a href="#cb3-1" aria-hidden="true" tabindex="-1"></a>dcm.filename <span class="ot">&lt;-</span> <span class="fu">file.choose</span> ()</span>
+<span id="cb3-2"><a href="#cb3-2" aria-hidden="true" tabindex="-1"></a>df <span class="ot">&lt;-</span> <span class="fu">dicom.parser</span> (<span class="fu">dicom.raw.data.loader</span> (dcm.filename), <span class="at">as.txt =</span> <span class="cn">TRUE</span>, <span class="at">try.parse =</span> <span class="cn">TRUE</span>)</span></code></pre></div>
+<p>A file in .xlsx format can also be created with the
+<strong><em>xlsx.from.dcm</em></strong> function.</p>
+<p>Thanks to the <strong><em>dicom.set.tag.value</em></strong> function,
+the content of the various tags can be modified or deleted, as far as
+they are in ascii format.</p>
+<p>The <strong><em>dicom.raw.data.anonymizer</em></strong> function
+provides pseudonymization by shifting dates, changing the patient’s PIN
+and name, removing all patient data except age, weight, and height, and
+also removing any other name, phone, operator, service, and undocumented
+tag content.</p>
+</div>
+<div id="patient-overview" class="section level2">
+<h2>Patient overview</h2>
+<p>Espadon provides a unified view of the different imaging objects, by
+assigning them a name that takes into account their relationship. The
+following functions (depending on whether the patient’s directory
+contains DICOM or .Rdcm files) create these links.</p>
+<p>The <strong><em>load.patient.from.dicom</em></strong> and
+<strong><em>load.patient.from.Rdcm</em></strong> functions (depending on
+whether the patient’s folder contains DICOM or .Rdcm files) create an
+R-list, in which all the DICOM objects of the patient are identified. In
+this patient list, there is, among others, the element T.MAT, computed
+from the DICOM reg objects. This one provides all the necessary
+information to overlay two imaging objects acquired on different
+machines, or at different times. The
+<strong><em>display.obj.links</em></strong> function allows a nice and
+convenient display of these links.</p>
+<div class="sourceCode" id="cb4"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb4-1"><a href="#cb4-1" aria-hidden="true" tabindex="-1"></a><span class="fu">library</span>(espadon)</span>
+<span id="cb4-2"><a href="#cb4-2" aria-hidden="true" tabindex="-1"></a>pat.dir <span class="ot">&lt;-</span> <span class="fu">choose.dir</span> () <span class="co"># patient folder containing mr, ct, rt-struct, rt-dose, rt-plan and reg…</span></span>
+<span id="cb4-3"><a href="#cb4-3" aria-hidden="true" tabindex="-1"></a>pat <span class="ot">&lt;-</span> <span class="fu">load.patient.from.dicom</span> (pat.dir)</span></code></pre></div>
+<p>When the patient object list is loaded into memory, the
+<strong><em>load.obj.data</em></strong> function loads the full object
+information, i.e. voxels content for MR, CT or PT, rt-dose or contour
+coordinates for rt-struct.</p>
+<div class="sourceCode" id="cb5"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb5-1"><a href="#cb5-1" aria-hidden="true" tabindex="-1"></a>S <span class="ot">&lt;-</span> <span class="fu">load.obj.data</span> (pat<span class="sc">$</span>rtstruct[[<span class="dv">1</span>]])</span>
+<span id="cb5-2"><a href="#cb5-2" aria-hidden="true" tabindex="-1"></a>CT <span class="ot">&lt;-</span> <span class="fu">load.obj.data</span> (pat<span class="sc">$</span>ct[[<span class="dv">1</span>]]) </span>
+<span id="cb5-3"><a href="#cb5-3" aria-hidden="true" tabindex="-1"></a>MR <span class="ot">&lt;-</span> <span class="fu">load.obj.data</span> (pat<span class="sc">$</span>mr[[<span class="dv">1</span>]])</span>
+<span id="cb5-4"><a href="#cb5-4" aria-hidden="true" tabindex="-1"></a>D <span class="ot">&lt;-</span> <span class="fu">load.obj.data</span> (pat<span class="sc">$</span>rtdose[[<span class="dv">1</span>]])</span></code></pre></div>
+</div>
+<div id="d-display" class="section level2">
+<h2>2D Display</h2>
+<p>Visualization of imaging volumes is essential for controlling the
+loaded DICOM objects. The espadon package allows this display, with the
+possibility of using the color palettes of your choice.</p>
+<p>The <strong><em>display.kplane</em></strong> function displays a
+slice plane of the imaging volume in the slice plane geometric frame of
+reference</p>
+<div class="sourceCode" id="cb6"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb6-1"><a href="#cb6-1" aria-hidden="true" tabindex="-1"></a>CT <span class="ot">&lt;-</span> <span class="fu">load.obj.from.dicom</span>(ct_dicom_file_path)</span>
+<span id="cb6-2"><a href="#cb6-2" aria-hidden="true" tabindex="-1"></a><span class="fu">display.kplane</span> (CT, <span class="at">k =</span><span class="dv">10</span>, <span class="at">col =</span> <span class="fu">pal.RVV</span>(<span class="dv">1000</span>), </span>
+<span id="cb6-3"><a href="#cb6-3" aria-hidden="true" tabindex="-1"></a>                <span class="at">breaks =</span> <span class="fu">seq</span>(<span class="sc">-</span><span class="dv">1000</span>, <span class="dv">1000</span>, <span class="at">length.out =</span> <span class="dv">1001</span>),</span>
+<span id="cb6-4"><a href="#cb6-4" aria-hidden="true" tabindex="-1"></a>                <span class="at">ord.flip =</span> <span class="cn">TRUE</span>, <span class="at">interpolate =</span> <span class="cn">TRUE</span>)</span></code></pre></div>
+<p>The <strong><em>display.plane</em></strong> function displays
+transverse, frontal or sagittal views in the patient’s frame of
+reference. It allows the superposition of images and contours.</p>
+</div>
+<div id="d-display-1" class="section level2">
+<h2>3D Display</h2>
+<p>The espadon package has several 3D visualization features:</p>
+<ul>
+<li>the <strong><em>display.3D.contour</em></strong> function displays
+the contours of the selected region of interest as described in the
+rt-struct.</li>
+<li>the <strong><em>display.3D.stack</em></strong> function displays
+selected slices of the imaging volume.</li>
+<li>the <strong><em>display.3D.sections</em></strong> function displays
+the frontal, sagittal and transverse view at a point. These last 2
+functions can use the same color palettes as the 2D visualization
+functions, except that a color can only be totally transparent or
+visible.</li>
+</ul>
+<p>Thanks to the internal management of geometrical frames of reference,
+the different displays can be mixed, as shown in the example below:</p>
+<div class="sourceCode" id="cb7"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb7-1"><a href="#cb7-1" aria-hidden="true" tabindex="-1"></a><span class="fu">library</span>(espadon)</span>
+<span id="cb7-2"><a href="#cb7-2" aria-hidden="true" tabindex="-1"></a><span class="fu">library</span>(rgl)</span>
+<span id="cb7-3"><a href="#cb7-3" aria-hidden="true" tabindex="-1"></a>pat.dir <span class="ot">&lt;-</span> <span class="fu">choose.dir</span> () <span class="co"># patient folder containing mr, ct, rt-struct, and reg</span></span>
+<span id="cb7-4"><a href="#cb7-4" aria-hidden="true" tabindex="-1"></a>pat <span class="ot">&lt;-</span> <span class="fu">load.patient.from.dicom</span> (pat.dir)</span>
+<span id="cb7-5"><a href="#cb7-5" aria-hidden="true" tabindex="-1"></a>S <span class="ot">&lt;-</span> <span class="fu">load.obj.data</span>(pat<span class="sc">$</span>rtstruct[[<span class="dv">1</span>]])</span>
+<span id="cb7-6"><a href="#cb7-6" aria-hidden="true" tabindex="-1"></a>CT <span class="ot">&lt;-</span> <span class="fu">load.obj.data</span>(pat<span class="sc">$</span>ct[[<span class="dv">1</span>]])</span>
+<span id="cb7-7"><a href="#cb7-7" aria-hidden="true" tabindex="-1"></a>MR <span class="ot">&lt;-</span> <span class="fu">load.obj.data</span>(pat<span class="sc">$</span>mr[[<span class="dv">1</span>]])</span>
+<span id="cb7-8"><a href="#cb7-8" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb7-9"><a href="#cb7-9" aria-hidden="true" tabindex="-1"></a><span class="fu">bg3d</span> (<span class="st">&quot;black&quot;</span>)</span>
+<span id="cb7-10"><a href="#cb7-10" aria-hidden="true" tabindex="-1"></a><span class="fu">par3d</span> (<span class="at">userMatrix =</span> <span class="fu">matrix</span> (<span class="fu">c</span>(<span class="dv">0</span>, <span class="dv">0</span>, <span class="sc">-</span><span class="dv">1</span>, <span class="dv">0</span>, <span class="sc">-</span><span class="dv">1</span>, <span class="dv">0</span>, <span class="dv">0</span>, <span class="dv">0</span>, <span class="dv">0</span>, <span class="dv">1</span>, <span class="dv">0</span>, <span class="dv">0</span>, <span class="dv">0</span>, <span class="dv">0</span>, <span class="dv">0</span>, <span class="dv">1</span>), <span class="at">ncol =</span> <span class="dv">4</span>), </span>
+<span id="cb7-11"><a href="#cb7-11" aria-hidden="true" tabindex="-1"></a>       <span class="at">windowRect =</span> <span class="fu">c</span>(<span class="dv">0</span>, <span class="dv">50</span>, <span class="dv">300</span>, <span class="dv">300</span>), <span class="at">zoom =</span> <span class="fl">0.7</span>)</span>
+<span id="cb7-12"><a href="#cb7-12" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb7-13"><a href="#cb7-13" aria-hidden="true" tabindex="-1"></a><span class="fu">display.3D.contour</span> (S, <span class="at">roi.sname =</span> <span class="st">&quot;eye&quot;</span>, <span class="at">display.ref =</span> CT<span class="sc">$</span>ref.pseudo, </span>
+<span id="cb7-14"><a href="#cb7-14" aria-hidden="true" tabindex="-1"></a>                    <span class="at">T.MAT =</span> pat<span class="sc">$</span>T.MAT)</span>
+<span id="cb7-15"><a href="#cb7-15" aria-hidden="true" tabindex="-1"></a><span class="fu">display.3D.stack</span> (MR, <span class="at">k.idx =</span> <span class="fu">c</span>(<span class="dv">10</span>,<span class="dv">35</span>,<span class="dv">70</span>, <span class="dv">105</span>, <span class="dv">140</span>,<span class="dv">165</span>), </span>
+<span id="cb7-16"><a href="#cb7-16" aria-hidden="true" tabindex="-1"></a>                  <span class="at">display.ref =</span> CT<span class="sc">$</span>ref.pseudo, </span>
+<span id="cb7-17"><a href="#cb7-17" aria-hidden="true" tabindex="-1"></a>                  <span class="at">T.MAT =</span> pat<span class="sc">$</span>T.MAT,</span>
+<span id="cb7-18"><a href="#cb7-18" aria-hidden="true" tabindex="-1"></a>                  <span class="at">ktext =</span> <span class="cn">FALSE</span>)</span>
+<span id="cb7-19"><a href="#cb7-19" aria-hidden="true" tabindex="-1"></a><span class="fu">display.3D.sections</span> (CT, <span class="at">cross.pt =</span> <span class="fu">c</span>(<span class="dv">0</span>, <span class="dv">150</span>, <span class="dv">0</span>), </span>
+<span id="cb7-20"><a href="#cb7-20" aria-hidden="true" tabindex="-1"></a>                     <span class="at">col =</span> <span class="fu">pal.RVV</span> (<span class="dv">200</span>, <span class="at">alpha =</span> <span class="fu">c</span>(<span class="fu">rep</span> (<span class="dv">0</span>, <span class="dv">90</span>), <span class="fu">rep</span> (<span class="dv">1</span>, <span class="dv">110</span>))),</span>
+<span id="cb7-21"><a href="#cb7-21" aria-hidden="true" tabindex="-1"></a>                     <span class="at">breaks =</span> <span class="fu">seq</span>(<span class="sc">-</span><span class="dv">1000</span>, <span class="dv">1000</span>, <span class="at">length.out =</span> <span class="dv">201</span>), </span>
+<span id="cb7-22"><a href="#cb7-22" aria-hidden="true" tabindex="-1"></a>                     <span class="at">border.col =</span> <span class="st">&quot;#844A39&quot;</span>)</span>
+<span id="cb7-23"><a href="#cb7-23" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb7-24"><a href="#cb7-24" aria-hidden="true" tabindex="-1"></a><span class="fu">play3d</span> (<span class="fu">spin3d</span> (<span class="at">rpm =</span> <span class="dv">4</span>), <span class="at">duration =</span> <span class="dv">15</span>)</span></code></pre></div>
+</div>
+<div id="geometry-tools" class="section level2">
+<h2>Geometry tools</h2>
+<p>Several espadon functions have been created to transform imaging
+volumes.</p>
+<ul>
+<li>Functions such as <strong><em>add.margin</em></strong>,
+<strong><em>nesting.cube</em></strong>,
+<strong><em>nesting.roi</em></strong> increase or decrease the number of
+voxels in the volume.</li>
+</ul>
+<div class="sourceCode" id="cb8"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb8-1"><a href="#cb8-1" aria-hidden="true" tabindex="-1"></a>nesting.MR <span class="ot">&lt;-</span> <span class="fu">nesting.roi</span> (MR, S, <span class="at">roi.sname =</span> <span class="st">&quot;brain&quot;</span>, <span class="at">T.MAT =</span> pat<span class="sc">$</span>T.MAT, </span>
+<span id="cb8-2"><a href="#cb8-2" aria-hidden="true" tabindex="-1"></a>                           <span class="at">vol.restrict =</span> <span class="cn">TRUE</span>, mar)</span>
+<span id="cb8-3"><a href="#cb8-3" aria-hidden="true" tabindex="-1"></a><span class="fu">display.3D.stack</span> (nesting.MR, <span class="at">ktext =</span> <span class="cn">FALSE</span>, line.lw <span class="at">d=</span> <span class="dv">2</span>)</span>
+<span id="cb8-4"><a href="#cb8-4" aria-hidden="true" tabindex="-1"></a><span class="fu">display.3D.contour</span> (S, <span class="at">roi.sname =</span> <span class="st">&quot;brain&quot;</span>, <span class="at">display.ref =</span> MR<span class="sc">$</span>ref.pseudo, </span>
+<span id="cb8-5"><a href="#cb8-5" aria-hidden="true" tabindex="-1"></a>                    <span class="at">T.MAT =</span> pat<span class="sc">$</span>T.MAT)</span></code></pre></div>
+<ul>
+<li>The <strong><em>vol.regrid</em></strong> function resamples the
+volume to the grid of another imaging volume.</li>
+</ul>
+<div class="sourceCode" id="cb9"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb9-1"><a href="#cb9-1" aria-hidden="true" tabindex="-1"></a>MR.on.CT <span class="ot">&lt;-</span> <span class="fu">vol.regrid</span> (MR, CT, <span class="at">T.MAT=</span>pat<span class="sc">$</span>T.MAT, <span class="at">interpolate =</span> <span class="cn">TRUE</span>)</span>
+<span id="cb9-2"><a href="#cb9-2" aria-hidden="true" tabindex="-1"></a><span class="fu">display.3D.stack</span> (MR.on.CT, <span class="at">display.ref =</span> CT<span class="sc">$</span>ref.pseudo , <span class="at">T.MAT =</span> pat<span class="sc">$</span>T.MAT, </span>
+<span id="cb9-3"><a href="#cb9-3" aria-hidden="true" tabindex="-1"></a>                  <span class="at">ktext =</span> <span class="cn">FALSE</span>, <span class="at">line.lwd =</span> <span class="dv">2</span>, <span class="at">line.col =</span> <span class="st">&quot;#844A39&quot;</span>)</span></code></pre></div>
+<ul>
+<li>More generally the <strong><em>get.plane</em></strong> function
+creates a cut of the volume in any direction. The
+<strong><em>get.direction</em></strong> function creates the direction
+vector from 3 points in space.</li>
+</ul>
+<div class="sourceCode" id="cb10"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb10-1"><a href="#cb10-1" aria-hidden="true" tabindex="-1"></a><span class="co"># Points determination : centers of the eyes and the chiasm found in rtstruct data</span></span>
+<span id="cb10-2"><a href="#cb10-2" aria-hidden="true" tabindex="-1"></a>roi.idx <span class="ot">&lt;-</span> <span class="fu">select.names</span> (S<span class="sc">$</span>roi.info<span class="sc">$</span>roi.pseudo, roi.name <span class="fu">c</span>(<span class="st">&quot;eye&quot;</span>, <span class="st">&quot;chiasm&quot;</span>))</span>
+<span id="cb10-3"><a href="#cb10-3" aria-hidden="true" tabindex="-1"></a>pt <span class="ot">&lt;-</span> S<span class="sc">$</span>roi.info[roi.idx, <span class="fu">c</span>(<span class="st">&quot;Gx&quot;</span>, <span class="st">&quot;Gy&quot;</span>, <span class="st">&quot;Gz&quot;</span>)]</span>
+<span id="cb10-4"><a href="#cb10-4" aria-hidden="true" tabindex="-1"></a>origin.pt <span class="ot">&lt;-</span> <span class="fu">as.numeric</span> (<span class="fu">apply</span> (pt, <span class="dv">2</span>, mean))</span>
+<span id="cb10-5"><a href="#cb10-5" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb10-6"><a href="#cb10-6" aria-hidden="true" tabindex="-1"></a><span class="co"># Plane creation in the CT frame of reference </span></span>
+<span id="cb10-7"><a href="#cb10-7" aria-hidden="true" tabindex="-1"></a>new.plane <span class="ot">&lt;-</span> <span class="fu">get.plane</span> (CT, <span class="at">origin =</span> origin.pt, </span>
+<span id="cb10-8"><a href="#cb10-8" aria-hidden="true" tabindex="-1"></a>                        <span class="at">plane.orientation =</span>  <span class="fu">orientation.create</span> (pt), </span>
+<span id="cb10-9"><a href="#cb10-9" aria-hidden="true" tabindex="-1"></a>                        <span class="at">interpolate =</span> <span class="cn">TRUE</span>)</span>
+<span id="cb10-10"><a href="#cb10-10" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb10-11"><a href="#cb10-11" aria-hidden="true" tabindex="-1"></a><span class="co"># Display of the new plane, in the cut plane frame of reference</span></span>
+<span id="cb10-12"><a href="#cb10-12" aria-hidden="true" tabindex="-1"></a>tmat <span class="ot">&lt;-</span> <span class="fu">ref.cutplane.add</span> (new.plane, <span class="at">origin.pt =</span> origin.pt, </span>
+<span id="cb10-13"><a href="#cb10-13" aria-hidden="true" tabindex="-1"></a>                          <span class="at">ref.cutplane =</span> <span class="st">&quot;ref.plane&quot;</span>, <span class="at">T.MAT =</span> pat<span class="sc">$</span>T.MAT)</span>
+<span id="cb10-14"><a href="#cb10-14" aria-hidden="true" tabindex="-1"></a>plan <span class="ot">&lt;-</span> <span class="fu">vol.in.new.ref</span> (new.plane, <span class="st">&quot;ref.plane&quot;</span>, tmat)</span>
+<span id="cb10-15"><a href="#cb10-15" aria-hidden="true" tabindex="-1"></a><span class="fu">display.plane</span> (plan, <span class="at">struct=</span> S, <span class="at">roi.idx =</span> idx, <span class="at">T.MAT =</span> tmat, </span>
+<span id="cb10-16"><a href="#cb10-16" aria-hidden="true" tabindex="-1"></a>               <span class="at">view.coord =</span> plan<span class="sc">$</span>patient.xyz0[<span class="dv">3</span>],</span>
+<span id="cb10-17"><a href="#cb10-17" aria-hidden="true" tabindex="-1"></a>               <span class="at">bottom.col =</span> <span class="fu">pal.RVV</span>(<span class="dv">200</span>), </span>
+<span id="cb10-18"><a href="#cb10-18" aria-hidden="true" tabindex="-1"></a>               <span class="at">bottom.breaks =</span> <span class="fu">seq</span>(<span class="sc">-</span><span class="dv">1000</span>, <span class="dv">1000</span>, <span class="at">length.out =</span> <span class="dv">201</span>), </span>
+<span id="cb10-19"><a href="#cb10-19" aria-hidden="true" tabindex="-1"></a>               <span class="at">main =</span> <span class="st">&quot;cut plane&quot;</span>, <span class="at">bg =</span> <span class="st">&quot;#379DA2&quot;</span>, <span class="at">sat.transp =</span> T, </span>
+<span id="cb10-20"><a href="#cb10-20" aria-hidden="true" tabindex="-1"></a>               <span class="at">legend.plot =</span> <span class="cn">FALSE</span>, <span class="at">interpolate =</span> <span class="cn">TRUE</span>)</span></code></pre></div>
+</div>
+<div id="binary-objects" class="section level2">
+<h2>Binary objects</h2>
+<p>Binary objects are volumes whose voxel values are either TRUE, FALSE
+or NA (i.e. undetermined). They act as a mask, and are used to select
+only the desired part of a volume. The example below show how to select
+the brain voxels described in the rtstruct object.</p>
+<div class="sourceCode" id="cb11"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb11-1"><a href="#cb11-1" aria-hidden="true" tabindex="-1"></a>nesting.MR <span class="ot">&lt;-</span> <span class="fu">nesting.roi</span> (MR, S, <span class="at">roi.sname =</span> <span class="st">&quot;brain&quot;</span>, <span class="at">T.MAT =</span> pat<span class="sc">$</span>T.MAT, </span>
+<span id="cb11-2"><a href="#cb11-2" aria-hidden="true" tabindex="-1"></a>                           <span class="at">vol.restrict =</span> <span class="cn">TRUE</span>, </span>
+<span id="cb11-3"><a href="#cb11-3" aria-hidden="true" tabindex="-1"></a>                           <span class="at">xyz.margin =</span> <span class="fu">c</span>(<span class="dv">20</span>, <span class="dv">20</span>, <span class="dv">20</span>)) <span class="co"># to reduce the computation time </span></span>
+<span id="cb11-4"><a href="#cb11-4" aria-hidden="true" tabindex="-1"></a>bin.brain <span class="ot">&lt;-</span> <span class="fu">bin.from.roi</span> (nesting.MR, <span class="at">struct =</span> S, <span class="at">roi.sname =</span> <span class="st">&quot;brain&quot;</span>, </span>
+<span id="cb11-5"><a href="#cb11-5" aria-hidden="true" tabindex="-1"></a>                           <span class="at">T.MAT =</span> pat<span class="sc">$</span>T.MAT)</span>
+<span id="cb11-6"><a href="#cb11-6" aria-hidden="true" tabindex="-1"></a>MR. brain <span class="ot">&lt;-</span> <span class="fu">vol.from.bin</span> (nesting.MR, bin.brain)</span></code></pre></div>
+<p>The <strong><em>bin.from.vol</em></strong> function creates binary
+volumes by selecting voxels that are inside or outside an interval [min,
+max]. The example below selects voxels with a value greater than
+150.*</p>
+<div class="sourceCode" id="cb12"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb12-1"><a href="#cb12-1" aria-hidden="true" tabindex="-1"></a>bin.min<span class="fl">.150</span> <span class="ot">&lt;-</span> <span class="fu">bin.from.vol</span> (MR.brain, <span class="at">min =</span> <span class="dv">150</span>)</span>
+<span id="cb12-2"><a href="#cb12-2" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb12-3"><a href="#cb12-3" aria-hidden="true" tabindex="-1"></a><span class="fu">display.plane</span> (bin.min<span class="fl">.150</span>, <span class="at">view.coord =</span> <span class="dv">0</span>, <span class="at">view.type =</span> <span class="st">&quot;sagi&quot;</span>,</span>
+<span id="cb12-4"><a href="#cb12-4" aria-hidden="true" tabindex="-1"></a>               <span class="at">main =</span> <span class="st">&quot;bin.min.150&quot;</span>, <span class="at">bg =</span> <span class="st">&quot;#379DA2&quot;</span>, <span class="at">legend.plot =</span> <span class="cn">FALSE</span>, </span>
+<span id="cb12-5"><a href="#cb12-5" aria-hidden="true" tabindex="-1"></a>               <span class="at">sat.transp =</span> <span class="cn">TRUE</span>, <span class="at">interpolate =</span> <span class="cn">TRUE</span>)</span></code></pre></div>
+<p>Other image processing functions are available:</p>
+<ul>
+<li><strong><em>bin.erosion</em></strong> decreases the volume of a
+radius r</li>
+<li><strong><em>bin.dilation</em></strong> increases the volume of a
+radius r</li>
+<li><strong><em>bin.closing</em></strong> is usefull for filling holes
+that are smaller than the radius and merging two shapes close to each
+other.</li>
+<li><strong><em>bin.opening</em></strong> is usefull for removing
+volumes that are smaller than the radius and smoothing shapes.</li>
+<li><strong><em>bin.clustering</em></strong> groups and labels TRUE
+voxels that have a 6-connectivity (i.e. sharing a common side).</li>
+</ul>
+<p>These functions can be used to separate multiple volumes in the
+binary selection, as shown below:</p>
+<div class="sourceCode" id="cb13"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb13-1"><a href="#cb13-1" aria-hidden="true" tabindex="-1"></a>bin.smooth <span class="ot">&lt;-</span> <span class="fu">bin.opening</span> (bin.min<span class="fl">.150</span>, <span class="at">radius =</span> <span class="fl">1.5</span>)<span class="er">)</span></span>
+<span id="cb13-2"><a href="#cb13-2" aria-hidden="true" tabindex="-1"></a>bin.cluster <span class="ot">&lt;-</span> <span class="fu">bin.clustering</span> (bin.smooth)</span>
+<span id="cb13-3"><a href="#cb13-3" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb13-4"><a href="#cb13-4" aria-hidden="true" tabindex="-1"></a><span class="co"># Creation of ventricle contours</span></span>
+<span id="cb13-5"><a href="#cb13-5" aria-hidden="true" tabindex="-1"></a>bin.ventricle <span class="ot">&lt;-</span> <span class="fu">bin.from.vol</span> (bin.cluster, <span class="at">min =</span> <span class="dv">1</span>, <span class="at">max =</span> <span class="dv">1</span>)</span>
+<span id="cb13-6"><a href="#cb13-6" aria-hidden="true" tabindex="-1"></a>S.ventricle <span class="ot">&lt;-</span> <span class="fu">struct.from.bin</span> (bin.ventricle , <span class="at">roi.name =</span> <span class="st">&quot;ventricle&quot;</span>, </span>
+<span id="cb13-7"><a href="#cb13-7" aria-hidden="true" tabindex="-1"></a>                                <span class="at">roi.color =</span> <span class="st">&quot;#FF0000&quot;</span> )</span>
+<span id="cb13-8"><a href="#cb13-8" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb13-9"><a href="#cb13-9" aria-hidden="true" tabindex="-1"></a><span class="co"># Display of the first 3 largest sub-volumes, and ventricle contours</span></span>
+<span id="cb13-10"><a href="#cb13-10" aria-hidden="true" tabindex="-1"></a><span class="fu">library</span> (rgl)</span>
+<span id="cb13-11"><a href="#cb13-11" aria-hidden="true" tabindex="-1"></a><span class="fu">bg3d</span> (<span class="st">&quot;black&quot;</span>)</span>
+<span id="cb13-12"><a href="#cb13-12" aria-hidden="true" tabindex="-1"></a><span class="fu">par3d</span> (<span class="at">userMatrix =</span> <span class="fu">matrix</span> (<span class="fu">c</span>(<span class="dv">0</span>, <span class="dv">0</span>, <span class="sc">-</span><span class="dv">1</span>, <span class="dv">0</span>, <span class="sc">-</span><span class="dv">1</span>, <span class="dv">0</span>, <span class="dv">0</span>, <span class="dv">0</span>, <span class="dv">0</span>, <span class="dv">1</span>, <span class="dv">0</span>, <span class="dv">0</span>, <span class="dv">0</span>, <span class="dv">0</span>, <span class="dv">0</span>, <span class="dv">1</span>), </span>
+<span id="cb13-13"><a href="#cb13-13" aria-hidden="true" tabindex="-1"></a>                            <span class="at">ncol =</span> <span class="dv">4</span>), </span>
+<span id="cb13-14"><a href="#cb13-14" aria-hidden="true" tabindex="-1"></a>       <span class="at">windowRect =</span> <span class="fu">c</span>(<span class="dv">0</span>, <span class="dv">50</span>, <span class="dv">300</span>, <span class="dv">300</span>), <span class="at">zoom =</span> <span class="fl">0.7</span>)</span>
+<span id="cb13-15"><a href="#cb13-15" aria-hidden="true" tabindex="-1"></a><span class="fu">display.3D.stack</span>(bin.cluster, <span class="at">k.idx =</span> bin.cluster<span class="sc">$</span>k.idx, </span>
+<span id="cb13-16"><a href="#cb13-16" aria-hidden="true" tabindex="-1"></a>                 <span class="at">col =</span> <span class="fu">c</span> (<span class="st">&quot;#00000000&quot;</span>, <span class="fu">rainbow</span> (<span class="dv">3</span>, <span class="at">alpha =</span> <span class="dv">1</span>)), </span>
+<span id="cb13-17"><a href="#cb13-17" aria-hidden="true" tabindex="-1"></a>                 <span class="at">breaks =</span> <span class="fu">seq</span> (<span class="dv">0</span>, <span class="dv">3</span>, <span class="at">length.out =</span> <span class="dv">5</span>), <span class="at">border =</span> <span class="cn">FALSE</span>, </span>
+<span id="cb13-18"><a href="#cb13-18" aria-hidden="true" tabindex="-1"></a>                 <span class="at">ktext =</span> <span class="cn">FALSE</span>)</span>
+<span id="cb13-19"><a href="#cb13-19" aria-hidden="true" tabindex="-1"></a><span class="fu">play3d</span> (<span class="fu">spin3d</span> (<span class="at">rpm =</span> <span class="dv">4</span>), <span class="at">duration =</span> <span class="dv">15</span>)</span>
+<span id="cb13-20"><a href="#cb13-20" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb13-21"><a href="#cb13-21" aria-hidden="true" tabindex="-1"></a><span class="fu">bg3d</span> (<span class="st">&quot;black&quot;</span>)</span>
+<span id="cb13-22"><a href="#cb13-22" aria-hidden="true" tabindex="-1"></a><span class="fu">par3d</span> (<span class="at">userMatrix =</span> <span class="fu">matrix</span> (<span class="fu">c</span>(<span class="dv">0</span>, <span class="dv">0</span>, <span class="sc">-</span><span class="dv">1</span>, <span class="dv">0</span>, <span class="sc">-</span><span class="dv">1</span>, <span class="dv">0</span>, <span class="dv">0</span>, <span class="dv">0</span>, <span class="dv">0</span>, <span class="dv">1</span>, <span class="dv">0</span>, <span class="dv">0</span>, <span class="dv">0</span>, <span class="dv">0</span>, <span class="dv">0</span>, <span class="dv">1</span>), </span>
+<span id="cb13-23"><a href="#cb13-23" aria-hidden="true" tabindex="-1"></a>                            <span class="at">ncol =</span> <span class="dv">4</span>), </span>
+<span id="cb13-24"><a href="#cb13-24" aria-hidden="true" tabindex="-1"></a>       <span class="at">windowRect =</span> <span class="fu">c</span>(<span class="dv">0</span>, <span class="dv">50</span>, <span class="dv">300</span>, <span class="dv">300</span>), <span class="at">zoom =</span> <span class="dv">1</span>)</span>
+<span id="cb13-25"><a href="#cb13-25" aria-hidden="true" tabindex="-1"></a><span class="fu">display.3D.contour</span> (S.ventricle)</span>
+<span id="cb13-26"><a href="#cb13-26" aria-hidden="true" tabindex="-1"></a><span class="fu">play3d</span> (<span class="fu">spin3d</span> (<span class="at">rpm =</span> <span class="dv">4</span>), <span class="at">duration =</span> <span class="dv">15</span>)</span></code></pre></div>
+</div>
+<div id="meshes" class="section level2">
+<h2>Meshes</h2>
+<p>The espadon package has the <strong><em>mesh.from.bin</em></strong>
+function to create a triangle mesh from a binary volume and the
+<strong><em>display.3D.mesh</em></strong> function to display it in any
+frame of reference.</p>
+<p>In the example below, the patient folder contains a CT-scan files and
+a DICOM rtstruct file in which lung and heart are outlined :</p>
+<div class="sourceCode" id="cb14"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb14-1"><a href="#cb14-1" aria-hidden="true" tabindex="-1"></a><span class="fu">library</span> (espadon)</span>
+<span id="cb14-2"><a href="#cb14-2" aria-hidden="true" tabindex="-1"></a>patient.folder <span class="ot">&lt;-</span> <span class="fu">choose.dir</span> ()</span>
+<span id="cb14-3"><a href="#cb14-3" aria-hidden="true" tabindex="-1"></a>pat <span class="ot">&lt;-</span> <span class="fu">load.patient.from.dicom</span> (patient.folder, <span class="at">data =</span> <span class="cn">TRUE</span>)</span>
+<span id="cb14-4"><a href="#cb14-4" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb14-5"><a href="#cb14-5" aria-hidden="true" tabindex="-1"></a>bin.lung <span class="ot">&lt;-</span> <span class="fu">bin.sum</span> (<span class="fu">bin.from.roi</span> (pat<span class="sc">$</span>ct[[<span class="dv">1</span>]], <span class="at">struct =</span> pat<span class="sc">$</span>rtstruct[[<span class="dv">1</span>]], </span>
+<span id="cb14-6"><a href="#cb14-6" aria-hidden="true" tabindex="-1"></a>                                   <span class="at">roi.name =</span> <span class="st">&quot;lungl&quot;</span>),</span>
+<span id="cb14-7"><a href="#cb14-7" aria-hidden="true" tabindex="-1"></a>                     <span class="fu">bin.from.roi</span> (pat<span class="sc">$</span>ct[[<span class="dv">1</span>]], <span class="at">struct =</span> pat<span class="sc">$</span>rtstruct[[<span class="dv">1</span>]], </span>
+<span id="cb14-8"><a href="#cb14-8" aria-hidden="true" tabindex="-1"></a>                                   <span class="at">roi.name =</span> <span class="st">&quot;lungr&quot;</span>))</span>
+<span id="cb14-9"><a href="#cb14-9" aria-hidden="true" tabindex="-1"></a>bin.heart <span class="ot">&lt;-</span> <span class="fu">bin.from.roi</span> (pat<span class="sc">$</span>ct[[<span class="dv">1</span>]], <span class="at">struct =</span> pat<span class="sc">$</span>rtstruct[[<span class="dv">1</span>]], </span>
+<span id="cb14-10"><a href="#cb14-10" aria-hidden="true" tabindex="-1"></a>                           <span class="at">roi.name =</span> <span class="st">&quot;heart&quot;</span>)</span>
+<span id="cb14-11"><a href="#cb14-11" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb14-12"><a href="#cb14-12" aria-hidden="true" tabindex="-1"></a>mesh.lung <span class="ot">&lt;-</span> <span class="fu">mesh.from.bin</span> (bin.lung)</span>
+<span id="cb14-13"><a href="#cb14-13" aria-hidden="true" tabindex="-1"></a>mesh.heart <span class="ot">&lt;-</span> <span class="fu">mesh.from.bin</span> (bin.heart)</span>
+<span id="cb14-14"><a href="#cb14-14" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb14-15"><a href="#cb14-15" aria-hidden="true" tabindex="-1"></a><span class="fu">display.3D.mesh</span> (mesh.lung, <span class="at">color =</span> <span class="st">&quot;burlywood2&quot;</span>, <span class="at">specular =</span> <span class="st">&quot;black&quot;</span>, </span>
+<span id="cb14-16"><a href="#cb14-16" aria-hidden="true" tabindex="-1"></a>                 <span class="at">alpha =</span> <span class="fl">0.8</span>)</span>
+<span id="cb14-17"><a href="#cb14-17" aria-hidden="true" tabindex="-1"></a><span class="fu">display.3D.mesh</span> (mesh.heart, <span class="at">color =</span> <span class="st">&quot;red&quot;</span>, <span class="at">specular =</span> <span class="st">&quot;black&quot;</span>, </span>
+<span id="cb14-18"><a href="#cb14-18" aria-hidden="true" tabindex="-1"></a>                 <span class="at">alpha =</span> <span class="dv">1</span>)</span></code></pre></div>
+<p>Sometimes, the mesh contains holes. The
+<strong><em>mesh.repair</em></strong> function can be used to repair the
+mesh by removing the degenerated triangles.</p>
+</div>
+<div id="histograms" class="section level2">
+<h2>Histograms</h2>
+<p>Histograms computing is a basic function proposed by R. The espadon
+package adds the feature to compute these differential histograms over
+an imaging volume such as CT, MR, PT, rt-dose, and within a predefined
+area:</p>
+<ul>
+<li>either by a region of interest (RoI) of an rt-struct file :
+<strong><em>histo.from.roi</em></strong> function</li>
+<li>or by a selection by binary volume :
+<strong><em>histo.from.bin</em></strong>* function.</li>
+</ul>
+<p>To be able to simulate random shifts of the selection, or variations
+of contours, the <strong><em>histo.from.roi</em></strong> function
+includes Monte Carlo calculations, according to a normal distribution.
+If the imaging volume is a dose distribution (from an rtdose file), it
+is then easy to calculate a cumulative histogram, called in this case
+dose-volume histograms or DVH, using the
+<strong><em>histo.DVH</em></strong> function.</p>
+<p>The functions <strong><em>display.dV_dx</em></strong>,
+<strong><em>display.DVH</em></strong>,
+<strong><em>display.DVH.pc</em></strong> allow to display pretty graphs,
+including the quantile zones 100%, 95% and 50% of the Monte-Carlo
+data.</p>
+<p>In the following example, the patient folder contains a CT-scan
+files, a rt-dose file and a rt-struct file in which optic chiasm is
+outlined :</p>
+<div class="sourceCode" id="cb15"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb15-1"><a href="#cb15-1" aria-hidden="true" tabindex="-1"></a><span class="fu">library</span> (espadon)</span>
+<span id="cb15-2"><a href="#cb15-2" aria-hidden="true" tabindex="-1"></a>patient.folder <span class="ot">&lt;-</span> <span class="fu">choose.dir</span> ()</span>
+<span id="cb15-3"><a href="#cb15-3" aria-hidden="true" tabindex="-1"></a>pat <span class="ot">&lt;-</span> <span class="fu">load.patient.from.dicom</span> (patient.folder, <span class="at">data =</span> <span class="cn">FALSE</span>)</span>
+<span id="cb15-4"><a href="#cb15-4" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb15-5"><a href="#cb15-5" aria-hidden="true" tabindex="-1"></a>S <span class="ot">&lt;-</span> <span class="fu">load.obj.data</span> (pat<span class="sc">$</span>rtstruct[[<span class="dv">1</span>]])</span>
+<span id="cb15-6"><a href="#cb15-6" aria-hidden="true" tabindex="-1"></a>CT <span class="ot">&lt;-</span> <span class="fu">load.obj.data</span> (pat<span class="sc">$</span>ct[[<span class="dv">1</span>]])</span>
+<span id="cb15-7"><a href="#cb15-7" aria-hidden="true" tabindex="-1"></a>D <span class="ot">&lt;-</span> <span class="fu">load.obj.data</span> (pat<span class="sc">$</span>rtdose[[<span class="dv">1</span>]])</span>
+<span id="cb15-8"><a href="#cb15-8" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb15-9"><a href="#cb15-9" aria-hidden="true" tabindex="-1"></a><span class="co"># resample D on the cut planes on which the chiasm has been outlined</span></span>
+<span id="cb15-10"><a href="#cb15-10" aria-hidden="true" tabindex="-1"></a>D.on.CT <span class="ot">&lt;-</span> <span class="fu">vol.regrid</span> (D, CT)</span>
+<span id="cb15-11"><a href="#cb15-11" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb15-12"><a href="#cb15-12" aria-hidden="true" tabindex="-1"></a><span class="co"># Calculation of histogram with simulation of random displacements according to </span></span>
+<span id="cb15-13"><a href="#cb15-13" aria-hidden="true" tabindex="-1"></a><span class="co"># a normal distribution of standard deviation 1 mm in all directions:</span></span>
+<span id="cb15-14"><a href="#cb15-14" aria-hidden="true" tabindex="-1"></a>h <span class="ot">&lt;-</span> <span class="fu">histo.from.roi</span> (D.on.CT, S, <span class="at">roi.name=</span><span class="st">&quot;chiasm&quot;</span>, <span class="at">breaks =</span> <span class="fu">seq</span>(<span class="dv">0</span>, <span class="dv">80</span>, <span class="fl">0.1</span>),</span>
+<span id="cb15-15"><a href="#cb15-15" aria-hidden="true" tabindex="-1"></a>                     <span class="at">alias =</span> <span class="st">&quot;chiasm&quot;</span>, <span class="at">MC =</span> <span class="dv">100</span> )</span>
+<span id="cb15-16"><a href="#cb15-16" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb15-17"><a href="#cb15-17" aria-hidden="true" tabindex="-1"></a>DVH <span class="ot">&lt;-</span> <span class="fu">histo.DVH</span> (h, <span class="at">alias =</span> <span class="st">&quot;Chiasm DVH&quot;</span>)</span>
+<span id="cb15-18"><a href="#cb15-18" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb15-19"><a href="#cb15-19" aria-hidden="true" tabindex="-1"></a><span class="fu">display.DVH</span> (DVH, <span class="at">MC.plot =</span> <span class="cn">TRUE</span>, <span class="at">col =</span> <span class="st">&quot;#ff0000&quot;</span>, <span class="at">lwd =</span> <span class="dv">2</span>)</span></code></pre></div>
+</div>
+<div id="radiotherapy-indices" class="section level2">
+<h2>Radiotherapy indices</h2>
+<p>The espadon package offers the possibility of computing many
+radiotherapy indices. After specifying the target volumes to be treated
+(if available), the healthy volumes to be protected (if available), the
+dose distribution from rt-dose file, the functions
+<strong><em>rt.indices.from.roi</em></strong> and
+<strong><em>rt.indices.from.bin</em></strong> can calculate, on demand
+:</p>
+<ul>
+<li>dosimetry indices : minimum, maximum, average dose, standard
+deviation and requested D.x%</li>
+<li>volume indices : total volume, surface area and requested
+V.xGy.</li>
+<li>conformity indices : prescription isodose target volume (PITV),
+prescription dose spillage (PDS), conformity index (CI), conformation
+number (CN), new conformity index (NCI), Dice similarity coefficient
+(DSC), conformity index based on distance (CIdistance), conformity
+distance index (CDI), triple point conformity scale (CS3), underdosed
+lesion factor (ULF), overdosed healthy tissues factor (OHTF), geometric
+conformity index (gCI), COIN , critical organ scoring index (COSI),
+generalized COSI (gCOSI).</li>
+<li>homogeneity indices from RTOG or ICRU.</li>
+<li>gradient indices : gradient index based on volumes ratio, modified
+gradient index (mGI).</li>
+</ul>
+<p>In the following example, the patient folder contains a CT-scan
+files, a rt-dose file and a rt-struct file in which PTV and optic chiasm
+are outlined.</p>
+<div class="sourceCode" id="cb16"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb16-1"><a href="#cb16-1" aria-hidden="true" tabindex="-1"></a><span class="fu">library</span> (espadon)</span>
+<span id="cb16-2"><a href="#cb16-2" aria-hidden="true" tabindex="-1"></a>patient.folder <span class="ot">&lt;-</span> <span class="fu">choose.dir</span> ()</span>
+<span id="cb16-3"><a href="#cb16-3" aria-hidden="true" tabindex="-1"></a>pat <span class="ot">&lt;-</span> <span class="fu">load.patient.from.dicom</span> (patient.folder, <span class="at">data =</span> <span class="cn">FALSE</span>)</span>
+<span id="cb16-4"><a href="#cb16-4" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb16-5"><a href="#cb16-5" aria-hidden="true" tabindex="-1"></a>S <span class="ot">&lt;-</span> <span class="fu">load.obj.data</span> (pat<span class="sc">$</span>rtstruct[[<span class="dv">1</span>]])</span>
+<span id="cb16-6"><a href="#cb16-6" aria-hidden="true" tabindex="-1"></a>CT <span class="ot">&lt;-</span> <span class="fu">load.obj.data</span> (pat<span class="sc">$</span>ct[[<span class="dv">1</span>]])</span>
+<span id="cb16-7"><a href="#cb16-7" aria-hidden="true" tabindex="-1"></a>D <span class="ot">&lt;-</span> <span class="fu">load.obj.data</span> (pat<span class="sc">$</span>rtdose[[<span class="dv">1</span>]])</span>
+<span id="cb16-8"><a href="#cb16-8" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb16-9"><a href="#cb16-9" aria-hidden="true" tabindex="-1"></a><span class="co"># resample D on the cut planes on which the chiasm has been outlined</span></span>
+<span id="cb16-10"><a href="#cb16-10" aria-hidden="true" tabindex="-1"></a>D.on.CT <span class="ot">&lt;-</span> <span class="fu">vol.regrid</span> (D, CT)</span>
+<span id="cb16-11"><a href="#cb16-11" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb16-12"><a href="#cb16-12" aria-hidden="true" tabindex="-1"></a><span class="fu">rt.indices.from.roi</span> (D.on.CT, S, <span class="at">target.roi.name =</span> <span class="st">&quot;ptv&quot;</span>, </span>
+<span id="cb16-13"><a href="#cb16-13" aria-hidden="true" tabindex="-1"></a>                     <span class="at">healthy.roi.name =</span> <span class="st">&quot;chiasm&quot;</span>,</span>
+<span id="cb16-14"><a href="#cb16-14" aria-hidden="true" tabindex="-1"></a>                     <span class="at">presc.dose =</span> <span class="fl">0.9</span> <span class="sc">*</span> <span class="dv">70</span>)</span></code></pre></div>
+</div>
+
+
+
+<!-- code folding -->
+
+
+<!-- dynamically load mathjax for compatibility with self-contained -->
+<script>
+  (function () {
+    var script = document.createElement("script");
+    script.type = "text/javascript";
+    script.src  = "https://mathjax.rstudio.com/latest/MathJax.js?config=TeX-AMS-MML_HTMLorMML";
+    document.getElementsByTagName("head")[0].appendChild(script);
+  })();
+</script>
+
+</body>
+</html>

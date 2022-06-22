@@ -1,0 +1,22 @@
+citHeader("To cite espadon in publications use:")
+
+year <- sub("-.*", "", meta$Date)
+note <- sprintf("R package version %s", meta$Version)
+url0 <- "https://CRAN.R-project.org/package=espadon"
+
+bibentry(bibtype = "Manual",
+         title = "{espadon}: Easy Study of Patient DICOM Data in Oncology: toolbox 
+         for automation, exploitation and processing of DICOM files and images",
+         author = c(person("Cathy", "Fontbonne"),
+                    person("Jean-Marc", "Fontbonne")),
+         institution = "Normandie Univ, ENSICAEN, UNICAEN, CNRS/IN2P3, LPC Caen, 14000 Caen, France",
+         year = year,
+         note = note,
+         url = "",
+         textVersion = paste0("Cathy & Jean-Marc Fontbonne, (", year, ").",
+         " espadon: Easy Study of PAtient Dicom data in ONcology: toolbox for 
+         automation, exploitation and processing of DICOM files and images. ", note, ".",
+         "https://espadon.cnrs.fr"))
+         
+
+
