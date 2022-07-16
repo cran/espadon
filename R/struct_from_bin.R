@@ -3,6 +3,11 @@
 #' a unique RoI, defined by the contours of binary volume.
 #' @param vol "volume" class object, of binary modality.
 #' @param roi.name Character string, representing the name of created RoI.
+#' @param roi.type Type of RoI, from among "", "EXTERNAL", "PTV", "CTV", "GTV", 
+#' "TREATED_VOLUME", "IRRAD_VOLUME", "OAR", "BOLUS", "AVOIDANCE", "ORGAN", "MARKER", 
+#' "REGISTRATION", "ISOCENTER", "CONTRAST_AGENT", "CAVITY", "BRACHY_CHANNEL", 
+#' "BRACHY_ACCESSORY", "BRACHY_SRC_APP", "BRACHY_CHNL_SHLD", "SUPPORT", "FIXATION", 
+#' "DOSE_REGION","CONTROL" and "DOSE_MEASUREMENT"
 #' @param roi.nb Positive integer, representing the number of created RoI.
 #' @param roi.color Color of the created RoI, in hex code format ("#RRGGBB").
 #' @param external.only Boolean. If \code{TRUE}, only external contours are kept.
@@ -28,6 +33,14 @@
 #' @export
 struct.from.bin <- function (vol, roi.name = vol$description, roi.nb = 1,
                              roi.color = "#379DA2", 
+                             roi.type = c ("","EXTERNAL", "PTV", "CTV", "GTV", 
+                                           "TREATED_VOLUME", "IRRAD_VOLUME", "OAR", 
+                                           "BOLUS", "AVOIDANCE", "ORGAN", "MARKER", 
+                                           "REGISTRATION", "ISOCENTER", "CONTRAST_AGENT", 
+                                           "CAVITY", "BRACHY_CHANNEL", "BRACHY_ACCESSORY", 
+                                           "BRACHY_SRC_APP", "BRACHY_CHNL_SHLD", 
+                                           "SUPPORT", "FIXATION", "DOSE_REGION", 
+                                           "CONTROL", "DOSE_MEASUREMENT"),
                              external.only = FALSE, alias = "", 
                              description = paste ("RoI from", vol$object.alias)) {
   
@@ -49,6 +62,16 @@ struct.from.bin <- function (vol, roi.name = vol$description, roi.nb = 1,
   roi.name <- roi.name[1]
   roi.color <- roi.color[1]
   alias <- alias[1]
+  defined.type <- c ("","EXTERNAL", "PTV", "CTV", "GTV", 
+                     "TREATED_VOLUME", "IRRAD_VOLUME", "OAR", 
+                     "BOLUS", "AVOIDANCE", "ORGAN", "MARKER", 
+                     "REGISTRATION", "ISOCENTER", "CONTRAST_AGENT", 
+                     "CAVITY", "BRACHY_CHANNEL", "BRACHY_ACCESSORY", 
+                     "BRACHY_SRC_APP", "BRACHY_CHNL_SHLD", 
+                     "SUPPORT", "FIXATION", "DOSE_REGION", 
+                     "CONTROL", "DOSE_MEASUREMENT")
+  roi.type <- roi.type[!is.na(match(roi.type,defined.type))][1]
+  if (is.na(roi.type)) roi.type <- ""
   
   struct <- list()
   
@@ -86,6 +109,11 @@ struct.from.bin <- function (vol, roi.name = vol$description, roi.nb = 1,
                                  color=roi.color, 
                                  roi.pseudo=tolower (gsub("[[:space:],_]", "", 
                                                           iconv (roi.name,  to="ASCII//TRANSLIT"))))
+  
+  struct$roi.obs <- data.frame (nb = roi.nb[1], roi.nb=roi.nb[1], label=roi.name, 
+                                     code.value = "", code.scheme="",code.scheme.v="",
+                                     code.meaning = "", type=roi.type, interpreter="")
+                                     
   struct$roi.data <- list()
   # struct$roi.data[[1]] <- .display.roi.data.from.bin(bin_, bin_$patient.xyz0[1,])
   struct$roi.data[[1]] <- .display.roi.data.from.bin(bin_)

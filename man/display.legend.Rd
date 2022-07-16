@@ -12,7 +12,8 @@ display.legend(
   lwd = 1,
   cex = 1,
   displayed.roi.name = NULL,
-  bg = "black"
+  bg = "black",
+  text.col = "white"
 )
 }
 \arguments{
@@ -35,6 +36,8 @@ object. By default \code{roi.idx = NULL}. See Details.}
 the replacement names of selected RoI if needed.}
 
 \item{bg}{color of the background.}
+
+\item{text.col}{color of the legend text.}
 }
 \value{
 Returns  display of the RoI names and their associated color in the

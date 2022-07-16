@@ -13,6 +13,7 @@
 #' @param displayed.roi.name Vector. If different from \code{NULL}, it represents
 #' the replacement names of selected RoI if needed.  
 #' @param bg color of the background.
+#' @param text.col color of the legend text.
 #' @details \code{roi.name}, \code{roi.sname}, and \code{roi.idx}
 #' indicates the RoI to display. If all three are set to NULL, all RoI are selected.
 #' @return  Returns  display of the RoI names and their associated color in the 
@@ -29,7 +30,8 @@
 #' @importFrom methods is
 display.legend <- function (struct = NULL, roi.name = NULL,
                             roi.sname = NULL, roi.idx = NULL, lwd = 1, cex = 1, 
-                            displayed.roi.name = NULL, bg = "black") {
+                            displayed.roi.name = NULL, bg = "black", 
+                            text.col = "white") {
   
   if (!is (struct, "struct")) 
     stop ("struct should be a struct class object.")
@@ -51,7 +53,7 @@ display.legend <- function (struct = NULL, roi.name = NULL,
   rect(par("usr")[1], par("usr")[3], par("usr")[2], par("usr")[4], col =bg)
   
   leg <- legend("topleft",legend =c.name , col =struct$roi.info$color[list.roi.idx],seg.len=1,
-                ncol=ncol ,lwd=lwd, bty="o", cex=cex, text.col="white",bg="black")
+                ncol=ncol ,lwd=lwd, bty="o", cex=cex, text.col=text.col,bg=bg)
 
   on.exit (par(op))
   

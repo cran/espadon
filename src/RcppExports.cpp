@@ -27,6 +27,24 @@ BEGIN_RCPP
     return rcpp_result_gen;
 END_RCPP
 }
+// getvaluefromijkC
+std::vector <double> getvaluefromijkC(std::vector <double> vol3D, bool interpolate, std::vector <double> i, std::vector <double> j, std::vector <double> k, std::vector  <int> k_idx, std::vector  <int> k_loc, std::vector  <int> n_ijk);
+RcppExport SEXP _espadon_getvaluefromijkC(SEXP vol3DSEXP, SEXP interpolateSEXP, SEXP iSEXP, SEXP jSEXP, SEXP kSEXP, SEXP k_idxSEXP, SEXP k_locSEXP, SEXP n_ijkSEXP) {
+BEGIN_RCPP
+    Rcpp::RObject rcpp_result_gen;
+    Rcpp::RNGScope rcpp_rngScope_gen;
+    Rcpp::traits::input_parameter< std::vector <double> >::type vol3D(vol3DSEXP);
+    Rcpp::traits::input_parameter< bool >::type interpolate(interpolateSEXP);
+    Rcpp::traits::input_parameter< std::vector <double> >::type i(iSEXP);
+    Rcpp::traits::input_parameter< std::vector <double> >::type j(jSEXP);
+    Rcpp::traits::input_parameter< std::vector <double> >::type k(kSEXP);
+    Rcpp::traits::input_parameter< std::vector  <int> >::type k_idx(k_idxSEXP);
+    Rcpp::traits::input_parameter< std::vector  <int> >::type k_loc(k_locSEXP);
+    Rcpp::traits::input_parameter< std::vector  <int> >::type n_ijk(n_ijkSEXP);
+    rcpp_result_gen = Rcpp::wrap(getvaluefromijkC(vol3D, interpolate, i, j, k, k_idx, k_loc, n_ijk));
+    return rcpp_result_gen;
+END_RCPP
+}
 // labelbrowser
 std::vector <unsigned int> labelbrowser(std::vector <bool> vol3D, std::vector  <unsigned int> n_ijk);
 RcppExport SEXP _espadon_labelbrowser(SEXP vol3DSEXP, SEXP n_ijkSEXP) {
@@ -42,6 +60,7 @@ END_RCPP
 
 static const R_CallMethodDef CallEntries[] = {
     {"_espadon_dicombrowser", (DL_FUNC) &_espadon_dicombrowser, 7},
+    {"_espadon_getvaluefromijkC", (DL_FUNC) &_espadon_getvaluefromijkC, 8},
     {"_espadon_labelbrowser", (DL_FUNC) &_espadon_labelbrowser, 2},
     {NULL, NULL, 0}
 };

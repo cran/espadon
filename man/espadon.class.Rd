@@ -286,8 +286,44 @@ they exist,
 \item \code{$thickness}: thickness between two consecutive planes of a contour.
 \item \code{$ref.from.contour}: reference frame change matrix, from the contour
 reference frame to the ref.pseudo reference frame
-\item \code{$roi.info}: dataframe. Information on RoI contours. See
-\link[espadon]{load.obj.from.Rdcm}
+\item \code{$roi.info}: dataframe. Information on RoI contours. It includes the
+followings columns:
+\tabular{rl}{
+\tab -\code{$number}: value of TAG (3006,0084) for the concerned RoI.\cr
+\tab -\code{$name}: value of TAG (3006,0026) for the concerned RoI.\cr
+\tab -\code{$description}: value of TAG (3006,0028) for the concerned RoI.\cr
+\tab -\code{$generation.algorithm}: value of TAG (3006,0036) for the concerned RoI.\cr
+\tab -\code{$color}: value of TAG (3006,002A) for the concerned RoI.\cr
+\tab -\code{$dz}: z step between planes for the concerned RoI.\cr
+\tab -\code{$roi.pseudo}: pseudonym of the RoI \code{$name}. It can be changed by the user.\cr
+\tab -\code{$min.x}: minimum value x in mm of the RoI. Absent when \code{data = FALSE}.\cr
+\tab -\code{$max.x}: maximum value x in mm of the RoI. Absent when \code{data = FALSE}.\cr
+\tab -\code{$min.y}: minimum value y in mm of the RoI. Absent when \code{data = FALSE}.\cr
+\tab -\code{$max.y}: maximum value y in mm of the RoI. Absent when \code{data = FALSE}.\cr
+\tab -\code{$min.z}: minimum value z in mm of the RoI. Absent when \code{data = FALSE}.\cr
+\tab -\code{$max.z}: maximum value z in mm of the RoI. Absent when \code{data = FALSE}.\cr
+\tab -\code{$vol}: volume in mm^3 of the RoI. Absent when \code{data = FALSE}.\cr
+\tab -\code{$Gx}: position x in mm of the RoI center of gravity.
+Absent when \code{data = FALSE}.\cr
+-\tab -\code{$Gy}: position y in mm of the RoI center of gravity.
+Absent when \code{data = FALSE}.\cr
+-\tab -\code{$Gz}: position z in mm of the RoI center of gravity.
+Absent when \code{data = FALSE}.\cr
+-\tab -\code{$continue}: boolean, indicating whether the contours are on adjacent planes.
+}
+\item \code{$roi.obs}: dataframe. RT RoI observations (sequence TAG (3006,0080)).
+It includes the followings columns :
+\tabular{rl}{
+\tab -\code{$nb}: value of TAG (3006,0082) for the concerned RoI.\cr
+\tab -\code{$roi.nb}: value of TAG (3006,0084) for the concerned RoI.\cr
+\tab -\code{$label}: value of TAG (3006,0085) for the concerned RoI.\cr
+\tab -\code{$code.value}: value of TAG (0008,0100) in the Identification code sequence.\cr
+\tab -\code{$code.scheme}: value of TAG (0008,0102) in the Identification code sequence.\cr
+\tab -\code{$code.scheme.v}: value of TAG (0008,0103) in the Identification code sequence.\cr
+\tab -\code{$code.meaning}: value of TAG (0008,0104) in the Identification code sequence.\cr
+\tab -\code{$type}: value of TAG (3006,00A4) for the concerned RoI.\cr
+\tab -\code{$interpreter}:value of TAG (3006,00A6) for the concerned RoI.\cr
+}
 \item \code{$roi.data}: exists only if the data is loaded. Contains the list
 of contour coordinates. The RoI of list number i is that of line i of roi.info.
 Each element of the list is a list giving the contour

@@ -107,7 +107,7 @@ struct.merge <- function (ref.struct, add.struct, roi.name = NULL,
   
   roi1 <- select.names (ref.struct$roi.info$roi.pseudo)
   to.add <- add.struct$roi.info[roi2, ]
-  
+  to.add.m <- add.struct$roi.obs[roi2, ]
   
   if (suffix!=""){ 
     to.add$name <- paste(to.add$name, suffix, sep="-")
@@ -119,7 +119,9 @@ struct.merge <- function (ref.struct, add.struct, roi.name = NULL,
   
 
   ref.struct$roi.info <- rbind (ref.struct$roi.info, to.add)
+  ref.struct$roi.obs <- rbind (ref.struct$roi.obs, to.add.m)
   row.names(ref.struct$roi.info) <- NULL
+  row.names(ref.struct$roi.obs) <- NULL
   
   to.add_ <- add.struct$roi.data[roi2]
   ref.struct$roi.data <- c(ref.struct$roi.data, to.add_)
@@ -128,6 +130,9 @@ struct.merge <- function (ref.struct, add.struct, roi.name = NULL,
   keep <- !sapply(ref.struct$roi.data,is.null)
   ref.struct$roi.data <- ref.struct$roi.data[keep]
   ref.struct$roi.info <- ref.struct$roi.info[keep, ]
+  
+  row.names(ref.struct$roi.info) <- NULL
+  row.names(ref.struct$roi.obs) <- NULL
   ref.struct$nb.of.roi <- length (ref.struct$roi.data)
   return (ref.struct)
 }

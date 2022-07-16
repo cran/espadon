@@ -50,16 +50,20 @@ bin.from.vol <- function (vol, min=-Inf, max=Inf, in.selection = TRUE,
     if (!in.selection) description <- paste ("!(", description, ")")
   }
   Vb <- vol.copy (vol, alias = alias, modality="binary", description=description)
-  Vb$min.pixel <- 0
-  Vb$max.pixel <- 1
+  Vb$min.pixel <- FALSE
+  Vb$max.pixel <- TRUE
   
-  Vb$vol3D.data <- (Vb$vol3D.data >= min) &  (Vb$vol3D.data <= max)
+  na.vox <-  is.na(Vb$vol3D.data)
+  Vb$vol3D.data[!na.vox] <- (Vb$vol3D.data[!na.vox] >= min) &  (Vb$vol3D.data[!na.vox] <= max)
   
   if (!in.selection) Vb$vol3D.data <- !Vb$vol3D.data
 
   # Vb$vol3D.data[is.na(Vb$vol3D.data)] <- FALSE
-  Vb$min.pixel <- all(Vb$vol3D.data)
-  Vb$max.pixel <- any(Vb$vol3D.data)
+  Vb$min.pixel <- min(Vb$vol3D.data, na.rm=T)
+  Vb$max.pixel <- max(Vb$vol3D.data, na.rm=T)
+  Vb$vol3D.data  <- Vb$vol3D.data==T
+  Vb$min.pixel <- Vb$min.pixel==T
+  Vb$max.pixel <- Vb$max.pixel==T
   return (Vb)
   
 }

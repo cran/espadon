@@ -9,6 +9,11 @@ struct.from.bin(
   roi.name = vol$description,
   roi.nb = 1,
   roi.color = "#379DA2",
+  roi.type = c("", "EXTERNAL", "PTV", "CTV", "GTV", "TREATED_VOLUME", "IRRAD_VOLUME",
+    "OAR", "BOLUS", "AVOIDANCE", "ORGAN", "MARKER", "REGISTRATION", "ISOCENTER",
+    "CONTRAST_AGENT", "CAVITY", "BRACHY_CHANNEL", "BRACHY_ACCESSORY", "BRACHY_SRC_APP",
+    "BRACHY_CHNL_SHLD", "SUPPORT", "FIXATION", "DOSE_REGION", "CONTROL",
+    "DOSE_MEASUREMENT"),
   external.only = FALSE,
   alias = "",
   description = paste("RoI from", vol$object.alias)
@@ -22,6 +27,12 @@ struct.from.bin(
 \item{roi.nb}{Positive integer, representing the number of created RoI.}
 
 \item{roi.color}{Color of the created RoI, in hex code format ("#RRGGBB").}
+
+\item{roi.type}{Type of RoI, from among "", "EXTERNAL", "PTV", "CTV", "GTV",
+"TREATED_VOLUME", "IRRAD_VOLUME", "OAR", "BOLUS", "AVOIDANCE", "ORGAN", "MARKER",
+"REGISTRATION", "ISOCENTER", "CONTRAST_AGENT", "CAVITY", "BRACHY_CHANNEL",
+"BRACHY_ACCESSORY", "BRACHY_SRC_APP", "BRACHY_CHNL_SHLD", "SUPPORT", "FIXATION",
+"DOSE_REGION","CONTROL" and "DOSE_MEASUREMENT"}
 
 \item{external.only}{Boolean. If \code{TRUE}, only external contours are kept.}
 

@@ -80,7 +80,7 @@ std::list <std::string> dicombrowser (std::vector <unsigned char> dicomrawdata,
     for (int i = 0; i < 128;i++) {
       if (dicomrawdata[i] != 0) preamble = false;
     }
-    if ((dicomrawdata[128] != 68) | (dicomrawdata[129] != 73) | (dicomrawdata[130] != 67) ||
+    if ((dicomrawdata[128] != 68) || (dicomrawdata[129] != 73) || (dicomrawdata[130] != 67) ||
       (dicomrawdata[131] != 77))  preamble = false;
   }
   
@@ -103,9 +103,9 @@ std::list <std::string> dicombrowser (std::vector <unsigned char> dicomrawdata,
   length_of_Group=0;           
   // parcours
   //---------       ()
-  while (  (my_cursor < dicomrawdata.size ()) & 
-           ((tag_number < nbTAG) | (nbTAG == 0)) &
-           ((stop_tag == "") | (tag < stop_tag) | (curr_encaps != stop_level))) {
+  while (  (my_cursor < dicomrawdata.size ()) && 
+           ((tag_number < nbTAG) || (nbTAG == 0)) &&
+           ((stop_tag == "") || (tag < stop_tag) || (curr_encaps != stop_level))) {
     R_CheckUserInterrupt();
 
     if ((encapsulation_level > 0) && (encapsulation_load[encapsulation_level] == 0)) {
@@ -151,10 +151,10 @@ std::list <std::string> dicombrowser (std::vector <unsigned char> dicomrawdata,
       offset_count = 4;
       tag_number=tag_number+1;
       
-      if ((tag_number<4) & (grouptag != 0x0002) & (grouptag != 0x0008)) {mylist.push_back ("not dicom compliant");break;}
+      if ((tag_number<4) && (grouptag != 0x0002) && (grouptag != 0x0008)) {mylist.push_back ("not dicom compliant");break;}
       
       
-      if ((grouptag == 0xFFFE) & ((elementtag == 0xE0DD) | (elementtag == 0xE00D)) ){// Sequence_Delimitation_Tag ou Item_Delimitation_Tag
+      if ((grouptag == 0xFFFE) && ((elementtag == 0xE0DD) || (elementtag == 0xE00D)) ){// Sequence_Delimitation_Tag ou Item_Delimitation_Tag
       //-----------------------------------------------------------------------------  
         tag_name[encapsulation_level] = tag;
         
@@ -178,7 +178,7 @@ std::list <std::string> dicombrowser (std::vector <unsigned char> dicomrawdata,
         my_cursor = my_cursor + 4;
         offset_count =offset_count + 4;
         for (unsigned int i = 0; i<=encapsulation_level; i++) {
-          if ((encapsulation_load [i] != Undef_Length) & (encapsulation_load [i] != 0)) encapsulation_load [i] = encapsulation_load [i] - offset_count;
+          if ((encapsulation_load [i] != Undef_Length) && (encapsulation_load [i] != 0)) encapsulation_load [i] = encapsulation_load [i] - offset_count;
         }
 
         encapsulation_load [encapsulation_level] = 0;
@@ -187,7 +187,7 @@ std::list <std::string> dicombrowser (std::vector <unsigned char> dicomrawdata,
         if (encapsulation_level>0)  encapsulation_level= encapsulation_level - 1;
         
 
-      } else if ((grouptag == 0xFFFE) & (elementtag == 0xE000)){ // item tag
+      } else if ((grouptag == 0xFFFE) && (elementtag == 0xE000)){ // item tag
       //--------------------------------------------------------
       
         tag_name[encapsulation_level]= "item" + std::to_string (item_nb[encapsulation_level]);
@@ -225,10 +225,10 @@ std::list <std::string> dicombrowser (std::vector <unsigned char> dicomrawdata,
         if (verbose)  Rcout << "\n" << list_el;
 //       // fin affichage       
         
-        if ((my_VL != Undef_Length) & (my_cursor+my_VL>dicomrawdata.size())) {mylist.push_back ("not dicom compliant");break;}
+        if ((my_VL != Undef_Length) && (my_cursor+my_VL>dicomrawdata.size())) {mylist.push_back ("not dicom compliant");break;}
         
         for (unsigned int i = 0; i<=encapsulation_level; i++) {
-          if ((encapsulation_load [i] != Undef_Length) & (encapsulation_load [i] != 0)) encapsulation_load [i] = encapsulation_load [i] - offset_count;
+          if ((encapsulation_load [i] != Undef_Length) && (encapsulation_load [i] != 0)) encapsulation_load [i] = encapsulation_load [i] - offset_count;
         }
         encapsulation_level = encapsulation_level + 1;
         encapsulation_load[encapsulation_level] = my_VL;
@@ -269,11 +269,11 @@ std::list <std::string> dicombrowser (std::vector <unsigned char> dicomrawdata,
         length_data = 0;
         for (int i=0; i < 10; i++) if (std_my_VR == special_VR[i]) {length_data = length_special_VR[i]; break;}
 
-        if ((length_data !=0) & (VRness == explicit_VR)) {
+        if ((length_data !=0) && (VRness == explicit_VR)) {
           my_cursor = my_cursor + 2;
           offset_count =offset_count+2;
           }
-        if (((length_data !=0) & (VRness == explicit_VR)) | (VRness != explicit_VR)){
+        if (((length_data !=0) && (VRness == explicit_VR)) || (VRness != explicit_VR)){
           my_VL_start = my_cursor + 1;
           my_VL_stop = my_cursor + 4;
           
@@ -315,10 +315,10 @@ std::list <std::string> dicombrowser (std::vector <unsigned char> dicomrawdata,
         if (verbose)  Rcout << "\n" << list_el;
         // fin affichage
 
-        if ((my_VL != Undef_Length) & (my_cursor+my_VL>dicomrawdata.size())) {mylist.push_back ("not dicom compliant");break;}
+        if ((my_VL != Undef_Length) && (my_cursor+my_VL>dicomrawdata.size())) {mylist.push_back ("not dicom compliant");break;}
         
         // decode endianness et VRness
-        if ((stdgrouptag == "0002") & (stdelementtag == "0010")){
+        if ((stdgrouptag == "0002") && (stdelementtag == "0010")){
           dcm = "";
           if (my_VL>0) for (uint32_t i = 0; i < my_VL-1; i++) dcm.append (1, dicomrawdata[my_cursor + i]);
           if (dicomrawdata [my_cursor + my_VL-1] != 0)  dcm.append (1, dicomrawdata[my_cursor + my_VL-1]);
@@ -345,7 +345,7 @@ std::list <std::string> dicombrowser (std::vector <unsigned char> dicomrawdata,
         // fin decode endianness et VRness
 
         // recuperation de la longueur du header
-        if ( (stdgrouptag == "0002") &  (stdelementtag == "0000")) {
+        if ( (stdgrouptag == "0002") &&  (stdelementtag == "0000")) {
         // if  (stdelementtag == "0000") {
           grouptag_le = stdgrouptag; 
           if (endianness == Low_Order_First) length_of_Group = (uint32_t) dicomrawdata [my_cursor] + (256 * (uint32_t) dicomrawdata [my_cursor + 1]) +
@@ -358,14 +358,14 @@ std::list <std::string> dicombrowser (std::vector <unsigned char> dicomrawdata,
         if (std_my_VR == "AT") {
           my_cursor = my_cursor +  4;
           offset_count = offset_count + 4;
-        } else if ((std_my_VR=="SQ") || (std_my_VR == "00")){
-          my_cursor = my_cursor;
-        } else {
+        } else if (!((std_my_VR=="SQ") || (std_my_VR == "00"))){
+        //   my_cursor = my_cursor;
+        // } else {
           my_cursor = my_cursor + my_VL;
           offset_count = offset_count + my_VL;
         }
         // prise en compte de endianness et VRness
-        if ((stdgrouptag == "0002")  &  (stdelementtag != "0000")){
+        if ((stdgrouptag == "0002")  &&  (stdelementtag != "0000")){
         // if ((stdgrouptag == grouptag_le)  &  (stdelementtag != "0000")){
           length_of_Group = length_of_Group - (my_cursor - counter_start);
           if (length_of_Group == 0) {
@@ -377,7 +377,7 @@ std::list <std::string> dicombrowser (std::vector <unsigned char> dicomrawdata,
         // fin prise en compte de endianness et VRness
 
         for (unsigned int i = 0; i<=encapsulation_level; i++) {
-          if ((encapsulation_load [i] != Undef_Length) & (encapsulation_load [i] != 0)) encapsulation_load [i] = encapsulation_load [i] - offset_count;
+          if ((encapsulation_load [i] != Undef_Length) && (encapsulation_load [i] != 0)) encapsulation_load [i] = encapsulation_load [i] - offset_count;
         }
 
         if (std_my_VR=="SQ"){

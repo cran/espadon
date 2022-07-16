@@ -63,7 +63,7 @@ get.line <- function (vol, origin = c (0, 0, 0),
   pt <-  sweep(sweep(M.grid,2,v1,"*"),2,origin,"+")
   # pt <- as.matrix(do.call(rbind.data.frame, lapply(grid, function(ind) ind*v1+ origin)))
   # colnames(pt) <- c("x","y","z")
-  ijk <- get.ijk.from.xyz(pt, vol)
+  ijk <- round(get.ijk.from.xyz(pt, vol),6)
   df <-as.data.frame(cbind (pt, s = grid, value= get.value.from.ijk(ijk, vol=vol,interpolate = interpolate)))
   
   return (df)

@@ -161,7 +161,8 @@ toy.load.patient <- function (
   # display.plane (b.PM.ext, view.type = "sagi", main = "PM.ext",view.coord = xyz.L.eye.G[3])
   if (rtstruct.f) {
     S <- struct.merge(S,struct.from.bin(b.PM.ext, roi.name = "patient" , roi.nb = 2,
-                                        roi.color = "#ffffff", external.only = TRUE))
+                                        roi.color = "#ffffff", roi.type = "EXTERNAL",
+                                        external.only = TRUE))
     # display.plane (struct = S, view.type = "sagi", main = "PM.ext")
   }
   
@@ -187,7 +188,8 @@ toy.load.patient <- function (
   
   if (rtstruct.f) {
     S <- struct.merge(S,struct.from.bin(b.couch, roi.name = "couch" , roi.nb = 1,
-                                        roi.color = "#808080", external.only = TRUE))
+                                        roi.color = "#808080", roi.type = "SUPPORT",
+                                        external.only = TRUE))
   }
   # display.plane (b.couch, view.type = "sagi", main = "couch")
   
@@ -222,9 +224,9 @@ toy.load.patient <- function (
     
     if (rtstruct.f) {
       S <- struct.merge(S,struct.from.bin(b.eye.L, roi.name = "left eye" , roi.nb = 3,
-                                          roi.color = "#ff0000", external.only = TRUE))
+                                          roi.color = "#ff0000", roi.type = "ORGAN", external.only = TRUE))
       S <- struct.merge(S,struct.from.bin(b.eye.R, roi.name = "right eye" , roi.nb = 4,
-                                          roi.color = "#00ff00", external.only = TRUE))
+                                          roi.color = "#00ff00", roi.type = "ORGAN", external.only = TRUE))
     }
    
     # display.plane (bin.sum (b.eye.L, b.eye.R), view.coord = xyz.L.eye.G[3], main = "eye L|R")
@@ -275,7 +277,7 @@ toy.load.patient <- function (
     
     if (rtstruct.f) {
       S <- struct.merge(S,struct.from.bin(b.brain.ext, roi.name = "brain" , roi.nb = 5,
-                                          roi.color = "#0080f0", external.only = TRUE))}
+                                          roi.color = "#0080f0", roi.type = "ORGAN", external.only = TRUE))}
     
     # brain interior
     PM1 <- (xyz[, 1] / (2.2 * PM.brain.radius - 3))^2 +
@@ -337,9 +339,9 @@ toy.load.patient <- function (
     b.on.s.L <- bin.subtraction(b.on.s.L, b.on.L)
     if (rtstruct.f) {
       S <- struct.merge(S,struct.from.bin(b.on.s.L, roi.name = "left optical nerve" , roi.nb = 6,
-                                          roi.color = "#8f0000", external.only = FALSE))
+                                          roi.color = "#8f0000", roi.type = "ORGAN", external.only = FALSE))
       S <- struct.merge(S,struct.from.bin(b.on.s.R, roi.name = "right optical nerve" , roi.nb = 7,
-                                          roi.color = "#008f00", external.only = FALSE))
+                                          roi.color = "#008f00", roi.type = "ORGAN", external.only = FALSE))
     }
     b.on <- bin.sum (b.on.L,b.on.R)
     rm(list = c("b.on.L","b.on.R","b.on.s.L","b.on.s.R"))
@@ -362,7 +364,7 @@ toy.load.patient <- function (
     # display.plane (b.gc.ext, view.type  = "sagi", main = "gc ext")
     if (rtstruct.f) {
       S <- struct.merge(S,struct.from.bin(b.gc.ext, roi.name = "ghost container" , roi.nb = 8,
-                                          roi.color = "#ff8800", external.only = TRUE))}
+                                          roi.color = "#ff8800", roi.type = "ORGAN", external.only = TRUE))}
     
     ## ghost container interior
     PM1 <- (xyz[, 1] / (2.2 * PM.gc.radius - 3))^2 +
@@ -388,7 +390,7 @@ toy.load.patient <- function (
     if (rtstruct.f) {
       S <- struct.merge(S, struct.from.bin(b.lpu, roi.name = "labyrinth processing unit" , 
                                            roi.nb = 9,
-                                           roi.color = "#f759cb", external.only = TRUE))}
+                                           roi.color = "#f759cb", roi.type = "ORGAN", external.only = TRUE))}
     # display.plane (b.lpu, view.type  = "sagi", main = "lab unit")
   }
   
@@ -438,7 +440,7 @@ toy.load.patient <- function (
     
     if (rtstruct.f) {
       S <- struct.merge(S,struct.from.bin(b.gz.ext, roi.name = "gizzard", roi.nb = 10,
-                                          roi.color = "#ffc914", external.only = TRUE))}
+                                          roi.color = "#ffc914", roi.type = "ORGAN", external.only = TRUE))}
   }
   # display.plane (b.gz.int, view.type  = "sagi", main = "gz int")
   
@@ -459,7 +461,7 @@ toy.load.patient <- function (
     
     if (rtstruct.f) {
       S <- struct.merge(S,struct.from.bin(b.ev, roi.name = "exhaust valve", roi.nb = 11,
-                                          roi.color = "#80ffff", external.only = TRUE))}
+                                          roi.color = "#80ffff", roi.type = "ORGAN", external.only = TRUE))}
   }
   # display.plane (b.ev, view.type  = "sagi", main = "gz int")
   ## energy unit
@@ -476,7 +478,7 @@ toy.load.patient <- function (
     
     if (rtstruct.f) {
       S <- struct.merge(S,struct.from.bin(b.eu, roi.name = "energy unit", roi.nb = 12,
-                                          roi.color = "#fa4305", external.only = TRUE))}
+                                          roi.color = "#fa4305", roi.type = "ORGAN", external.only = TRUE))}
     
     ## chaos energy flow eu to ghost container
     if (f.gc){
@@ -537,7 +539,8 @@ toy.load.patient <- function (
   b.ptv$vol3D.data[PM1] <- TRUE
   if (rtstruct.f) {
     S <- struct.merge(S,struct.from.bin(b.ptv, roi.name = "ptv" , roi.nb = 13,
-                                        roi.color = "#ff80ff", external.only = TRUE))
+                                        roi.color = "#ff80ff", roi.type = "PTV",
+                                        external.only = TRUE))
   }
   # }
   

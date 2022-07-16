@@ -53,6 +53,9 @@ display.3D.sections <- function(vol, cross.pt = c (0, 0, 0), display.ref = vol$r
   if (is.null(vol$vol3D.data)) 
     stop  ("empty vol$vol3D.data.")
   
+  ept <-get.extreme.pt(vol)
+  if (any(sign(c(cross.pt-ept[,1], ept[,2]-cross.pt))==-1)) 
+    stop("cross.pt is not included in the vol")
   
   vol_ <- vol.in.new.ref(vol, new.ref.pseudo = display.ref, T.MAT= T.MAT)
   

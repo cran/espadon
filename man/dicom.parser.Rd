@@ -7,6 +7,7 @@
 dicom.parser(
   dicom.raw.data,
   as.txt = TRUE,
+  nested.list = FALSE,
   try.parse = FALSE,
   txt.sep = "\\\\",
   txt.length = 100,
@@ -18,6 +19,9 @@ dicom.parser(
 
 \item{as.txt}{Boolean. If \code{as.txt = TRUE}, the function returns a
 dataframe, a list otherwise.}
+
+\item{nested.list}{Boolean. Only used if \code{as.txt = FALSE}. If
+\code{nested.list = FALSE}, the returned list consists  of nested lists.}
 
 \item{try.parse}{Boolean. If \code{TRUE}, the tag with unknown DICOM VR
 (value representation) is converted into string if possible.}
@@ -48,7 +52,10 @@ content of the DICOM TAGs included in the raw data.
 \examples{
 # content of the dummy raw data toy.dicom.raw (), as a list.
 L <- dicom.parser (toy.dicom.raw (), as.txt = FALSE)
-L[1:10]
+str(L[40:57])
+
+L <- dicom.parser (toy.dicom.raw (), as.txt = FALSE, nested.list = TRUE)
+str(L[40:45])
 
 # content of the dummy raw data toy.dicom.raw (), as a dataframe.
 L <- dicom.parser (toy.dicom.raw (), as.txt = TRUE)

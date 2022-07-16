@@ -49,9 +49,9 @@ If \code{full.info = FALSE}, dataframe columns are
 
 If \code{full.info = TRUE}, the following columns are added :
 \itemize{
-\item encaps.load : If the tag contains encapsulated data, this column gives
-the number of bytes remaining until the end of the encapsulation. If there
-are several levels of encapsulation, these numbers are collapsed and separated
+\item encaps.load : If the tag contains nested data, this column gives
+the number of bytes remaining until the end of the nesting. If there
+are several levels of nesting, these numbers are collapsed and separated
 by a space.
 \item load.start : the start address in \code{dicom.raw.data} of the tag load size.
 \item load.stop : the stop address in \code{dicom.raw.data}of the tag load size.

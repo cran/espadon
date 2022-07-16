@@ -152,7 +152,7 @@ get.plane <- function(vol, origin = c (0, 0, 0),
                           ref.pseudo = plane.ref, frame.of.reference = t.mat$ref.info[t.mat$ref.info$ref.pseudo == plane.ref, ]$ref,
                           alias = alias, number = vol$number, modality = vol$modality,  description = vol$description)
   
-  new.vol <- vol.regrid (v, back.vol, T.MAT=t.mat, interpolate = interpolate, alias = alias)
+  new.vol <- vol.regrid (v, back.vol, T.MAT=t.mat, interpolate = interpolate, alias = alias, verbose = FALSE)
   
   new.vol <- vol.in.new.ref (new.vol, vol$ref.pseudo, T.MAT=t.mat, alias = alias)
   new.vol$local.gridx <- new.grid.i

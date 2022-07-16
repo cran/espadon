@@ -72,16 +72,17 @@ display.3D.contour <- function (struct, roi.name = NULL, roi.sname = NULL, roi.i
   }
   for (sel in 1:length(s.idx)) { #struct$struct[[s.idx]]) {
     i <- s.idx[sel]
-    
-    for (j in 1:length (struct$roi.data[[i]])) {
-      pt <- as.matrix(cbind(struct$roi.data[[i]][[j]]$pt,1)) %*% t(M)
-      lines3d (pt[ ,1], pt[ ,2], pt[ ,3], col=col[sel], lwd=roi.lwd)
+    if (!is.null(struct$roi.data[[i]])){
+      for (j in 1:length (struct$roi.data[[i]])) {
+        pt <- as.matrix(cbind(struct$roi.data[[i]][[j]]$pt,1)) %*% t(M)
+        lines3d (pt[ ,1], pt[ ,2], pt[ ,3], col=col[sel], lwd=roi.lwd)
+      }
+      
+      pt <- as.numeric(c( struct$roi.info$Gx[i], struct$roi.info$Gy[i],struct$roi.info$Gz[i], 1) %*% t(M))
+      
+      if (roi.print) text3d (pt[1], pt[2], pt[3], struct$roi.info$roi.pseudo[i], 
+                             col=col[sel], cex=roi.cex, offset = 0, adj=0.5)
     }
-    
-    pt <- as.numeric(c( struct$roi.info$Gx[i], struct$roi.info$Gy[i],struct$roi.info$Gz[i], 1) %*% t(M))
-    
-    if (roi.print) text3d (pt[1], pt[2], pt[3], struct$roi.info$roi.pseudo[i], 
-                            col=col[sel], cex=roi.cex, offset = 0, adj=0.5)
   }
   
   

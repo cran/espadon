@@ -5,6 +5,10 @@
     .Call('_espadon_dicombrowser', PACKAGE = 'espadon', dicomrawdata, tagdico, nbTAG, stop_tag, stop_level, full_info, verbose)
 }
 
+.getvaluefromijkC <- function(vol3D, interpolate, i, j, k, k_idx, k_loc, n_ijk) {
+    .Call('_espadon_getvaluefromijkC', PACKAGE = 'espadon', vol3D, interpolate, i, j, k, k_idx, k_loc, n_ijk)
+}
+
 .labelbrowser <- function(vol3D, n_ijk) {
     .Call('_espadon_labelbrowser', PACKAGE = 'espadon', vol3D, n_ijk)
 }

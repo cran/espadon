@@ -40,6 +40,7 @@
 #' @import progress
 #' @importFrom methods is
 #' @export
+#' 
 vol.regrid <- function (vol, back.vol, T.MAT = NULL, interpolate = TRUE, alias = "", 
                         description=NULL, verbose = TRUE){
   
@@ -53,6 +54,7 @@ vol.regrid <- function (vol, back.vol, T.MAT = NULL, interpolate = TRUE, alias =
     return (NULL)
   }
   
+  
   if (grid.equal (vol, back.vol)) return (vol.copy (vol, alias = alias, modality = vol$modality, description =description))
   M.Tref <- get.rigid.M (T.MAT, back.vol$ref.pseudo, vol$ref.pseudo)
   
@@ -60,6 +62,8 @@ vol.regrid <- function (vol, back.vol, T.MAT = NULL, interpolate = TRUE, alias =
     warning ("vol$ref.pseudo and back.vol$ref.pseudo are different.")
     return (NULL)
   }
+  if (verbose) pb <- progress_bar$new(format = " processing [:bar] :percent",
+                                      total = 2, clear = FALSE, width= 60)
   if (is.null(description)) description<- vol$description
   new.vol <- vol.copy (back.vol, alias = alias, modality = vol$modality, description =description)
   new.vol$patient <- vol$patient
@@ -84,32 +88,64 @@ vol.regrid <- function (vol, back.vol, T.MAT = NULL, interpolate = TRUE, alias =
     warning ("non invertible matrix, check arguments.")
     return (NULL)
   }
+  
+  
   new.cube.idx <- solve (M.old.from.new) %*% vol$cube.idx
   rg.i <- floor (min(new.cube.idx[1,])):ceiling(max(new.cube.idx[1,]))
   rg.j <- floor (min(new.cube.idx[2,])):ceiling(max(new.cube.idx[2,]))
   rg.k <- floor (min(new.cube.idx[3,])):ceiling(max(new.cube.idx[3,]))
   rg.i <- rg.i[!is.na (match (rg.i,(1:new.vol$n.ijk[1])-1))]
   rg.j <- rg.j[!is.na (match (rg.j,(1:new.vol$n.ijk[2])-1))]
-  rg.k <- rg.k[!is.na (match (rg.k, new.vol$k.idx))]
-  n <- ceiling ((2^18) / (length(rg.i) * length(rg.j)))
-  i <- 0
-  N <- ceiling(length(rg.k)/n)
-# print(N)
-  if (verbose) pb <- progress_bar$new(format = " processing [:bar] :percent",
-                                      total = N, clear = FALSE, width= 60)
-  repeat {
-    k.idx <- rg.k[i + (1:n)]
-    k.idx <- k.idx[!is.na(k.idx)]
- 
-    if (length (k.idx)==0) break
-    ijk.selection <- as.matrix (expand.grid (rg.i, rg.j, k.idx, 1))
-    ijk.Rselection <- ijk.selection[ , 1:3] +1
-    ijk <-(ijk.selection %*% t(M.old.from.new))[ ,1:3]
-    new.vol$vol3D.data[ijk.Rselection] <- get.value.from.ijk (ijk, vol, interpolate)
-    i <- i+n
-    if (verbose) pb$tick()
-  }
-  #new.vol$vol3D.data[new.vol$vol3D.data<=1e-6] <- 0
+  back.rgk.loc <- match (rg.k, new.vol$k.idx)
+  fna <- is.na(back.rgk.loc)
+  rg.k <- rg.k[!fna]
+  
+  ijk.selection <- as.matrix (expand.grid (rg.i, rg.j, rg.k, 1))
+  
+  back.rgk.loc <-  back.rgk.loc[!fna]
+  ijk.Rselection <-  as.matrix (expand.grid (rg.i+1, rg.j+1, back.rgk.loc))
+  
+  
+  k.idx<- match(0:max(vol$k.idx),vol$k.idx)
+  k.loc <- k.idx-1
+  fna <- is.na(k.idx)
+  k.idx[!fna] <- vol$k.idx
+  k.loc[fna] <- max(vol$k.idx)+1
+  k.idx[fna] <- max(vol$k.idx)+1
+  
+  ijk <-matrix((ijk.selection %*% t(M.old.from.new))[ ,1:3],ncol=3)
+  if (verbose) pb$tick()
+  new.vol$vol3D.data[ijk.Rselection] <- .getvaluefromijkC (vol3D = as.numeric(vol$vol3D.data),
+                                                           interpolate = interpolate,
+                                                           i = as.numeric(ijk[ ,1]),
+                                                           j = as.numeric(ijk[ ,2]),
+                                                           k = as.numeric(ijk[ ,3]),
+                                                           k_idx = k.idx,
+                                                           k_loc = k.loc, n_ijk=vol$n.ijk)
+  
+  
+  # d <- round(seq(1,nrow(ijk.Rselection),2^20))
+  # f <-c(d-1, nrow(ijk.Rselection))
+  # f <- f[-1]
+  # if (verbose) pb <- progress_bar$new(format = " processing [:bar] :percent",
+  #                                     total = length(d), clear = FALSE, width= 60)
+  # 
+  # for(i in 1:length(d)){
+  #   ijk <-matrix((ijk.selection[d[i]:f[i],] %*% t(M.old.from.new))[ ,1:3],ncol=3)
+  #   new.vol$vol3D.data[ijk.Rselection[d[i]:f[i],]] <- .getvaluefromijkC (vol3D = as.numeric(vol$vol3D.data),
+  #                                                                        interpolate = interpolate,
+  #                                                                        i = as.numeric(ijk[ ,1]), 
+  #                                                                        j = as.numeric(ijk[ ,2]),
+  #                                                                        k = as.numeric(ijk[ ,3]),
+  #                                                                        k_idx = k.idx,
+  #                                                                        k_loc = k.loc, n_ijk=vol$n.ijk)
+  # 
+  # if (verbose) pb$tick()
+  # }
+  if (verbose) pb$tick()
+  new.vol$vol3D.data[is.nan(new.vol$vol3D.data)] <- NA
+  new.vol$vol3D.data[abs(new.vol$vol3D.data)<=1e-6] <- 0
+  
   if (any(!is.na(new.vol$vol3D.data))){
     new.vol$min.pixel <- min ( new.vol$vol3D.data, na.rm=TRUE)
     new.vol$max.pixel <- max ( new.vol$vol3D.data, na.rm=TRUE)

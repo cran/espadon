@@ -157,12 +157,15 @@ rt.indices.from.bin <- function (vol,
     L.healthy.idx <- L.healthy.idx[!is.na(L.healthy.idx)]
     if (length(L.healthy.idx)==0) L.healthy.idx <- NULL
     
+    if (verbose) pb <- progress_bar$new(format = " processing [:bar] :percent",
+                                        total = length(bin.L), clear = FALSE, width= 60)
     vol.L <- list()
     for (l.idx in 1:length(bin.L)) {
       l <- bin.L[[l.idx]]
       vol_ <- vol
-      if (!grid.equal(vol_,l)) vol_ <- vol.regrid(vol,l,T.MAT=T.MAT)
+      if (!grid.equal(vol_,l)) vol_ <- vol.regrid(vol,l,T.MAT=T.MAT, verbose = FALSE)
       vol.L[[l.idx]] <- vol.from.bin(vol_,l, alias = l$object.alias, description=l$description)
+      if (verbose) pb$tick()
     }
     names(vol.L) <- vol.names
   }

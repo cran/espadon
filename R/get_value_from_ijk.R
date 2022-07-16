@@ -31,94 +31,105 @@ get.value.from.ijk <- function (ijk, vol, interpolate = TRUE)  {
     warning ("vol should be a volume class object.")
     return (NULL)
   }
-  
   toC3M <- function (vect) {return(matrix(vect,ncol=3))}
   ijk <- toC3M (ijk)
-  value <- rep(NA,nrow(ijk))
-  if (!interpolate) {
-    round.idx <- floor (ijk + 0.5) + 1
-    
-    keep <- !is.na (match (round.idx[,1],(1:vol$n.ijk[1]))) &
-      !is.na (match (round.idx[,2],(1:vol$n.ijk[2]))) &
-      !is.na (match (round.idx[,3],vol$k.idx + 1))
-    keep.map.ind <- toC3M(round.idx[keep,])
-    if (vol$missing.k.idx) keep.map.ind[,3] <- (1:vol$n.ijk[3])[match(keep.map.ind[,3],vol$k.idx + 1)]
-    
-    value[keep] <- vol$vol3D.data[keep.map.ind]
-    
-  } else {
-    idx000 <- floor (ijk) + 1
-    idx111 <- floor (ijk) + 2
-    keep <- rep(TRUE, nrow(ijk))
-    if (vol$n.ijk[1]>1) {
-      keep <- keep & !is.na (match (idx000[,1],(1:vol$n.ijk[1]))) & 
-        !is.na (match (idx111[,1],(1:vol$n.ijk[1])))
-    } else {
-      keep <- keep & (idx000[,1]==1)
-    }
-    if (vol$n.ijk[2]>1) {
-      keep <- keep & !is.na (match (idx000[,2],(1:vol$n.ijk[2]))) & 
-        !is.na (match (idx111[,2],(1:vol$n.ijk[2])))
-    } else {
-      keep <- keep & (idx000[,2]==1)
-    }
-    if (vol$n.ijk[3]>1) {
-      keep <- keep & !is.na (match (idx000[,3],vol$k.idx + 1)) & 
-        !is.na (match (idx111[,3],vol$k.idx + 1))
-    } else {
-      keep <- keep & (idx000[,3]== vol$k.idx + 1)
-    }
-    
-    idx000.keep <- toC3M(idx000[keep,])
-    idx111.keep <- toC3M(idx111[keep,])
-    ijk.keep <- toC3M(ijk[keep,]) + 1
-    if (vol$missing.k.idx) {
-      idx000.keep[,3] <- (1:vol$n.ijk[3])[match(idx000.keep[,3],vol$k.idx + 1)]
-      idx111.keep[,3] <- (1:vol$n.ijk[3])[match(idx111.keep[,3],vol$k.idx + 1)]
-      ijk.keep[,3] <- (1:vol$n.ijk[3])[match(ijk.keep[,3],vol$k.idx + 1)]
-    }
-    
-    muvw <- 1 + idx000.keep - ijk.keep
-    puvw <- 1 - idx111.keep + ijk.keep
-    
-    
-    V000 <- vol$vol3D.data [idx000.keep] * muvw[ , 1] * muvw[ , 2] * muvw[ , 3]
-    if (vol$n.ijk[3]>1) {
-      V001 <- vol$vol3D.data [cbind (idx000.keep[, 1], idx000.keep[, 2], idx111.keep[, 3])] * muvw[ , 1] * muvw[ , 2] * puvw[ , 3]
-    }else {
-      V001 <- rep(0, nrow(puvw))
-    } 
-    if (vol$n.ijk[2]>1) {
-      V010 <- vol$vol3D.data [cbind (idx000.keep[, 1], idx111.keep[, 2], idx000.keep[, 3])] * muvw[ , 1] * puvw[ , 2] * muvw[ , 3]
-    } else {
-      V010 <- rep(0, nrow(puvw))
-    } 
-    if ((vol$n.ijk[2]>1) & (vol$n.ijk[3]>1) ){
-      V011 <- vol$vol3D.data [cbind (idx000.keep[, 1], idx111.keep[, 2], idx111.keep[, 3])] * muvw[ , 1] * puvw[ , 2] * puvw[ , 3]
-    } else {
-      V011 <- rep(0, nrow(puvw))
-    }
-    if (vol$n.ijk[1]>1) {
-      V100 <- vol$vol3D.data [cbind (idx111.keep[, 1], idx000.keep[, 2], idx000.keep[, 3])] * puvw[ , 1] * muvw[ , 2] * muvw[ , 3]
-    } else {
-      V100 <- rep(0, nrow(puvw))
-    }
-    if ((vol$n.ijk[1]>1) & (vol$n.ijk[3]>1) ){
-      V101 <- vol$vol3D.data [cbind (idx111.keep[, 1], idx000.keep[, 2], idx111.keep[, 3])] * puvw[ , 1] * muvw[ , 2] * puvw[ , 3]
-    } else {
-      V101 <- rep(0, nrow(puvw))
-    } 
-    if ((vol$n.ijk[1]>1) & (vol$n.ijk[2]>1) ){
-      V110 <- vol$vol3D.data [cbind (idx111.keep[, 1], idx111.keep[, 2], idx000.keep[, 3])] * puvw[ , 1] * puvw[ , 2] * muvw[ , 3]
-    } else {
-      V110 <- rep(0, nrow(puvw))
-    }
-    if ((vol$n.ijk[1]>1) & (vol$n.ijk[2]>1) & (vol$n.ijk[3]>1) ){
-      V111 <- vol$vol3D.data [idx111.keep] * puvw[ , 1] * puvw[ , 2] * puvw[ , 3]
-    } else {
-      V111 <- rep(0, nrow(puvw))
-    }
-    value[keep]  <- V000 + V001 + V010 + V011 + V100 + V101 + V110 + V111
-  }
+
+  k.idx<- match(0:max(vol$k.idx),vol$k.idx)
+  k.loc <- k.idx-1
+  fna <- is.na(k.idx)
+  k.idx[!fna] <- vol$k.idx
+  k.loc[fna] <- max(vol$k.idx)+1
+  k.idx[fna] <- max(vol$k.idx)+1
+  
+  value <- .getvaluefromijkC (vol3D = as.numeric(vol$vol3D.data),
+                              interpolate = interpolate,
+                              i = as.numeric(ijk[ ,1]),
+                              j = as.numeric(ijk[ ,2]),
+                              k = as.numeric(ijk[ ,3]),
+                              k_idx = k.idx,
+                              k_loc = k.loc, n_ijk=vol$n.ijk)
+  
+  value [is.nan(value)] <- NA
   return(value)
+
+
+  # value <- rep(NA,nrow(ijk))
+  # if (!interpolate) {
+  #   round.idx <- floor (ijk + 0.5) + 1
+  # 
+  #   keep <- !is.na (match (round.idx[,1],(1:vol$n.ijk[1]))) &
+  #     !is.na (match (round.idx[,2],(1:vol$n.ijk[2]))) &
+  #     !is.na (match (round.idx[,3],vol$k.idx + 1))
+  #   keep.map.ind <- toC3M(round.idx[keep,])
+  #   if (vol$missing.k.idx) keep.map.ind[,3] <- (1:vol$n.ijk[3])[match(keep.map.ind[,3],vol$k.idx + 1)]
+  # 
+  #   value[keep] <- vol$vol3D.data[keep.map.ind]
+  # 
+  # } else {
+  #   idx000 <- floor (ijk) + 1
+  #   idx111 <- floor (ijk) + 2
+  #   keep <- rep(TRUE, nrow(ijk))
+  #   if (vol$n.ijk[1]>1) {
+  #     keep <- keep & !is.na (match (idx000[,1],(1:vol$n.ijk[1]))) &
+  #       !is.na (match (idx111[,1],(1:vol$n.ijk[1])))
+  #   } else {
+  #     keep <- keep & (idx000[,1]==1)
+  #   }
+  #   if (vol$n.ijk[2]>1) {
+  #     keep <- keep & !is.na (match (idx000[,2],(1:vol$n.ijk[2]))) &
+  #       !is.na (match (idx111[,2],(1:vol$n.ijk[2])))
+  #   } else {
+  #     keep <- keep & (idx000[,2]==1)
+  #   }
+  #   if (vol$n.ijk[3]>1) {
+  #     keep <- keep & !is.na (match (idx000[,3],vol$k.idx + 1)) &
+  #       !is.na (match (idx111[,3],vol$k.idx + 1))
+  #   } else {
+  #     keep <- keep & (idx000[,3]== vol$k.idx + 1)
+  #   }
+  # 
+  #   idx000.keep <- toC3M(idx000[keep,])
+  #   idx111.keep <- toC3M(idx111[keep,])
+  #   ijk.keep <- toC3M(ijk[keep,]) + 1
+  # 
+  #   muvw <- 1 + idx000.keep - ijk.keep
+  #   puvw <- 1 - idx111.keep + ijk.keep
+  # 
+  #   if (vol$missing.k.idx) {
+  #     idx000.keep[,3] <- (1:vol$n.ijk[3])[match(idx000.keep[,3],vol$k.idx + 1)]
+  #     idx111.keep[,3] <- (1:vol$n.ijk[3])[match(idx111.keep[,3],vol$k.idx + 1)]
+  #     # ijk.keep[,3] <- (1:vol$n.ijk[3])[match(ijk.keep[,3],vol$k.idx + 1)]
+  #   }
+  # 
+  # 
+  #   value[keep] <- vol$vol3D.data [idx000.keep] * muvw[ , 1] * muvw[ , 2] * muvw[ , 3]
+  #   if (vol$n.ijk[3]>1) {
+  #     value[keep] <- value[keep] + vol$vol3D.data [cbind (idx000.keep[, 1], idx000.keep[, 2], idx111.keep[, 3])] * muvw[ , 1] * muvw[ , 2] * puvw[ , 3]
+  #   }
+  #   
+  #   if (vol$n.ijk[2]>1) {
+  #     value[keep] <- value[keep] + vol$vol3D.data [cbind (idx000.keep[, 1], idx111.keep[, 2], idx000.keep[, 3])] * muvw[ , 1] * puvw[ , 2] * muvw[ , 3]
+  #   }
+  #   
+  #   if ((vol$n.ijk[2]>1) & (vol$n.ijk[3]>1) ){
+  #     value[keep] <- value[keep] + vol$vol3D.data [cbind (idx000.keep[, 1], idx111.keep[, 2], idx111.keep[, 3])] * muvw[ , 1] * puvw[ , 2] * puvw[ , 3]
+  #   } 
+  #   
+  #   if (vol$n.ijk[1]>1) {
+  #     value[keep] <- value[keep] + vol$vol3D.data [cbind (idx111.keep[, 1], idx000.keep[, 2], idx000.keep[, 3])] * puvw[ , 1] * muvw[ , 2] * muvw[ , 3]
+  #   } 
+  #   
+  #   if ((vol$n.ijk[1]>1) & (vol$n.ijk[3]>1) ){
+  #     value[keep] <- value[keep] + vol$vol3D.data [cbind (idx111.keep[, 1], idx000.keep[, 2], idx111.keep[, 3])] * puvw[ , 1] * muvw[ , 2] * puvw[ , 3]
+  #   } 
+  #   
+  #   if ((vol$n.ijk[1]>1) & (vol$n.ijk[2]>1) ){
+  #     value[keep] <- value[keep] + vol$vol3D.data [cbind (idx111.keep[, 1], idx111.keep[, 2], idx000.keep[, 3])] * puvw[ , 1] * puvw[ , 2] * muvw[ , 3]
+  #   } 
+  #   
+  #   if ((vol$n.ijk[1]>1) & (vol$n.ijk[2]>1) & (vol$n.ijk[3]>1) ){
+  #     value[keep] <- value[keep] + vol$vol3D.data [idx111.keep] * puvw[ , 1] * puvw[ , 2] * puvw[ , 3]
+  #   } 
+  # }
+  # return(value)
 }

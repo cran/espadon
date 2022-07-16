@@ -323,6 +323,11 @@
     header$object.info$scanning.sequence <- object.info$scanning.sequence
     header$object.info$SOP.label <- data[[grep("^[(]0008,0018[)]$",name)]]
     header$object.info$encoding <- tryCatch (data[[grep("^[(]0008,0005[)]$",name)]],error = function (e) "")
+    conv_idx <- integer(0)
+    if(header$object.info$encoding!="") {
+      conv_idx <- grep(paste0("^",tolower (gsub("[[:space:],_,-]", "", header$object.info$encoding)),"$"),
+                       tolower (gsub("[[:space:],_,-]", "", iconvlist())))}
+      
     if (Rdcm.mode) {
       header$object.info$dicom.file  <- sort(basename(filename))
       }
@@ -376,12 +381,9 @@
       
       flag.idx <- grep("[(]3006,0026[)]$", names (L_))
       if (length (flag.idx)) header$roi.info$name[idx.roi[flag.idx]] <- as.character(unlist(L_[flag.idx]))
+
+      if (length(conv_idx)>0) header$roi.info$name <- iconv(header$roi.info$name,iconvlist()[conv_idx[1]])
       
-      if(header$object.info$encoding!="") {
-        conv_idx <- grep(paste0("^",tolower (gsub("[[:space:],_,-]", "", header$object.info$encoding,"$"))),
-                         tolower (gsub("[[:space:],_,-]", "", iconvlist())))
-        if (length(conv_idx)>0) header$roi.info$name <- iconv(header$roi.info$name,iconvlist()[conv_idx[1]])
-      }
       
       flag.idx <- grep("[(]3006,0028[)]$", names (L_))
       if (length (flag.idx)) header$roi.info$description[idx.roi[flag.idx]] <- as.character(unlist(L_[flag.idx]))
@@ -409,6 +411,35 @@
       
       header$roi.info$roi.pseudo <- tolower (gsub("[[:space:],_]", "", iconv (header$roi.info$name,  to="ASCII//TRANSLIT")))
       
+      
+      
+      db.name <- c ("(3006,0080)(3006,0082)","(3006,0080)(3006,0084)","(3006,0080)(3006,0085)",
+                    "(3006,0080)(3006,0086) item1 (0008,0100)","(3006,0080)(3006,0086) item1 (0008,0102)",
+                    "(3006,0080)(3006,0086) item1 (0008,0103)","(3006,0080)(3006,0086) item1 (0008,0104)",
+                    "(3006,0080)(3006,00A4)","(3006,0080)(3006,00A")
+      
+      
+      db.tag <- do.call(rbind.data.frame, lapply (db.name, function(l) unlist(strsplit(l,"[)][(]"))))
+      colnames(db.tag) <- NULL   
+      
+      header$roi.obs <- array("", dim=c(header$nb.of.roi,length(db.name)))
+      colnames(header$roi.obs) <- c("nb", "roi.nb", "label", "code.value", 
+                                    "code.scheme", "code.scheme.v","code.meaning","type", "interpreter")
+      rc.db <- expand.grid(1:header$nb.of.roi, 1:length(db.name))
+      tag.list <- apply(rc.db,1, function(rc){paste0(db.tag[as.numeric(rc[2]),1],") item",
+                                                     as.numeric(rc[1])," (",
+                                                     db.tag[as.numeric(rc[2]),2])})
+      ma <- match(tag.list, name)
+      not.na <- which(!is.na(ma))
+      header$roi.obs[as.matrix(rc.db[not.na,])] <- sapply (data[ma[not.na]],paste,collapse="\\")
+      
+      header$roi.obs <- data.frame(header$roi.obs,stringsAsFactors = F)
+      header$roi.obs[is.na(header$roi.obs)] <- ""
+      if (length(conv_idx)>0) {
+        header$roi.obs$label <- iconv(header$roi.obs$label,iconvlist()[conv_idx[1]])
+        header$roi.obs$code.meaning <- iconv(header$roi.obs$code.meaning,iconvlist()[conv_idx[1]])
+        header$roi.obs$interpreter <- iconv(header$roi.obs$interpreter,iconvlist()[conv_idx[1]])
+      }
     }
     d <- list()
     d[[1]]<- data
@@ -1298,15 +1329,15 @@
     header_$number <- img.idx
     if (Rdcm.mode) {
       header$file.basename <- paste(object.info$outfilename,img.idx, ".Rdcm", sep="")
-      header$object.info$dicom.file  <- sort(basename(fn))
+      header$object.info$dicom.file  <- basename(fn)
     } else {
-      header$file.basename <- sort(basename(fn))
+      header$file.basename <- basename(fn)
       header$file.dirname <- unique(dirname(fn))
     }
     
     header$object.alias <- paste(object.info$outfilename, img.idx, sep="")
     
-    header$object.info$SOP.label <- sort(unique(tryCatch (sapply(dat, function (d) d[[grep("^[(]0008,0018[)]$",names(d))]]),error = function (e)  "")))
+    header$object.info$SOP.label <- tryCatch (sapply(dat, function (d) d[[grep("^[(]0008,0018[)]$",names(d))]]),error = function (e)  "")
     
     # 
     # header$ref.object.info$SOP.ID <- unique(unlist(lapply(dat, function (d) 
@@ -1374,6 +1405,13 @@
           machine.xyz0 <- machine.xyz0[Z.order,]
           
           header_$patient.xyz0 <- header_$patient.xyz0[Z.order, ]
+          header$object.info$SOP.label  <- header$object.info$SOP.label[Z.order] 
+          if (Rdcm.mode) {
+            header$object.info$dicom.file  <- header$object.info$dicom.file[Z.order] 
+          } else {
+            header$file.basename <-  header$file.basename[Z.order] 
+          }
+          
           #on corrige l'ordre des DICOM
           dat <- dat[Z.order]
           add <- add[Z.order]
@@ -2165,6 +2203,9 @@
   } else {
     if (!is.null(Lobj$data)) L$vol3D.data <- Lobj$data
   }
+  if (L$missing.k.idx) 
+  warning(paste("some imaging plans of",L$object.alias, 
+                "are missing. Some results of espadon calculations are unpredictable") )
   return (L)
 }
 

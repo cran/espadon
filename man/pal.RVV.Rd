@@ -20,7 +20,7 @@ i.e. \code{"#000000"}) and above +1000HU (by default, white, i.e. \code{"#FFFFFF
 Returns a vector of colors of size \code{n}.
 }
 \description{
-The \code{build.RVV.pal} function produces a color palette where
+The \code{RVV.pal} function produces a color palette where
 Hounsfield Units in the range -1000 HU to 1000 HU are converted into
 realistically colorized virtual anatomy (for use with CT), developped by
 \emph{J.C. Silverstein and al} [1]

@@ -6,6 +6,8 @@
 #' @param dicom.raw.data Raw vector, representing the binary extraction of the DICOM file.
 #' @param as.txt Boolean. If \code{as.txt = TRUE}, the function returns a 
 #' dataframe, a list otherwise.
+#' @param nested.list Boolean. Only used if \code{as.txt = FALSE}. If 
+#' \code{nested.list = FALSE}, the returned list consists  of nested lists.
 #' @param try.parse Boolean. If \code{TRUE}, the tag with unknown DICOM VR 
 #' (value representation) is converted into string if possible.
 # @param txt.sep String. Used if \code{as.txt = TRUE}. See Note.
@@ -33,14 +35,17 @@
 #' @examples
 #' # content of the dummy raw data toy.dicom.raw (), as a list.
 #' L <- dicom.parser (toy.dicom.raw (), as.txt = FALSE)
-#' L[1:10]
+#' str(L[40:57])
+#' 
+#' L <- dicom.parser (toy.dicom.raw (), as.txt = FALSE, nested.list = TRUE)
+#' str(L[40:45])
 #' 
 #' # content of the dummy raw data toy.dicom.raw (), as a dataframe.
 #' L <- dicom.parser (toy.dicom.raw (), as.txt = TRUE)
 #' str (L)
 
 #' @export
-dicom.parser <- function (dicom.raw.data, as.txt=TRUE, try.parse = FALSE, txt.sep = "\\", 
+dicom.parser <- function (dicom.raw.data, as.txt=TRUE, nested.list = FALSE, try.parse = FALSE, txt.sep = "\\", 
                           txt.length = 100, tag.dictionary = dicom.tag.dictionary ()){
   if (!is.raw(dicom.raw.data)) {
     warning ("dicom.raw.data should be raw data :).")
@@ -53,7 +58,27 @@ dicom.parser <- function (dicom.raw.data, as.txt=TRUE, try.parse = FALSE, txt.se
                                                          dicom.raw.data,try.parse=try.parse))
   names(L) <- dicom.df$tag
   
-  if (!as.txt) return(L)
+  if (!as.txt & !nested.list) return(L)
+  if (nested.list) {
+    n <- names(L)
+    encaps <- as.numeric(sapply(n,function(st) length(unlist(strsplit(st," ")))))
+    parent.encaps.idx <- sapply( 1:length(encaps), function(i)
+      rev(which((encaps[1:i] == encaps[i]-1)))[1])
+    seq.idx <- !is.na(match(1:length(encaps),unique (parent.encaps.idx[!is.na(parent.encaps.idx)])))
+    
+    l <- lapply(1: length(L),function(i) NULL)
+    names(l)  <- sapply(names(L), function(str) rev(unlist(strsplit(str," ")))[1])
+    l[!seq.idx] <- L[!seq.idx]
+    
+    for (i in max(encaps):2){
+      ei <- which(encaps==i)
+      li <- unique(parent.encaps.idx[ei])
+      for (ej in li)
+        l[[ej]] <-   l[ei[ej==parent.encaps.idx[ei]]]
+    }
+    l[encaps>1] <- NULL
+    return (l)
+  }
   
   db <- dicom.df[, c(1:2)]
   colnames( db) <- c ("TAG", "VR")
@@ -61,10 +86,20 @@ dicom.parser <- function (dicom.raw.data, as.txt=TRUE, try.parse = FALSE, txt.se
   db$VM <- tag.dictionary[match(dbtag,tag.dictionary$tag),"name"]
   
   db$loadsize <- sapply(L, function (l) length(l))
+  
+  encoding <- L[["(0008,0005)"]]
+  if(!is.null(encoding)) {
+    conv_idx <- grep(paste0("^",tolower (gsub("[[:space:],_,-]", "", encoding)),"$"),
+                     tolower (gsub("[[:space:],_,-]", "", iconvlist())))
+    if (length(conv_idx)>0) {encoding <- iconvlist()[conv_idx[1]]
+    } else encoding <- NULL
+  }
+  
   db$Value <- sapply(L, function (l) {
     if (length(l)==0) return("")
     if (is.na(l[1])) return("")
-    lc <- as.character(l)
+    if (is.character(l) & !is.null(encoding)){ lc <- iconv(l, encoding)
+    } else {lc <- as.character(l)}
     llc <- length(lc)
     cum <- cumsum (nchar(lc) + nchar(txt.sep))
     if (cum[llc] <= txt.length + nchar(txt.sep))  return(paste(lc[1:llc], collapse=txt.sep))

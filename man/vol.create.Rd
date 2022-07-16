@@ -51,8 +51,8 @@ created object.}
 \value{
 Returns a "volume" class object (see \link[espadon]{espadon.class}
 for class definitions), in which the grid is defined by  \code{pt000} or
-\code{mid.pt}, \code{dxyz}   \code{n.ijk}. All \code{$vol3D.data} are
-initialized to \code{FALSE} if  \code{modality = "binary"}, \code{NA} otherwise.
+\code{mid.pt}, \code{dxyz} \code{n.ijk}. If \code{default.value} are
+initialized to \code{FALSE}, then \code{modality = "binary"}.
 The orientation of the patient is orthonormal to the grid.
 }
 \description{

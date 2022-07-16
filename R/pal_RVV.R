@@ -1,5 +1,5 @@
 #' Conversion of Hounsfied Units to Realistic Volume Vizualization colors
-#' @description The \code{build.RVV.pal} function produces a color palette where 
+#' @description The \code{RVV.pal} function produces a color palette where 
 #' Hounsfield Units in the range -1000 HU to 1000 HU are converted into 
 #' realistically colorized virtual anatomy (for use with CT), developped by 
 #' \emph{J.C. Silverstein and al} \[1\]
