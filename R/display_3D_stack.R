@@ -79,69 +79,69 @@ display.3D.stack <- function (vol,
   } else {
     breaks <- .pixel.scale (imin,imax,length(col))
   }
-  breaks[1] <- imin - 1
-  breaks[length (breaks)] <- imax + 1
+  if (breaks[1]>imin) breaks[1] <- imin - 1
+  if (breaks[length (breaks)]<imax) breaks[length (breaks)] <- imax + 1
   
   color  <- substr(col,1,7)
   alpha <- substr(col,8,9)
   if (nchar(alpha[1])==0) alpha= rep ("ff",length(col))
+  cube_disp <- vol$cube.idx
+  cube_disp[c(1:3,6:7,11,13,15,17:18,22,29)] <- cube_disp[c(1:3,6:7,11,13,15,17:18,22,29)] - 0.5
+  cube_disp[c(5,9:10,14,19,21,23,25:27,30:31)] <- cube_disp[c(5,9:10,14,19,21,23,25:27,30:31)] + 0.5
   
   if (cube & !any (apply(vol$cube.idx == 0 ,1, all))){
 
     line <-unique (do.call(rbind.data.frame,lapply(1:ncol(vol$cube.idx), function(i) 
       data.frame(a=rep(i,3),b=which(apply(sweep(vol$cube.idx,1,vol$cube.idx[,i])==0,2,sum)==3)))))
 
-    pt <- (M %*% vol$xyz.from.ijk %*% vol$cube.idx)[1:3,]
+    pt <- (M %*% vol$xyz.from.ijk %*% cube_disp)[1:3,]
     for (i in 1:nrow(line)) rgl::segments3d (t (pt[ ,c (line[i,1], line[i,2])]), color = line.col, lwd=line.lwd)
   }
 
-
-    for (k in k.idx){
-
-      p <- vol$cube.idx[,1:4]
-      p[3,] <- k
-      pt <- (M %*% vol$xyz.from.ijk %*% p)[1:3,]
-      if (border){    
-        segments3d (t (pt[,c(1,2)]), color=line.col, lwd=line.lwd)
-        segments3d (t (pt[,c(2,3)]), color=line.col, lwd=line.lwd)
-        segments3d (t (pt[,c(3,4)]), color=line.col, lwd=line.lwd)
-        segments3d (t (pt[,c(4,1)]), color=line.col, lwd=line.lwd)
+  for (k in k.idx){
+    p <- cube_disp[,1:4]
+    p[3,] <- k
+    pt <- (M %*% vol$xyz.from.ijk %*% p)[1:3,]
+    if (border){    
+      segments3d (t (pt[,c(1,2)]), color=line.col, lwd=line.lwd)
+      segments3d (t (pt[,c(2,3)]), color=line.col, lwd=line.lwd)
+      segments3d (t (pt[,c(3,4)]), color=line.col, lwd=line.lwd)
+      segments3d (t (pt[,c(4,1)]), color=line.col, lwd=line.lwd)
+      
+      if (ktext) texts3d(t (pt[,c(1)]), texts=paste0("k=",k," "), 
+                         color=line.col,cex=cex, adj=1)  
+    }
+      
+    idx <- which (k == vol$k.idx)
+    map <-  array(vol$vol3D.data[ , ,idx],dim=vol$n.ijk[1:2])
+    
+    if(!all(is.na(map))){
+      cut.map <- cut (as.numeric (map),breaks, include.lowest=TRUE)
+      alpha.layer <-  matrix (alpha[cut.map], nrow=nrow(map))
+      map.layer <- matrix (color[cut.map], nrow=nrow(map))
+      ind <- which(alpha.layer!="00", arr.ind = T) 
+      
+      if(nrow(ind)>0){
+        pt.ijk <- as.matrix(cbind(as.data.frame(ind)-1,k=vol$k.idx[idx],t=1))
         
-        if (ktext) texts3d(t (pt[,c(1)]), texts=paste0("k=",k," "), 
-                           color=line.col,cex=cex, adj=1)  
-      }
-      
-      
-      idx <- which (k == vol$k.idx)
-      map <- vol$vol3D.data[ , ,idx]
-      
-      if(!all(is.na(map))){
-        cut.map <- cut (as.numeric (map),breaks, include.lowest=TRUE)
-        alpha.layer <-  matrix (alpha[cut.map], nrow=nrow(map))
-        map.layer <- matrix (color[cut.map], nrow=nrow(map))
-        ind <- which(alpha.layer!="00", arr.ind = T) 
+        pt <- (as.matrix(cbind(as.data.frame(ind)-1,k=vol$k.idx[idx],t=1)) %*% t(M %*% vol$xyz.from.ijk))
+        A <- (as.matrix (sweep(pt.ijk,2, c ( 0.5,  0.5, 0, 0))) %*% t(M %*% vol$xyz.from.ijk))
+        B <- (as.matrix (sweep(pt.ijk,2, c (-0.5,  0.5, 0, 0))) %*% t(M %*% vol$xyz.from.ijk))
+        C <- (as.matrix (sweep(pt.ijk,2, c (-0.5, -0.5, 0, 0))) %*% t(M %*% vol$xyz.from.ijk))
+        D <- (as.matrix (sweep(pt.ijk,2, c ( 0.5, -0.5, 0, 0))) %*% t(M %*% vol$xyz.from.ijk))
         
-        if(nrow(ind)>0){
-          pt.ijk <- as.matrix(cbind(as.data.frame(ind)-1,k=vol$k.idx[idx],t=1))
-          
-          pt <- (as.matrix(cbind(as.data.frame(ind)-1,k=vol$k.idx[idx],t=1)) %*% t(M %*% vol$xyz.from.ijk))
-          A <- (as.matrix (sweep(pt.ijk,2, c ( 0.5,  0.5, 0, 0))) %*% t(M %*% vol$xyz.from.ijk))
-          B <- (as.matrix (sweep(pt.ijk,2, c (-0.5,  0.5, 0, 0))) %*% t(M %*% vol$xyz.from.ijk))
-          C <- (as.matrix (sweep(pt.ijk,2, c (-0.5, -0.5, 0, 0))) %*% t(M %*% vol$xyz.from.ijk))
-          D <- (as.matrix (sweep(pt.ijk,2, c ( 0.5, -0.5, 0, 0))) %*% t(M %*% vol$xyz.from.ijk))
-          
-          mesh <- list()
-          mesh$vb <- t((rbind(A,B,C,D)))
-          mesh$qu <- rbind(1:nrow(A),(1:nrow(A))+nrow(A),(1:nrow(A))+2*nrow(A),(1:nrow(A))+3*nrow(A))
-          material <-material3d()
-          material$specular = "black"
-          material$color <- as.character(map.layer[ind])
-          material$lit <- FALSE
-          m <- mesh3d(vertices=mesh$vb, quads=mesh$qu , meshColor="faces", material=material)
-          
-          shade3d(m)
-        }
+        mesh <- list()
+        mesh$vb <- t((rbind(A,B,C,D)))
+        mesh$qu <- rbind(1:nrow(A),(1:nrow(A))+nrow(A),(1:nrow(A))+2*nrow(A),(1:nrow(A))+3*nrow(A))
+        material <-material3d()
+        material$specular = "black"
+        material$color <- as.character(map.layer[ind])
+        material$lit <- FALSE
+        m <- mesh3d(vertices=mesh$vb, quads=mesh$qu , meshColor="faces", material=material)
+        
+        shade3d(m)
       }
     }
+  }
 
 }

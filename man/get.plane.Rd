@@ -43,6 +43,8 @@ at \code{k = 0}, in the same frame of reference as \code{vol}.
 This returned object has 2 new fields \code{local.xgrid}, and \code{local.ygrid},
 representing the local grids of the abscissa (columns) and ordinate (rows)
 of the plane.
+
+Returns \code{NULL} if plane doesn't exist.
 }
 \description{
 The \code{get.plane} function extracts a plane from a "volume"

@@ -99,7 +99,8 @@ display.kplane <- function(vol, k = vol$k.idx [ceiling (length (vol$k.idx) / 2)]
   # j.idx <- which((c(0, 1, 0, 0) %*% t(vol$xyz.from.ijk))!=0)[1]
   # k.idx <- which((c(0, 0, k, 1) %*% t(vol$xyz.from.ijk))!=0)[1]
   
-  map <- aperm (vol$vol3D.data[,,which(k==vol$k.idx)], perm=c (2, 1))
+  map <- aperm (as.matrix(vol$vol3D.data[,,which(k==vol$k.idx)], 
+                          dim =vol$n.ijk[1:2] ), perm=c (2, 1))
   
   rg.min <- pt00
   rg.max <- pt00 + (vol$n.ijk[1:2]-1) * dxy[1:2]
@@ -150,7 +151,7 @@ display.kplane <- function(vol, k = vol$k.idx [ceiling (length (vol$k.idx) / 2)]
     
     
     if(!any(is.na(breaks))){
-      if (sat.transp) {
+      if (!sat.transp) {
         # map[which(map <= imin)] <- imin
         # map[which(map >= imax)] <- imax
         breaks[1] <- imin - 1

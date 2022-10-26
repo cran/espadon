@@ -32,6 +32,7 @@ display.legend <- function (struct = NULL, roi.name = NULL,
                             roi.sname = NULL, roi.idx = NULL, lwd = 1, cex = 1, 
                             displayed.roi.name = NULL, bg = "black", 
                             text.col = "white") {
+  mar <- par()$mar
   
   if (!is (struct, "struct")) 
     stop ("struct should be a struct class object.")
@@ -46,7 +47,7 @@ display.legend <- function (struct = NULL, roi.name = NULL,
     if(length(displayed.roi.name)==length (struct$roi.info$roi.pseudo[list.roi.idx])) c.name <- displayed.roi.name
   
   ncol=ceiling(length(list.roi.idx)*cex/22.5)
-  op <- par(no.readonly = TRUE)
+  
 
   par(mar=c(0,0,0,0))
   plot(c(0,0),type="n", xlim=c(0,1), ylim=c(0,1),xaxt="n", yaxt="n", xlab="", ylab="")
@@ -55,6 +56,6 @@ display.legend <- function (struct = NULL, roi.name = NULL,
   leg <- legend("topleft",legend =c.name , col =struct$roi.info$color[list.roi.idx],seg.len=1,
                 ncol=ncol ,lwd=lwd, bty="o", cex=cex, text.col=text.col,bg=bg)
 
-  on.exit (par(op))
+  on.exit (par(mar=mar))
   
 }

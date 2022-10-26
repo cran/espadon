@@ -1,4 +1,5 @@
 #' Dosimetry, volume, conformity, homogeneity indices from RoI
+#' \loadmathjax
 #' @description The \code{rt.indices.from.roi} function calculates, from a "volume"
 #' class object of modality "rtdose", standard indicators of radiotherapy
 #' in relation to the target and healthy RoI, as long as their options are transmitted.
@@ -45,6 +46,8 @@
 
 #' @param D.xpc Vector of the percentage of the volume, for which the dose coverage 
 #' is requested.
+#' @param D.xcc Vector of the volume in \mjeqn{cm^3}{ascii}, for which the dose 
+#' coverage is requested.
 #' @param V.xGy Vector of the minimum dose in Gy, received by the volume to be 
 #' calculated.
 #' 
@@ -54,7 +57,6 @@
 #' \code{target.roi.idx} are all set to \code{NULL}, all RoI containing 'ptv' 
 #' (if they exist) are selected.
 
-#' \loadmathjax
 #' @return  Return  a list containing (if requested)
 
 #' @return \mjeqn{-~dosimetry}{ascii} : dataframe containing, for all target and 
@@ -64,6 +66,8 @@
 #' \code{D.mean} (Gy) and \code{STD} (Gy), respectively the minimum, maximum, 
 #' mean and standard deviation of the dose in the regions of interest.
 #' \item the requested \code{$D.x\%} : (Gy) Dose covering x percent of structure volume.
+#' \item the requested \code{$D.xcc} : (Gy) Dose covering x (\mjeqn{cm^3}{ascii})
+#'  of structure volume.
 #' } 
 
 #' @return \mjeqn{-~volume}{ascii} : dataframe containing, for all target and 
@@ -326,7 +330,7 @@ rt.indices.from.roi <- function (vol, struct = NULL, T.MAT = NULL,
                                                          "HI.ICRU.5.95_ref", "HI.mayo2010", 
                                                          "HI.heufelder"),
                                  gradient.indices = c("GI.ratio.50", "mGI"),
-                                 D.xpc = NULL, V.xGy = NULL, 
+                                 D.xpc = NULL, D.xcc = NULL, V.xGy = NULL, 
                                  
                                  verbose = TRUE){
 
@@ -400,7 +404,7 @@ rt.indices.from.roi <- function (vol, struct = NULL, T.MAT = NULL,
                     conformity.indices,
                     homogeneity.indices,
                     gradient.indices,
-                    D.xpc,V.xGy, 
+                    D.xpc, D.xcc, V.xGy, 
                     healthy.weight, healthy.tol.dose
                     )
   
@@ -418,7 +422,7 @@ rt.indices.from.roi <- function (vol, struct = NULL, T.MAT = NULL,
                                conformity.indices,
                                homogeneity.indices,
                                gradient.indices,
-                               D.xpc,V.xGy, 
+                               D.xpc, D.xcc, V.xGy, 
                                healthy.weight, healthy.tol.dose){#, DVH){
   
   vol.over.val.df <- function (vol,val,coln =NULL) {
@@ -493,6 +497,8 @@ rt.indices.from.roi <- function (vol, struct = NULL, T.MAT = NULL,
   dosimetry.names <- c("D.min", "D.max", "D.2%", "D.5%", "D.95%",
                        "D.98%","D.median", "D.mean", "STD")
   dosimetry.probs <- 1-c (1, 0, 0.02, 0.05, 0.95, 0.98, 0.5)
+  
+  
   Dxpc.names <- NULL
   if (!is.null (D.xpc))  {
     Dxpc.names <-  paste("D.",D.xpc,"%", sep="")
@@ -504,7 +510,7 @@ rt.indices.from.roi <- function (vol, struct = NULL, T.MAT = NULL,
       dosimetry.probs <- c(dosimetry.probs,probs.Dxpc[f])
       dosimetry.names <- c(dosimetry.names[1:7],Dxpc.names[f], "D.mean", "STD")
     }
-    }
+  }
   
   Dosimetry <- as.data.frame(do.call (rbind, lapply(vol.L,function(V) {
     D <- matrix(c(quantile (V$vol3D.data, probs=dosimetry.probs, na.rm=TRUE),
@@ -512,7 +518,27 @@ rt.indices.from.roi <- function (vol, struct = NULL, T.MAT = NULL,
     dimnames(D) <- list(V$object.alias,dosimetry.names)
     D
   })))
-   
+  
+  
+  
+  Dxcc.names <- NULL
+  if (!is.null (D.xcc))  {
+    Dxcc.names <-   paste("D",D.xcc,"cc", sep="")
+    Dosimetry.xcc <- as.data.frame(do.call (rbind, lapply(vol.L,function(V) {
+      probs.Dxcc <-  1-D.xcc/  (sum (V$vol3D.data>=0, na.rm = TRUE) * abs(prod (V$dxyz))/1000)
+      probs.Dxcc [probs.Dxcc>1] <- 1
+      probs.Dxcc [probs.Dxcc<0] <- 0
+      D <- matrix(quantile (V$vol3D.data, probs=probs.Dxcc, na.rm=TRUE),
+                  ncol=length(Dxcc.names), byrow = T)
+      dimnames(D) <- list(V$object.alias,Dxcc.names)
+      D
+    })))  
+    Dosimetry <- cbind(Dosimetry[,1:(ncol(Dosimetry)-2)], 
+                       Dosimetry.xcc,Dosimetry[,(ncol(Dosimetry)-1):ncol(Dosimetry)])
+  }
+  
+  
+
   
  ####################################################################################### 
   V.target <- do.call (rbind, lapply(vol.L[L.target.idx],function(V) vol.over.val.df (V, 0)))
@@ -576,7 +602,7 @@ rt.indices.from.roi <- function (vol, struct = NULL, T.MAT = NULL,
     dist.fct<- function(vect) {sqrt(sum(vect^2))}
     G.target <- lapply(bin.L[L.target.idx], function (b)apply(get.xyz.from.index(which(b$vol3D.data), b),2, mean))
     
-    unit.vector <-  .uniform.unit.vector(1)
+    unit.vector <-  matrix(.fansphereC(1),ncol=5, byrow=TRUE)[,1:3]
     
     ##### prec.dose
     Isodose.to.G.dist <- NULL
@@ -693,10 +719,10 @@ rt.indices.from.roi <- function (vol, struct = NULL, T.MAT = NULL,
         
         
         if ("CI.distance" %in% colnames(df)) df$CI.distance  <- 100 * 
-          as.numeric (apply((Isodose.to.G.dist[[col.idx]]-Target.to.G.dist)/Target.to.G.dist,2,mean))
+          as.numeric (apply((Isodose.to.G.dist[[col.idx]]-Target.to.G.dist)/Target.to.G.dist,2,mean, na.rm = TRUE))
         
         if ("CI.abs_distance" %in% colnames(df)) df$CI.abs_distance  <- 100 *
-          as.numeric (apply(abs((Isodose.to.G.dist[[col.idx]]-Target.to.G.dist)/Target.to.G.dist),2,mean))
+          as.numeric (apply(abs((Isodose.to.G.dist[[col.idx]]-Target.to.G.dist)/Target.to.G.dist),2,mean, na.rm = TRUE))
         
         
         if ("CDI" %in% colnames(df)) df$CDI <-as.numeric ((2* (V.refdose[rep(1,nrow(V.target)),col.idx] + 
@@ -904,7 +930,7 @@ rt.indices.from.roi <- function (vol, struct = NULL, T.MAT = NULL,
 
   ###################################################################################
   #dosimetry suite
-  dosimetry.name <- c(dosimetry,Dxpc.names)
+  dosimetry.name <- c(dosimetry,Dxpc.names,Dxcc.names)
   m <- match(c(dosimetry.name), colnames(Dosimetry))
   m <- m[!is.na(m)]
   dosimetry.b <- NULL

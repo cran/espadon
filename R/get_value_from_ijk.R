@@ -40,8 +40,9 @@ get.value.from.ijk <- function (ijk, vol, interpolate = TRUE)  {
   k.idx[!fna] <- vol$k.idx
   k.loc[fna] <- max(vol$k.idx)+1
   k.idx[fna] <- max(vol$k.idx)+1
-  
-  value <- .getvaluefromijkC (vol3D = as.numeric(vol$vol3D.data),
+  vol3D <- as.numeric(vol$vol3D.data)
+  # vol3D[is.na(vol3D)] <- NaN
+  value <- .getvaluefromijkC (vol3D = vol3D,
                               interpolate = interpolate,
                               i = as.numeric(ijk[ ,1]),
                               j = as.numeric(ijk[ ,2]),
@@ -49,7 +50,7 @@ get.value.from.ijk <- function (ijk, vol, interpolate = TRUE)  {
                               k_idx = k.idx,
                               k_loc = k.loc, n_ijk=vol$n.ijk)
   
-  value [is.nan(value)] <- NA
+  # value [is.nan(value)] <- NA
   return(value)
 
 

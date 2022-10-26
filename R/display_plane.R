@@ -7,7 +7,8 @@
 #' palette. If \code{bottom = NULL}, no bottom image is displayed.
 #' @param top "volume" class object, displayed as an overlay, using \code{top.col}
 #' palette. If \code{top = NULL}, no overlay image is displayed.
-#' @param struct "struct" class object. If \code{NULL}, no RoI is displayed.
+#' @param struct "struct" class object. If \code{NULL}, no RoI is displayed. Only
+#' RoI of closed planar or point type are displayed.
 #' @param roi.name Vector of exact names of the RoI in the \code{struct} object.
 #' By default \code{roi.name = NULL}. See Details.
 #' @param roi.sname Vector of names or parts of names of the RoI in the \code{struct} 
@@ -62,7 +63,7 @@
 #' @param legend.shift Numeric. It shifts (in mm) the display of the RoI legend 
 #' on x-axis.
 #' @details If \code{roi.name}, \code{roi.sname}, and \code{roi.idx} are
-#' all set to \code{NULL}, all closed planar RoI are selected.
+#' all set to \code{NULL}, all closed planar or point RoI are selected.
 #' If a RoI is not present in the requested plane, the RoI legend won't mention it.
 #' @note 1- The main title is given by \code{bottom}, the
 #' subtitle by \code{top}.
@@ -81,16 +82,23 @@
 #' @examples
 #' # loading of toy-patient objects (decrease dxyz and increase beam.nb for 
 #' # better result)
-#' step <- 5
-#' patient <- toy.load.patient (modality = c("ct", "rtstruct", "rtdose"), 
+#' step <- 4
+#' patient <- toy.load.patient (modality = c("ct", "mr", "rtstruct", "rtdose"), 
 #'                              roi.name  = "",
 #'                              dxyz = rep (step, 3), beam.nb = 3)
 #' CT <- patient$ct[[1]]
+#' MR <- patient$mr[[1]]
 #' D <- patient$rtdose[[1]]
 #' S <- patient$rtstruct[[1]]
 #' 
 #' display.plane (bottom = CT, top = D, struct = S, view.coord = -30, 
 #'                interpolate = FALSE, legend.shift = -80)
+#' # Display of CT in reference frame "ref1" and  MR in "ref2"               
+#' display.plane (bottom = CT, top = MR, interpolate = FALSE)
+#' 
+#' # Display of CT and MR in reference frame "ref2"
+#' display.plane (bottom = CT, top = MR, interpolate = FALSE, display.ref ="ref2",
+#'                T.MAT = patient$T.MAT)
 #' @export
 #' @importFrom grDevices rainbow grey.colors
 #' @importFrom methods is
@@ -110,6 +118,14 @@ display.plane <- function (bottom = NULL, top = NULL, struct = NULL,
                            sat.transp = FALSE,
                            struct.lwd=2, main = NULL, 
                            legend.plot = TRUE, legend.shift = 0) {
+  
+  xpd <- NULL
+
+  on.exit(
+    expr = {
+      if (!is.null(xpd)) par(xpd = xpd)
+    })
+  
   
   view.type <- view.type[1]
   list.roi.idx <- NULL
@@ -135,6 +151,7 @@ display.plane <- function (bottom = NULL, top = NULL, struct = NULL,
     
   if (length(view.coord)==0) stop ("view.coord length is 0.")
 
+
   
   if (!is.null (struct)) list.roi.idx <- select.names (struct$roi.info$roi.pseudo, roi.name, roi.sname, roi.idx)
   
@@ -142,18 +159,13 @@ display.plane <- function (bottom = NULL, top = NULL, struct = NULL,
     list.roi.idx <- list.roi.idx[sapply(struct$roi.data[list.roi.idx], function(l) {
       v <- castlow.str(unique(sapply(l, function(l_) l_$type)))
       if (length(v)==0) return(FALSE)
-      if (any(is.na(match(v,c("closedplanar"))))) return(FALSE)
+      if (any(is.na(match(v,c("closedplanar","point"))))) return(FALSE)
       return(TRUE)
     })]
-    
-    # list.roi.idx.point <- list.roi.idx[sapply(struct$roi.data[list.roi.idx], function(l) {
-    #   v <- castlow.str(unique(sapply(l, function(l_) l_$type)))
-    #   if (length(v)==0) return(FALSE)
-    #   if (any(is.na(match(v,c("point"))))) return(FALSE)
-    #   return(TRUE)
-    # })]
-    }
+  }
   
+  warn.ref <- FALSE
+  warn.ref.struct <- FALSE
   selected.ref <- display.ref
   if (is.null(selected.ref)) {
     if (!is.null(bottom)) selected.ref <- bottom$ref.pseudo
@@ -164,34 +176,51 @@ display.plane <- function (bottom = NULL, top = NULL, struct = NULL,
   
   if (length(unique(c(display.ref,bottom$ref.pseudo, 
                       top$ref.pseudo, struct$ref.pseudo)))!=1 & 
-      is.null(T.MAT)) stop("load T.MAT to display")
-  if (!is.null(bottom)) bottom <- vol.in.new.ref(bottom, selected.ref, T.MAT)
-  if (!is.null(top)) top <- vol.in.new.ref(top, selected.ref, T.MAT)
+      is.null(T.MAT)) warning("objects have different ref.pseudo. Load T.MAT for correct display")
+  if (!is.null(bottom)) {
+    dum <- suppressWarnings(vol.in.new.ref(bottom, selected.ref, T.MAT))
+    if (is.null(dum)) {
+      warning(paste("bottom is displayed in the ref.pseudo", bottom$ref.pseudo, "instead of", selected.ref))
+      warn.ref <- TRUE
+    } else {bottom <- dum}}
+  if (!is.null(top)) {
+    dum <- suppressWarnings(vol.in.new.ref(top, selected.ref, T.MAT))
+    if (is.null(dum)) {
+      warning(paste("top is displayed in the ref.pseudo", top$ref.pseudo, "instead of", selected.ref))
+      warn.ref <- TRUE
+    } else {top <- dum}}
+  
   if (is.null(bottom) & is.null(top) & is.null(list.roi.idx)) {
-    stop ("cannot display anything in the selected frame of reference.")
+    stop ("nothing to display")
   }
-  if (!is.null(list.roi.idx)) struct <- struct.in.new.ref (struct,new.ref.pseudo= selected.ref, T.MAT)
+  if (!is.null(list.roi.idx)) {
+    dum <- suppressWarnings(struct.in.new.ref (struct,new.ref.pseudo= selected.ref, T.MAT))
+    if (is.null(dum)) {
+      warning(paste("struct is displayed in the ref.pseudo", struct$ref.pseudo, "instead of", selected.ref))
+      warn.ref.struct <- TRUE
+    } else {struct <- dum}}
   if (is.null (struct)) list.roi.idx <- NULL
   
-  if (is.null(bottom) & is.null(top)){
+  if ((is.null(bottom) & is.null(top)) | (warn.ref.struct)){
     #on construit un support pour les contours
     rng.x <- c (floor (min(struct$roi.info[list.roi.idx,]$min.x)), max(struct$roi.info[list.roi.idx,]$max.x))
     rng.y <- c (floor (min(struct$roi.info[list.roi.idx,]$min.y)), max(struct$roi.info[list.roi.idx,]$max.y))
     rng.z <- c (floor (min(struct$roi.info[list.roi.idx,]$min.z)), max(struct$roi.info[list.roi.idx,]$max.z))
-    nxyz <- c(ceiling((rng.x[2] - rng.x[1])/struct.dxyz[1])+1,
-              ceiling((rng.y[2] - rng.y[1])/struct.dxyz[2])+1,
-              ceiling((rng.z[2] - rng.z[1])/struct.dxyz[3])+1)
-    struct.vol3D <- vol.in.new.ref (vol.create (n.ijk =nxyz, pt000= c(rng.x[1],rng.y[1],rng.z[1]), 
-                                                dxyz = struct.dxyz,
-                                                ref.pseudo = struct$ref.pseudo,
-                                                frame.of.reference = struct$frame.of.reference,
-                                                alias = struct$object.alias, number = 0,
-                                                modality = struct$modality,  description = ""),
-                                    selected.ref, T.MAT)
+    nxyz <- c(ceiling((rng.x[2] - rng.x[1])/struct.dxyz[1])+11,
+              ceiling((rng.y[2] - rng.y[1])/struct.dxyz[2])+11,
+              ceiling((rng.z[2] - rng.z[1])/struct.dxyz[3])+11)
+    struct.vol3D <- vol.create (n.ijk =nxyz, pt000= c(rng.x[1]-5*struct.dxyz[1],
+                                                      rng.y[1]-5*struct.dxyz[2],
+                                                      rng.z[1]-5*struct.dxyz[3]),
+                                dxyz = struct.dxyz,
+                                ref.pseudo = struct$ref.pseudo,
+                                frame.of.reference = struct$frame.of.reference,
+                                alias = struct$object.alias, number = 0,
+                                modality = struct$modality,  description = "")
     
-    if (is.null(struct.vol3D)) stop ("struct can not be displayed in selected frame of reference.")
-
-
+    if (!warn.ref.struct) {
+      struct.vol3D <- vol.in.new.ref (struct.vol3D, selected.ref, T.MAT)
+    }
   }
   
   #centre image
@@ -203,48 +232,40 @@ display.plane <- function (bottom = NULL, top = NULL, struct = NULL,
   lab <- c("x", "y", "z")
   
 
+
+  
   for (coord.idx in 1:length (view.coord)) {
 
     if (view.type=="sagi") {
-      #plane.orientation= c(0,0,1,0,1,0)
-      #rev.k=TRUE
       plane.orientation= c (0, 0, 1, 0, 1, 0, 1, 0, 0)
       lab.idx <- c(3,2,1)
       ord.flip <- TRUE
       w.idx <- 1
-      
-      # } else if (w.idx==2) {
     } else if (view.type=="front") {
-      #plane.orientation= c(1,0,0,0,0,1)
-      #rev.k=TRUE
       plane.orientation= c (1, 0, 0, 0, 0, 1, 0, 1, 0)
       lab.idx <- c(1,3,2)
       ord.flip <- FALSE
       w.idx <- 2
     } else {
       plane.orientation= c(1, 0, 0, 0, 1, 0, 0, 0, 1)
-      #rev.k=FALSE
       lab.idx <- c(1,2,3)
       ord.flip <- TRUE
       w.idx <- 3
     }
     plane.pt <- center.pt
     p.idx <- (1:3)[-w.idx]
-    # plane.pt[w.idx] <- xyz.whished_[whish.idx,w.idx]
     plane.pt[w.idx] <- view.coord[coord.idx]
     
     process.ori <- function(pt, vol,p.idx){
-      if(all(apply (abs(vol$xyz.from.ijk[1:3, p.idx])< 1e-4 ,2,sum)==2)){
-        center.ijk <- get.ijk.from.xyz(pt, vol)
-        center.ijk[p.idx] <- round(center.ijk[p.idx])
-        pt <- (vol$xyz.from.ijk %*% c(center.ijk,1))[1:3]
-      }
+      # if(all(apply (abs(vol$xyz.from.ijk[1:3, p.idx])< 1e-4 ,2,sum)==2)){
+      #   center.ijk <- get.ijk.from.xyz(pt, vol)
+      #   center.ijk[p.idx] <- round(center.ijk[p.idx])
+      #   pt <- (vol$xyz.from.ijk %*% c(center.ijk,1))[1:3]
+      # }
       pt
     }
     
     if (!is.null(bottom)){
-      
-      
       #bottom.p <-get.plane(bottom, origin = plane.pt, plane.orientation= plane.orientation, rev.k=rev.k, interpolate =interpolate)
       bottom.p <- get.plane(bottom, origin = process.ori (plane.pt, bottom, p.idx), 
                             plane.orientation= plane.orientation,
@@ -261,12 +282,13 @@ display.plane <- function (bottom = NULL, top = NULL, struct = NULL,
         } else {
           main.title <- main
         }
-        display.kplane (vol=bottom.p, pt00= pt000[lab.idx[1:2]], dxy= bottom.p$dxyz[1:2],
-                         col = bottom.col, breaks = b, sat.transp = sat.transp,
-                         abs.lab = lab [lab.idx[1]],
-                         ord.lab = lab [lab.idx[2]], ord.flip = ord.flip,
-                         main = main.title,
-                         bg=bg, abs.rng = abs.rng, ord.rng = ord.rng, interpolate=interpolate)
+        display.kplane (vol = bottom.p, pt00= pt000[lab.idx[1:2]], dxy= bottom.p$dxyz[1:2],
+                        col = bottom.col, breaks = b, sat.transp = sat.transp,
+                        abs.lab = lab [lab.idx[1]],
+                        ord.lab = lab [lab.idx[2]], ord.flip = ord.flip,
+                        main = main.title,
+                        bg=bg, abs.rng = abs.rng, ord.rng = ord.rng, interpolate=interpolate)
+        if (warn.ref | warn.ref.struct) mtext ("warning : different frames of reference",side=1, line=2, col='red', cex=0.8)
       }
       if (!is.null (top)) {
         plane.pt[w.idx] <- pt000[w.idx]
@@ -283,15 +305,16 @@ display.plane <- function (bottom = NULL, top = NULL, struct = NULL,
                            col = top.col, breaks = b, sat.transp = sat.transp,
                            add=TRUE,  interpolate=interpolate)
           if (is.null (main)) {
-            mtext (paste (top$modality, " (", top$description,") @ ", lab[lab.idx[3]], " = ",round (pt000[lab.idx[3]],3)," mm",sep=""),
+            mtext (paste (top$modality, " (", top$description,") @ ", lab[lab.idx[3]], 
+                          " = ",round (pt000[lab.idx[3]],3)," mm",sep=""),
                    side=3, line=0.4, col='gray32', cex=0.8)
             if (top$modality =="rtdose")
-              text (par("usr")[1], par("usr")[4] - (par("usr")[4]-par("usr")[3])*0.1, paste("  Dose max : ",round (top.p$max.pixel, 3)," Gy",sep=""), cex=1, col="red",adj = c(0,0))
+              text (par("usr")[1], par("usr")[4] - (par("usr")[4]-par("usr")[3])*0.1, 
+                    paste("  Dose max : ",round (top.p$max.pixel, 3)," Gy",sep=""), cex=1, col="red",adj = c(0,0))
           }
         }
       }
     } else if (!is.null(top)){
-      #bottom.p <-get.plane(top, origin = plane.pt, plane.orientation= plane.orientation, rev.k=rev.k, interpolate =interpolate)
       bottom.p <- get.plane(top, origin = process.ori (plane.pt, top, p.idx), 
                             plane.orientation= plane.orientation,
                             interpolate = interpolate)
@@ -315,9 +338,11 @@ display.plane <- function (bottom = NULL, top = NULL, struct = NULL,
                          bg=bg, abs.rng = abs.rng, ord.rng = ord.rng, interpolate=interpolate)
         if (is.null (main) & (top$modality =="rtdose"))
           text (par("usr")[1], par("usr")[4] - (par("usr")[4]-par("usr")[3])*0.1, paste("  Dose max : ",round (bottom.p$max.pixel, 3)," Gy",sep=""), cex=1, col="red",adj = c(0,0))
-      }
+      
+        if (warn.ref | warn.ref.struct) mtext ("warning : different frames of reference",side=1, line=2, col='red', cex=0.8)
+        }
+      
     } else {
-      #bottom.p <- get.plane(struct.vol3D, origin = plane.pt, plane.orientation= plane.orientation, rev.k=rev.k)
       bottom.p <- get.plane(struct.vol3D, origin = process.ori (plane.pt, struct.vol3D,  p.idx),
                              plane.orientation= plane.orientation)
       
@@ -334,6 +359,7 @@ display.plane <- function (bottom = NULL, top = NULL, struct = NULL,
                          ord.lab = lab [lab.idx[2]], ord.flip = ord.flip,
                          main =  main.title,
                          bg=bg, abs.rng = abs.rng, ord.rng = ord.rng, interpolate=interpolate)
+        if (warn.ref | warn.ref.struct) mtext ("warning : different frames of reference",side=1, line=2, col='red', cex=0.8)
       }
     }
     
@@ -343,20 +369,29 @@ display.plane <- function (bottom = NULL, top = NULL, struct = NULL,
       legendlty <- list()
       legendpch <- list()
       label.index <- 1
-      if (lab[w.idx]=="z" & bottom.p$ref.pseudo==struct$ref.pseudo & setequal(round(as.numeric(struct$ref.from.contour),6), c(rep ( c (1.0, 0.0, 0.0, 0.0, 0.0), 3), 1.0))) {
-        
-        new.struct <-  .display.select.struct.by.z (struct=struct, list.roi.idx= list.roi.idx, z =bottom.p$patient.xyz0[1,w.idx], dz = struct$thickness)
+      if (lab[w.idx]=="z" & 
+          (bottom.p$ref.pseudo==struct$ref.pseudo | warn.ref) & 
+          all(round(as.numeric(struct$ref.from.contour),6)== as.numeric(diag(4)))) {
+        new.struct <-  .display.select.struct.by.z (struct=struct, list.roi.idx= list.roi.idx, z =bottom.p$xyz0[1,w.idx], dz = struct$thickness)
         
       } else {
+  
+        if (warn.ref.struct) {
+          bottom.p <-  get.plane(struct.vol3D, origin = process.ori (plane.pt, struct.vol3D,  p.idx),
+                                 plane.orientation= plane.orientation)
+        }
+     
         t.mat <- ref.cutplane.add(bottom.p, ref.cutplane = "intern", origin = c(0,0,0))
+        
         new.struct <- lapply(1:struct$nb.of.roi, function(r.idx){
           if (!(r.idx %in% list.roi.idx)) return (NULL)
-          roi.nesting <- nesting.roi (vol=bottom.p, struct=struct, roi.idx=r.idx, 
-                                      T.MAT=T.MAT, xyz.margin=c(1,1,1), vol.restrict=TRUE)
+          if ((length(struct$roi.data[[r.idx]]) ==1) &   
+              (castlow.str (struct$roi.data[[r.idx]][[1]]$type) =="point")) return(struct$roi.data[[r.idx]])
+          roi.nesting <- suppressWarnings (nesting.roi (vol=bottom.p, struct=struct, roi.idx=r.idx, 
+                                      T.MAT=T.MAT, xyz.margin=c(1,1,1), vol.restrict=TRUE))
           if (is.null(roi.nesting)) return (NULL)
-          bin <-bin.from.roi(vol=roi.nesting, struct=struct, roi.idx=r.idx, T.MAT=T.MAT)
+          bin <-bin.from.roi (vol=roi.nesting, struct=struct, roi.idx=r.idx, T.MAT=T.MAT)
           bin_ <- vol.in.new.ref(bin, new.ref.pseudo="intern", t.mat)
-          # return (.display.roi.data.from.bin (bin, bin$patient.xyz0[1,lab.idx]))})
          return (.display.roi.data.from.bin (bin_))})
         names(new.struct) <- struct$roi.info$roi.pseudo
       }
@@ -364,36 +399,41 @@ display.plane <- function (bottom = NULL, top = NULL, struct = NULL,
         if (length(new.struct[[j]])>0) {
           for (nb in 1:length(new.struct[[j]])){
             type <- castlow.str (new.struct[[j]][[nb]]$type)
+            test.pt <-FALSE 
             if (type=="closedplanar"){
+              test.pt <- TRUE
               lines (new.struct[[j]][[nb]]$pt$x, new.struct[[j]][[nb]]$pt$y, col= struct$roi.info$color[j], lwd=struct.lwd)
               legendlty[[label.index]]<-1
               legendpch[[label.index]]<-" "
-            # } else if (type=="point") {
-            #   points(new.struct[[j]][[nb]]$pt$x, new.struct[[j]][[nb]]$pt$y, col= struct$roi.info$color[j], pch="+",cex=1)
-            #   legendlty[[label.index]]<-0
-            #   legendpch[[label.index]]<-"+"
+            } else if ((type=="point") &
+              (round(new.struct[[j]][[nb]]$pt[1,w.idx],6) == round(view.coord[coord.idx],6))) {
+                test.pt <- TRUE
+                points(new.struct[[j]][[nb]]$pt[lab.idx[1]], new.struct[[j]][[nb]]$pt[lab.idx[2]], col= struct$roi.info$color[j], pch="+",cex=1)
+                legendlty[[label.index]]<-0
+                legendpch[[label.index]]<-"+"
             }
           }
-          legendcol[[label.index]]<- struct$roi.info$color[j]
-          legendlabel[[label.index]]<- struct$roi.info$roi.pseudo[j]
-          label.index<-label.index+1
+          if (test.pt){
+            legendcol[[label.index]]<- struct$roi.info$color[j]
+            legendlabel[[label.index]]<- struct$roi.info$roi.pseudo[j]
+            label.index<-label.index+1
+          }
         }
       }
       if (length (legendlabel)>0 && legend.plot) {
-        par(xpd=TRUE)
+        
         # 	par("usr")[1], par("usr")[3], par("usr")[2], par("usr")[4]
+        xpd <- par()$xpd
+        par(xpd=TRUE)
         
         legend(par("usr")[2]+legend.shift ,par("usr")[4],
                legend = unlist (legendlabel), col = unlist (legendcol),
                ncol=1, lty = unlist (legendlty) ,lwd=struct.lwd, pch = unlist (legendpch), bty="o", cex=0.6, text.col="white",bg="black")
         
-        # legend(display$abs.rng[2]-0.2 *(display$abs.rng[2]-display$abs.rng[1]),display$ord.rng[2],
-        #        legend = unlist (legendlabel), col = unlist (legendcol),
-        #        ncol=1, lty = unlist (legendlty) ,lwd=struct.lwd, pch = unlist (legendpch), bty="o", cex=0.6, text.col="white",bg="black")
-        par(xpd=FALSE)
+
       }
     }
-    # }
+
   }
   
 }

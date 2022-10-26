@@ -26,7 +26,7 @@
 #' lf
 #' 
 #' # Inspect Rdcm raw data
-#' L <- load.Rdcm.raw.data (lf)
+#' L <- load.Rdcm.raw.data (lf[1])
 #' str (L, max.level =3)
 
 #' @export
@@ -36,14 +36,34 @@ load.Rdcm.raw.data <- function (Rdcm.filename, address= TRUE, data=TRUE) {
   l <- readBin(zz,what="int",size=4, n=3, endian="little")
   h <- qdeserialize (readBin(zz,what="raw", n=l[1]))
   a <- NULL
+  if (is.null(h$espadon.version)){
+    espadon.version <- character(0)
+  } else {
+    espadon.version <- h$espadon.version
+    h$espadon.version <- NULL
+  }
   if ((address | data) & l[2]>0) a <-  qdeserialize (readBin(zz,what="raw", n=l[2]))
   if (data) d <-  qdeserialize (readBin(zz,what="raw", n=l[3]))
   close (zz)
   h$file.dirname <- dirname (Rdcm.filename)
   h$file.basename <- basename (Rdcm.filename)
   from.dcm <- l[2]>0
+  
+  if (length(espadon.version)==0) {
+    n <- names(h)
+    idx <- which(n=="ref.object.name")
+    if (length(idx)!=0) n[idx] <- "ref.object.alias"
+    idx <- which(n=="patient.xyz0")  
+    if (length(idx)!=0) n[idx] <- "xyz0"  
+    idx <- which(n=="patient.orientation")  
+    if (length(idx)!=0) n[idx] <- "orientation"  
+
+    names(h) <- n
+  }
+  
   if (!address & !data) return(list(header=h, from.dcm=from.dcm))
   if (address & !data) return(list(header=h, address=a, from.dcm=from.dcm))
   if (!address & data) return(list(header=h, data=d, from.dcm=from.dcm))
-  if (address & data) return(list(header=h, address=a, data=d, from.dcm=from.dcm))
+  if (address & data) return(list(header=h, address=a, data=d, from.dcm=from.dcm,
+                                  espadon.version=espadon.version))
 }

@@ -69,6 +69,7 @@ The ***display.obj.links*** function allows a nice and convenient display of the
 library(espadon)
 pat.dir <- choose.dir () # patient folder containing mr, ct, rt-struct, rt-dose, rt-plan and reg…
 pat <- load.patient.from.dicom (pat.dir)
+display.obj.links (pat)
 ```
 When the patient object list is loaded into memory, the ***load.obj.data*** function loads the full object information, i.e. voxels content for MR, CT or PT, rt-dose or contour coordinates for rt-struct.
 ```{r, eval = FALSE}
@@ -133,7 +134,7 @@ play3d (spin3d (rpm = 4), duration = 15)
 
 Several espadon functions have been created to transform imaging volumes.  
 
-- Functions such as ***add.margin***, ***nesting.cube***, ***nesting.roi*** increase or decrease the number of voxels in the volume. 
+- Functions such as ***add.margin***, ***nesting.cube***, ***nesting.roi***,  ***nesting.bin*** increase or decrease the number of voxels in the volume. 
 ```{r, eval = FALSE}
 nesting.MR <- nesting.roi (MR, S, roi.sname = "brain", T.MAT = pat$T.MAT, 
                            vol.restrict = TRUE, mar)
@@ -301,13 +302,15 @@ display.DVH (DVH, MC.plot = TRUE, col = "#ff0000", lwd = 2)
 
 The espadon package offers the possibility of computing many radiotherapy indices. After specifying the target volumes to be treated (if available), the healthy volumes to be protected (if available), the dose distribution from rt-dose file, the functions ***rt.indices.from.roi*** and ***rt.indices.from.bin*** can calculate, on demand : 
 
-- dosimetry indices : minimum, maximum, average dose, standard deviation and requested D.x%
+- dosimetry indices : minimum, maximum, average dose, standard deviation, requested D.x% and requested D.xcc.
 - volume indices  :  total volume, surface area and requested V.xGy.
 - conformity indices : prescription isodose target volume (PITV),  prescription dose spillage (PDS), conformity index (CI), conformation number (CN), new conformity index (NCI), Dice similarity coefficient (DSC), conformity index based on distance (CIdistance), conformity distance index (CDI), triple point conformity scale (CS3), underdosed lesion factor (ULF), overdosed healthy tissues factor (OHTF), geometric conformity index (gCI), COIN , critical organ scoring index (COSI), generalized COSI (gCOSI).
 - homogeneity indices from RTOG or ICRU.
 - gradient indices : gradient index based on volumes ratio, modified gradient index (mGI).
 
 In the following example, the patient folder contains a CT-scan files, a rt-dose file and  a rt-struct file in which PTV and optic chiasm are outlined. 
+
+
 
 ```{r, eval = FALSE}
 library (espadon)
@@ -326,7 +329,7 @@ rt.indices.from.roi (D.on.CT, S, target.roi.name = "ptv",
                      presc.dose = 0.9 * 70)
 ```
 
-
+The espadon package can also compute the Gamma index and the Chi index in 2D or 3D, using the ***rt.gamma.index*** and ***rt.chi.index***.
 
 
 

@@ -18,6 +18,7 @@ knitr::opts_chunk$set(
 #  library(espadon)
 #  pat.dir <- choose.dir () # patient folder containing mr, ct, rt-struct, rt-dose, rt-plan and reg…
 #  pat <- load.patient.from.dicom (pat.dir)
+#  display.obj.links (pat)
 
 ## ---- eval = FALSE------------------------------------------------------------
 #  S <- load.obj.data (pat$rtstruct[[1]])

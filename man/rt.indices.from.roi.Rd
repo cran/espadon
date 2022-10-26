@@ -2,7 +2,8 @@
 % Please edit documentation in R/rt_indices_from_roi.R
 \name{rt.indices.from.roi}
 \alias{rt.indices.from.roi}
-\title{Dosimetry, volume, conformity, homogeneity indices from RoI}
+\title{Dosimetry, volume, conformity, homogeneity indices from RoI
+\loadmathjax}
 \usage{
 rt.indices.from.roi(
   vol,
@@ -27,6 +28,7 @@ rt.indices.from.roi(
     "HI.heufelder"),
   gradient.indices = c("GI.ratio.50", "mGI"),
   D.xpc = NULL,
+  D.xcc = NULL,
   V.xGy = NULL,
   verbose = TRUE
 )
@@ -88,6 +90,9 @@ healthy RoI.}
 \item{D.xpc}{Vector of the percentage of the volume, for which the dose coverage
 is requested.}
 
+\item{D.xcc}{Vector of the volume in \mjeqn{cm^3}{ascii}, for which the dose
+coverage is requested.}
+
 \item{V.xGy}{Vector of the minimum dose in Gy, received by the volume to be
 calculated.}
 
@@ -103,6 +108,8 @@ healthy structures:
 \code{D.mean} (Gy) and \code{STD} (Gy), respectively the minimum, maximum,
 mean and standard deviation of the dose in the regions of interest.
 \item the requested \code{$D.x\%} : (Gy) Dose covering x percent of structure volume.
+\item the requested \code{$D.xcc} : (Gy) Dose covering x (\mjeqn{cm^3}{ascii})
+of structure volume.
 }
 
 \mjeqn{-~volume}{ascii} : dataframe containing, for all target and
@@ -258,7 +265,6 @@ in relation to the target and healthy RoI, as long as their options are transmit
 If \code{target.roi.name}, \code{target.roi.sname}, and
 \code{target.roi.idx} are all set to \code{NULL}, all RoI containing 'ptv'
 (if they exist) are selected.
-\loadmathjax
 
 If \code{target.roi.name}, \code{target.roi.sname}, and \code{target.roi.idx}
 are all set to \code{NULL},all RoI that include 'ptv', if they exist, are

@@ -32,7 +32,7 @@
 
 #' @export
 #' @importFrom methods is
-ref.cutplane.add <- function (vol, origin = vol$patient.xyz0[1,],
+ref.cutplane.add <- function (vol, origin = vol$xyz0[1,],
                               ref.cutplane = paste0 (vol$ref.pseudo, "m"),
                               T.MAT = NULL){
   
@@ -42,7 +42,7 @@ ref.cutplane.add <- function (vol, origin = vol$patient.xyz0[1,],
   }
   
   t.mat <- ( ref.add( src.ref= vol$ref.pseudo, 
-                    orientation = vol$patient.orientation, 
+                    orientation = vol$orientation, 
                     origin = origin, 
                     new.ref.pseudo = ref.cutplane,
                     T.MAT = T.MAT))

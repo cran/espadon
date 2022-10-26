@@ -104,11 +104,13 @@ ref.add <- function (src.ref, orientation = c (1, 0, 0, 0, 1, 0),
   while (ref %in% T.MAT$ref.info$ref) ref <-paste (sample(1:9, 20, replace=TRUE),collapse ="")
   
   ref.info <- data.frame( ref.pseudo=c (T.MAT$ref.info$ref.pseudo,new.ref.pseudo),ref=c(T.MAT$ref.info$ref,ref), stringsAsFactors = FALSE)
+  ref.info_ <- unique (ref.info[, 1:2])
+  
   reg.info <- T.MAT$reg.info
   reg.info$file <- rbind(reg.info$file, db.file)
-  matrix.description <- unlist(lapply(ref.info$ref.pseudo,
+  matrix.description <- unlist(lapply(ref.info_$ref.pseudo,
                                       function(r) 
-                                        paste(paste(ref.info$ref.pseudo,r,sep="<-"),r,ref.info$ref.pseudo, sep=";")))
+                                        paste(paste(ref.info_$ref.pseudo,r,sep="<-"),r,ref.info_$ref.pseudo, sep=";")))
   matrix.description <- do.call(rbind.data.frame,strsplit(matrix.description,";"))
   names(matrix.description)  <- c("t","src","dest")
   matrix.description$type=""

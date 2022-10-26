@@ -15,7 +15,7 @@
 #' @examples
 #' # loading of toy-patient objects (decrease dxyz for  better result)
 #' step <- 5
-#' pat <- toy.load.patient (dxyz = rep (step, 3), beam.nb = 1)
+#' pat <- toy.load.patient (dxyz = rep (step, 3), beam.nb = 2)
 #' str (pat, max.level = 2)
 
 #' @importFrom stats runif spline
@@ -37,6 +37,13 @@ toy.load.patient <- function (
   f <-!is.na(match( c("ct", "rtdose", "rtstruct"), modality))
   ref1.do.nb[f] <- 1:sum(f)
   
+  
+  S <- NULL
+  rtstruct.f <- "rtstruct" %in% modality
+  ct.f <- "ct" %in% modality
+  mr.f <- "mr" %in% modality
+  rtdose.f<- "rtdose" %in% modality
+  
   #initialisation
   
   MR.date <- "20220523"
@@ -46,7 +53,9 @@ toy.load.patient <- function (
   mr.offset <- c(50,100,-70)
   pat.pseudo = "PM"
   bd <- "19800522"
-  sex <- "M"
+  sex <- c("M","O")
+  if (!rtstruct.f) sex <- sex[1]
+  
   PM.radius <- 120
   ptv.radius <- 10
   ptv.G <- c (-30.2,50.5,-30.1)
@@ -54,11 +63,7 @@ toy.load.patient <- function (
   
   
  
-  S <- NULL
-  rtstruct.f <- "rtstruct" %in% modality
-  ct.f <- "ct" %in% modality
-  mr.f <- "mr" %in% modality
-  rtdose.f<- "rtdose" %in% modality
+
   
   pat <- list()
   pat$patient <- data.frame(PIN = pat.pseudo, birth.date=bd, sex=sex)
@@ -75,16 +80,23 @@ toy.load.patient <- function (
                                    patient=character(0),patient.bd=character(0),
                                    patient.sex=character(0))
   
-  if (any (!is.na(match(modality, c("ct", "rtstruct", "rtdose")))))
-    pat$T.MAT$ref.info <- rbind(pat$T.MAT$ref.info$ref.pseudo, 
+  if (any (!is.na(match(modality, c("ct", "rtdose")))))
+    pat$T.MAT$ref.info <- rbind(pat$T.MAT$ref.info, 
                                 data.frame(ref.pseudo = "ref1", 
                                            ref = "2.16.840.1.114357.58485835081.6250.1551498438.0.3",
-                                           patient = pat.pseudo, patient.bd=bd, patient.sex=sex))
+                                           patient = pat.pseudo, patient.bd=bd, patient.sex=sex[1]))
+  if (any (!is.na(match(modality, c("rtstruct")))))
+    pat$T.MAT$ref.info <- rbind(pat$T.MAT$ref.info, 
+                                data.frame(ref.pseudo = "ref1", 
+                                           ref = "2.16.840.1.114357.58485835081.6250.1551498438.0.3",
+                                           patient = pat.pseudo, patient.bd=bd, patient.sex=sex[2]))
+  
+  
   if (any (!is.na(match(modality, c("mr")))))
     pat$T.MAT$ref.info <- rbind(pat$T.MAT$ref.info, 
                                 data.frame(ref.pseudo = "ref2", 
                                            ref = "2.16.840.1.114357.58094835081.62350.15267498438.0.1",
-                                           patient = pat.pseudo, patient.bd=bd, patient.sex=sex))
+                                           patient = pat.pseudo, patient.bd=bd, patient.sex=sex[1]))
   
   pat$T.MAT$reg.info <- list()
   pat$T.MAT$reg.info$patient <- data.frame(patient = pat.pseudo, patient.bd=bd, patient.sex=sex)
@@ -93,7 +105,8 @@ toy.load.patient <- function (
   pat$T.MAT$matrix.description <- data.frame(t=character(0), src=character(0),
                                              dest=character(0),type=character(0))
   pat$T.MAT$matrix.list <- list()
-  if (nrow(pat$T.MAT$ref.info)==2) {
+  ref.pseudo <- unique (pat$T.MAT$ref.info$ref.pseudo)
+  if (length(ref.pseudo) == 2) {
     pat$T.MAT$matrix.description <- data.frame (t=c("ref1<-ref1","ref2<-ref1","ref1<-ref2", "ref2<-ref2"), 
                                                 src = c("ref1","ref1", "ref2", "ref2"),
                                                 dest = c("ref1","ref2", "ref1", "ref2"),
@@ -102,13 +115,13 @@ toy.load.patient <- function (
     pat$T.MAT$matrix.list[["ref2<-ref1"]] <- cbind(diag(1,4,3), c(mr.offset,1))
     pat$T.MAT$matrix.list[["ref1<-ref2"]] <- cbind(diag(1,4,3), c(-mr.offset,1))
     pat$T.MAT$matrix.list[["ref2<-ref2"]] <- diag(4)
-  } else if (pat$T.MAT$ref.info$ref.pseudo == "ref1"){ 
+  } else if (ref.pseudo == "ref1"){ 
     pat$T.MAT$matrix.description <- data.frame (t=c("ref1<-ref1"), 
                                                 src = c("ref1"),
                                                 dest = c("ref1"),
                                                 type = "RIGID")
     pat$T.MAT$matrix.list[["ref1<-ref1"]] <- diag(4)
-  } else if (pat$T.MAT$ref.info$ref.pseudo == "ref2") {
+  } else if (ref.pseudo == "ref2") {
     pat$T.MAT$matrix.description <- data.frame (t=c("ref2<-ref2"), 
                                                 src = c("ref2"),
                                                 dest = c("ref2"),
@@ -599,12 +612,21 @@ toy.load.patient <- function (
     if (rtdose.f) {
       pat$rtdose <- list ()
       n <-paste0(rt.date,"_ref1_do",ref1.do.nb[2],"_rtdose")
-      pat$rtdose[[paste0(n,1)]] <-.toy.rtdose  (pat$ct[[1]], ptv.radius, ptv.G, beam.nb)
+      # .toy.rtdose  (pat$ct[[1]], ptv.radius, ptv.G, beam.nb)
+      
+
+      pat$rtdose[[paste0(n,1)]] <- .toy.rtdose.from.bin(D.max = 52, DSA= 600, 
+                                                        beam.nb = beam.nb, 
+                                                        vol = pat$ct[[1]], 
+                                                        bin = b.ptv, 
+                                                        description =  "IMRT|PTV52")
+        
       pat$rtdose[[1]]$patient <- pat$pat.pseudo
       pat$rtdose[[1]]$patient.bd <- pat$patient$birth.date[1]
       pat$rtdose[[1]]$patient.sex <- pat$patient$sex[1]
       pat$rtdose[[1]]$object.name <- n
       pat$rtdose[[1]]$object.alias <- paste0(n,1)
+      if (rtstruct.f) pat$rtdose[[1]]$ref.object.alias <- ""
       pat$rtdose[[1]]$acq.date = CT.date
       pat$rtdose[[1]]$study.date = CT.date
       pat$rtdose[[1]]$creation.date = CT.date
@@ -648,14 +670,14 @@ toy.load.patient <- function (
                                 1:b$n.ijk[3]))
     n <-paste0(MR.date,"_ref2_do1_mr")
     pat$mr[[paste0(n,1)]] <- 
-      vol.create (n.ijk = n.ijk[perm], dxyz = dxyz[perm], pt000=b$patient.xyz0[1,], 
+      vol.create (n.ijk = n.ijk[perm], dxyz = dxyz[perm], pt000=b$xyz0[1,], 
                   modality = "mr", default.value = 0, ref.pseudo = "ref2", 
                   description = "FULL^BODY|T1 GADO",
                   frame.of.reference = "2.16.840.1.114357.58094835081.62350.15267498438.0.1",
                   number = 1)
-    pat$mr[[1]]$patient.orientation <- as.vector(diag(3)[,perm])[1:6]
+    pat$mr[[1]]$orientation <- as.vector(diag(3)[,perm])[1:6]
     pat$mr[[1]]$xyz.from.ijk[,1:3] <-b$xyz.from.ijk[,perm]   
-    pat$mr[[1]]$patient.xyz0  <- matrix((as.matrix (expand.grid (0, 0, pat$mr[[1]]$k.idx,1))%*% 
+    pat$mr[[1]]$xyz0  <- matrix((as.matrix (expand.grid (0, 0, pat$mr[[1]]$k.idx,1))%*% 
                                            t(pat$mr[[1]]$xyz.from.ijk))[ ,1:3],ncol=3)
     m <- m[order(m[,perm[3]],m[,perm[2]],m[,perm[1]]),]
     pat$mr[[1]]$vol3D.data <-array(b$vol3D.data[m], dim = pat$mr[[1]]$n.ijk)
@@ -681,9 +703,11 @@ toy.load.patient <- function (
     pat$rtstruct[[paste0(n,1)]] <- S
     pat$rtstruct[[1]]$patient <- pat$pat.pseudo
     pat$rtstruct[[1]]$patient.bd <- pat$patient$birth.date[1]
-    pat$rtstruct[[1]]$patient.sex <- pat$patient$sex[1]
+    pat$rtstruct[[1]]$patient.sex <- pat$patient$sex[2]
     pat$rtstruct[[1]]$object.name <- n
     pat$rtstruct[[1]]$object.alias <- paste0(n,1)
+    if (rtdose.f) pat$rtdose[[1]]$ref.object.alias <- pat$rtstruct[[1]]$object.alias
+    if (ct.f) pat$rtstruct[[1]]$ref.object.alias <- pat$ct[[1]]$object.alias
     pat$rtstruct[[1]]$description <- "TREATMENT|RS: Approved Structure Set"
     pat$rtstruct[[1]]$ref.object.name <-  ct.n
     pat$rtstruct[[1]]$approval.status <- "APPROVED"

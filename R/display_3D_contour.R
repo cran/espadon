@@ -39,7 +39,7 @@
 #' bg3d ("black")
 #' display.3D.contour (struct = patient$rtstruct[[1]], roi.print = TRUE)
 
-#' @importFrom rgl lines3d text3d cur3d
+#' @importFrom rgl lines3d text3d cur3d points3d
 #' @importFrom stats ecdf
 #' @importFrom grDevices col2rgb rgb
 #' @importFrom methods is
@@ -75,7 +75,8 @@ display.3D.contour <- function (struct, roi.name = NULL, roi.sname = NULL, roi.i
     if (!is.null(struct$roi.data[[i]])){
       for (j in 1:length (struct$roi.data[[i]])) {
         pt <- as.matrix(cbind(struct$roi.data[[i]][[j]]$pt,1)) %*% t(M)
-        lines3d (pt[ ,1], pt[ ,2], pt[ ,3], col=col[sel], lwd=roi.lwd)
+        if (castup.str(struct$roi.data[[i]][[j]]$type) != "POINT") {lines3d (pt[ ,1], pt[ ,2], pt[ ,3], col=col[sel], lwd=roi.lwd)
+        } else { points3d (pt[ ,1], pt[ ,2], pt[ ,3], col=col[sel], lwd=roi.lwd)}
       }
       
       pt <- as.numeric(c( struct$roi.info$Gx[i], struct$roi.info$Gy[i],struct$roi.info$Gz[i], 1) %*% t(M))

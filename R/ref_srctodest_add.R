@@ -71,11 +71,12 @@ ref.srctodest.add <- function (src.ref, dest.ref, TM = diag (4), T.MAT = NULL){
   
   
   ref.info <- T.MAT$ref.info
+  ref.info_ <- ref.info[ ,1:2]
   reg.info <- T.MAT$reg.info
   reg.info$file <- rbind(reg.info$file, db.file)
-  matrix.description <- unlist(lapply(ref.info$ref.pseudo,
+  matrix.description <- unlist(lapply(ref.info_$ref.pseudo,
                                       function(r) 
-                                        paste(paste(ref.info$ref.pseudo,r,sep="<-"),r,ref.info$ref.pseudo, sep=";")))
+                                        paste(paste(ref.info_$ref.pseudo,r,sep="<-"),r,ref.info_$ref.pseudo, sep=";")))
   matrix.description <- do.call(rbind.data.frame,strsplit(matrix.description,";"))
   names(matrix.description)  <- c("t","src","dest")
   matrix.description$type=""

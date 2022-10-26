@@ -32,6 +32,7 @@
 #' This returned object has 2 new fields \code{local.xgrid}, and \code{local.ygrid}, 
 #' representing the local grids of the abscissa (columns) and ordinate (rows) 
 #' of the plane.
+#' @return Returns \code{NULL} if plane doesn't exist.
 #' @examples
 #' # loading of toy-patient objects (decrease dxyz for better result)
 #' step <- 4
@@ -90,8 +91,16 @@ get.plane <- function(vol, origin = c (0, 0, 0),
   }
   #si pas d'interpolation, on prend le point le plus proche qui existe dans le volume
   real.origin <- origin
-  if (!interpolate) real.origin <- (floor ((c(origin,1) %*% t (solve (vol$xyz.from.ijk))) + 0.5) %*% t (vol$xyz.from.ijk))[1:3]
-  
+  if (!interpolate) {
+    
+    idx.c <- which(apply(abs(vol$xyz.from.ijk[1:3,1:3]),2,sum)==0) 
+    idx.r <-  which(apply(abs(vol$xyz.from.ijk[1:3,1:3]),1,sum)==0)
+    u <- vol$xyz.from.ijk 
+    if (length(idx.c)>0) {
+      u[idx.r,idx.c]<- 1
+    }
+    real.origin <- (floor ((c(origin,1) %*% t (solve (u))) + 0.5) %*% t (vol$xyz.from.ijk ))[1:3]
+  }
   orientation <- plane.orientation
   #if (rev.k) orientation <- c(plane.orientation,-vector.product(plane.orientation[1:3],plane.orientation[4:6]))
   
@@ -102,44 +111,54 @@ get.plane <- function(vol, origin = c (0, 0, 0),
 
   v <- vol.in.new.ref(vol, plane.ref, t.mat)
   new.dxyz <- v$dxyz
-  ijk.from.xyz <- solve(v$xyz.from.ijk)
+  
+  #2D
+  idx.c <- which(apply(abs(v$xyz.from.ijk[1:3,1:3]),2,sum)==0) 
+  idx.r <-  which(apply(abs(v$xyz.from.ijk[1:3,1:3]),1,sum)==0)
+  if (length(idx.c)>0) {
+    if (abs(v$xyz0[1,idx.r])>1e-6) return(NULL)
+    u <- v$xyz.from.ijk 
+    u[idx.r,idx.c]<- 1
+    ijk.from.xyz <- solve(u)
+    ijk.from.xyz[idx.r,idx.c] <- 0
+  } else {ijk.from.xyz <- solve(v$xyz.from.ijk)}
+  
+  # ijk.from.xyz <- solve(v$xyz.from.ijk)
   ext.pt <- as.matrix(rbind(get.extreme.pt(v),c(1,1)))
   dif.ext.pt <- ext.pt[,2]-ext.pt[,1]
   
 
   mat <- ijk.from.xyz %*% (ext.pt*matrix(c(1,0,0,1,1,0,0,1), ncol=2))
-  new.dxyz[1] <- dif.ext.pt[1]/max(abs(mat[,2]-mat[,1]))
+  ds <- max(abs(mat[,2]-mat[,1]))
+  if (ds>0) new.dxyz[1] <- dif.ext.pt[1]/max(abs(mat[,2]-mat[,1]))
   
   mat <- ijk.from.xyz %*% (ext.pt*matrix(c(0,1,0,1,0,1,0,1), ncol=2))
-  new.dxyz[2] <- dif.ext.pt[2]/max(abs(mat[,2]-mat[,1]))
+  ds <- max(abs(mat[,2]-mat[,1]))
+  if (ds>0) new.dxyz[2] <- dif.ext.pt[2]/max(abs(mat[,2]-mat[,1]))
   
   mat <- ijk.from.xyz %*% (ext.pt*matrix(c(0,0,1,1,0,0,1,1), ncol=2))
-  new.dxyz[3] <- dif.ext.pt[3]/max(abs(mat[,2]-mat[,1]))
+  ds <- max(abs(mat[,2]-mat[,1]))
+  if (ds>0) new.dxyz[3] <- dif.ext.pt[3]/max(abs(mat[,2]-mat[,1]))
   
+  ext.pt <- ext.pt[1:2,]/ matrix(new.dxyz[c(1,2,1,2)],ncol=2) 
+  # round.ext.pt <- round(ext.pt + sign(ext.pt) * 0.5*(abs(ext.pt - round(ext.pt)) > 1e-6))
+  round.ext.pt <- round(ext.pt - sign(ext.pt) * 0.5*(abs(ext.pt - round(ext.pt)) > 1e-6))
   if (is.null(xgrid)){
     # creation de la grille incluant le point origin
-    min.i.idx <- floor (ext.pt[1,1] / abs(new.dxyz [1]))
-    max.i.idx <- ceiling (ext.pt[1,2] / abs(new.dxyz [1]))
-    i.idx <- min.i.idx:max.i.idx
-    new.grid.i <- i.idx * abs(new.dxyz [1]) 
+    i.idx <- round.ext.pt[1,1]:round.ext.pt[1,2]
+    new.grid.i <- i.idx * abs(new.dxyz [1])
     if (sign(new.dxyz [1])==-1) new.grid.i <- rev(new.grid.i)
-    if (length(new.grid.i)==1) new.dxyz [1] <-0
   } else{
     new.grid.i <- xgrid
-    if (length(new.grid.i)==1) new.dxyz [1] <-0
     if (length(new.grid.i)>1) new.dxyz [1] <- new.grid.i[2]-new.grid.i[1]
   }
   if (is.null(ygrid)){
-    min.j.idx <- floor (ext.pt[2,1] / abs(new.dxyz [2]))
-    max.j.idx <- ceiling (ext.pt[2,2] / abs (new.dxyz [2]))
-    j.idx <- min.j.idx:max.j.idx
-    new.grid.j <- j.idx * abs(new.dxyz [2]) 
+    j.idx <- round.ext.pt[2,1]:round.ext.pt[2,2]
+    new.grid.j <- j.idx * abs(new.dxyz [2])
     if (sign(new.dxyz [2])==-1) new.grid.j <- rev(new.grid.j)
-    if (length(new.grid.j)==1) new.dxyz [2] <-0
   } else{
     new.grid.j <- ygrid
     if (length(new.grid.j)>1) new.dxyz [2] <- new.grid.j[2]-new.grid.j[1]
-    if (length(new.grid.j)==1) new.dxyz [2] <-0
   }
   TM <- get.rigid.M(t.mat,plane.ref, vol$ref.pseudo)
   if (all (vector.product (orientation[1:3], orientation[4:6])==- as.numeric (TM[1:3,3]))) 

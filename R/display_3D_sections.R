@@ -57,28 +57,44 @@ display.3D.sections <- function(vol, cross.pt = c (0, 0, 0), display.ref = vol$r
   if (any(sign(c(cross.pt-ept[,1], ept[,2]-cross.pt))==-1)) 
     stop("cross.pt is not included in the vol")
   
+  
+  imin <- as.numeric(vol$min.pixel) #r[1]
+  imax <- as.numeric(vol$max.pixel) #r[2]
+  if (!is.null(breaks) & !any(is.na(breaks))) {
+    if (length(breaks)!= length (col) + 1) stop("length(breaks) must be equal to length(col) + 1.")
+    
+  } else {
+    breaks <- .pixel.scale (imin,imax,length(col))
+  }
+  if (breaks[1]>imin) breaks[1] <- imin - 1
+  if (breaks[length (breaks)]<imax) breaks[length (breaks)] <- imax + 1
+  
+  
   vol_ <- vol.in.new.ref(vol, new.ref.pseudo = display.ref, T.MAT= T.MAT)
   
   if (is.null (vol_)) stop ("cannot display anything in selected frame of reference.")
   
   if (trans) {
     pl.XY <- get.plane (vol_, cross.pt, c(1, 0, 0, 0, 1, 0), interpolate = TRUE)
-    display.3D.stack(pl.XY, 0, display.ref = display.ref, T.MAT = T.MAT, col =col, 
-                     breaks = breaks, cube=FALSE, border=border,ktext = FALSE,
-                     line.col = border.col)
-    }
+    if (!is.null(pl.XY))
+      display.3D.stack(pl.XY, 0, display.ref = display.ref, T.MAT = T.MAT, col =col, 
+                       breaks = breaks, cube=FALSE, border=border,ktext = FALSE,
+                       line.col = border.col)
+  }
   if (sagi) {
-    pl.YZ <- get.plane (vol_, cross.pt, c(0, 0, 1, 0, 1, 0), interpolate = TRUE)  
-    display.3D.stack(pl.YZ, 0, display.ref = display.ref, T.MAT = T.MAT, col =col, 
-                     breaks = breaks, cube=FALSE, border=border,ktext = FALSE,
-                     line.col = border.col)
+    pl.YZ <- get.plane (vol_, cross.pt, c(0, 0, 1, 0, 1, 0), interpolate = TRUE) 
+    if (!is.null(pl.YZ))
+      display.3D.stack(pl.YZ, 0, display.ref = display.ref, T.MAT = T.MAT, col =col, 
+                       breaks = breaks, cube=FALSE, border=border,ktext = FALSE,
+                       line.col = border.col)
     }
   if (front) {
     pl.ZX <- get.plane (vol_, cross.pt, c(1, 0, 0, 0, 0, 1), interpolate = TRUE) 
-    display.3D.stack(pl.ZX, 0, display.ref = display.ref, T.MAT = T.MAT, col =col, 
-                     breaks = breaks, cube=FALSE, border=border,ktext = FALSE,
-                     line.col = border.col)
-    } 
+    if (!is.null(pl.ZX))
+      display.3D.stack(pl.ZX, 0, display.ref = display.ref, T.MAT = T.MAT, col =col, 
+                       breaks = breaks, cube=FALSE, border=border,ktext = FALSE,
+                       line.col = border.col)
+  } 
 
  
 }

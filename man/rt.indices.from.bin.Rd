@@ -21,6 +21,7 @@ rt.indices.from.bin(
     "HI.heufelder"),
   gradient.indices = c("GI.ratio.50"),
   D.xpc = NULL,
+  D.xcc = NULL,
   V.xGy = NULL,
   verbose = TRUE
 )
@@ -69,6 +70,9 @@ RoI.}
 
 \item{D.xpc}{Vector of the percentage of the volume, for which the dose coverage
 is requested.}
+
+\item{D.xcc}{Vector of the volume in \mjeqn{cm^3}{ascii}, for which the dose
+coverage is requested.}
 
 \item{V.xGy}{Vector of the minimum dose in Gy, received by the volume to be
 calculated.}

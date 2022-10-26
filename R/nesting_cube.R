@@ -36,6 +36,11 @@ nesting.cube <- function (vol, pt.min, pt.max, alias = "", description = NULL){
     return (NULL)
   }
   
+  if(is.null(vol$vol3D.data)){
+    warning ("empty vol$vol3D.data.")
+    return (NULL)
+  }
+  
   struct.cube <- vol$cube.idx
   struct.cube[1, c(1,4,5,8)] <- pt.min[1]
   struct.cube[1, c(2,3,6,7)] <- pt.max[1]
@@ -64,7 +69,7 @@ nesting.cube <- function (vol, pt.min, pt.max, alias = "", description = NULL){
   new.vol$n.ijk <- c (length( rg.i), length (rg.j), length (rg.k))
   new.vol$xyz.from.ijk[ ,4] <- pt000
   new.vol$k.idx <- 0:(new.vol$n.ijk[3]-1)
-  new.vol$patient.xyz0  <- matrix ((as.matrix (expand.grid (0, 0, new.vol$k.idx,1))%*% t(new.vol$xyz.from.ijk))[ ,1:3],ncol=3)
+  new.vol$xyz0  <- matrix ((as.matrix (expand.grid (0, 0, new.vol$k.idx,1))%*% t(new.vol$xyz.from.ijk))[ ,1:3],ncol=3)
   
   new.vol$cube.idx <- matrix ( c(0, 0, 0, 1, new.vol$n.ijk[1]-1, 0, 0, 1,
                                  new.vol$n.ijk[1]-1, new.vol$n.ijk[2]-1, 0, 1, 0, new.vol$n.ijk[2]-1, 0, 1,

@@ -10,7 +10,8 @@ display.obj.links(
   exclusion = NULL,
   square = "rtdose",
   group.by.connected.FoR = TRUE,
-  interactive = FALSE
+  interactive = FALSE,
+  random.seed = 314
 )
 }
 \arguments{
@@ -37,11 +38,14 @@ on the graph to get information about the objects and select or remove them from
 the data frame of the selected objects.
 Then simply click on the name of the object on which to apply the chosen action.
 If \code{interactive = FALSE} no interaction possible with the plot.}
+
+\item{random.seed}{Positive Integer or \code{NULL}. If \code{random.seed = NULL},
+the objects are laid out randomly. The layout is otherwise fixed.}
 }
 \value{
 The function displays all patient objects, linked by an
-arrow when they are connected, and with a color and a shape depending on
-\code{square}, \code{group.by.connected.FoR}.
+arrow when they are connected or a line when they belongs to the same DICOM
+object, and with a color and a shape depending on \code{square}, \code{group.by.connected.FoR}.
 
 When \code{interactive = TRUE}, it returns a dataframe of the selected objects,
 or NULL if no object is selected.
@@ -62,4 +66,8 @@ By default, objects shapes are circles, except rtdose represented as squares.
 patient <- toy.load.patient (dxyz = c (5, 5, 5), beam.nb = 1)
 display.obj.links (patient, group.by.connected.FoR = FALSE)
 display.obj.links (patient, group.by.connected.FoR = TRUE)
+display.obj.links (patient, group.by.connected.FoR = TRUE, random.seed=NULL)
+}
+\seealso{
+\link[espadon]{get.obj.connection}
 }

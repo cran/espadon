@@ -12,7 +12,7 @@
 
 <meta name="author" content="Cathy &amp; Jean-Marc Fontbonne" />
 
-<meta name="date" content="2022-07-15" />
+<meta name="date" content="2022-10-26" />
 
 <title>espadon overview</title>
 
@@ -334,7 +334,7 @@ code > span.er { color: #a61717; background-color: #e3d2d2; }
 
 <h1 class="title toc-ignore">espadon overview</h1>
 <h4 class="author">Cathy &amp; Jean-Marc Fontbonne</h4>
-<h4 class="date">2022-07-15</h4>
+<h4 class="date">2022-10-26</h4>
 
 
 
@@ -412,7 +412,8 @@ machines, or at different times. The
 convenient display of these links.</p>
 <div class="sourceCode" id="cb4"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb4-1"><a href="#cb4-1" aria-hidden="true" tabindex="-1"></a><span class="fu">library</span>(espadon)</span>
 <span id="cb4-2"><a href="#cb4-2" aria-hidden="true" tabindex="-1"></a>pat.dir <span class="ot">&lt;-</span> <span class="fu">choose.dir</span> () <span class="co"># patient folder containing mr, ct, rt-struct, rt-dose, rt-plan and reg…</span></span>
-<span id="cb4-3"><a href="#cb4-3" aria-hidden="true" tabindex="-1"></a>pat <span class="ot">&lt;-</span> <span class="fu">load.patient.from.dicom</span> (pat.dir)</span></code></pre></div>
+<span id="cb4-3"><a href="#cb4-3" aria-hidden="true" tabindex="-1"></a>pat <span class="ot">&lt;-</span> <span class="fu">load.patient.from.dicom</span> (pat.dir)</span>
+<span id="cb4-4"><a href="#cb4-4" aria-hidden="true" tabindex="-1"></a><span class="fu">display.obj.links</span> (pat)</span></code></pre></div>
 <p>When the patient object list is loaded into memory, the
 <strong><em>load.obj.data</em></strong> function loads the full object
 information, i.e. voxels content for MR, CT or PT, rt-dose or contour
@@ -487,7 +488,8 @@ volumes.</p>
 <ul>
 <li>Functions such as <strong><em>add.margin</em></strong>,
 <strong><em>nesting.cube</em></strong>,
-<strong><em>nesting.roi</em></strong> increase or decrease the number of
+<strong><em>nesting.roi</em></strong>,
+<strong><em>nesting.bin</em></strong> increase or decrease the number of
 voxels in the volume.</li>
 </ul>
 <div class="sourceCode" id="cb8"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb8-1"><a href="#cb8-1" aria-hidden="true" tabindex="-1"></a>nesting.MR <span class="ot">&lt;-</span> <span class="fu">nesting.roi</span> (MR, S, <span class="at">roi.sname =</span> <span class="st">&quot;brain&quot;</span>, <span class="at">T.MAT =</span> pat<span class="sc">$</span>T.MAT, </span>
@@ -681,7 +683,7 @@ dose distribution from rt-dose file, the functions
 :</p>
 <ul>
 <li>dosimetry indices : minimum, maximum, average dose, standard
-deviation and requested D.x%</li>
+deviation, requested D.x% and requested D.xcc.</li>
 <li>volume indices : total volume, surface area and requested
 V.xGy.</li>
 <li>conformity indices : prescription isodose target volume (PITV),
@@ -713,6 +715,9 @@ are outlined.</p>
 <span id="cb16-12"><a href="#cb16-12" aria-hidden="true" tabindex="-1"></a><span class="fu">rt.indices.from.roi</span> (D.on.CT, S, <span class="at">target.roi.name =</span> <span class="st">&quot;ptv&quot;</span>, </span>
 <span id="cb16-13"><a href="#cb16-13" aria-hidden="true" tabindex="-1"></a>                     <span class="at">healthy.roi.name =</span> <span class="st">&quot;chiasm&quot;</span>,</span>
 <span id="cb16-14"><a href="#cb16-14" aria-hidden="true" tabindex="-1"></a>                     <span class="at">presc.dose =</span> <span class="fl">0.9</span> <span class="sc">*</span> <span class="dv">70</span>)</span></code></pre></div>
+<p>The espadon package can also compute the Gamma index and the Chi
+index in 2D or 3D, using the <strong><em>rt.gamma.index</em></strong>
+and <strong><em>rt.chi.index</em></strong>.</p>
 </div>
 
 

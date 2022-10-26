@@ -28,12 +28,19 @@
 #' an.raw.data <- dicom.raw.data.anonymizer (toy.dicom.raw (), offset = -2)
 #' data <- dicom.parser (toy.dicom.raw ())
 #' an.data <- dicom.parser (an.raw.data) 
+#'
 #' # Checking for differences
 #' flag.dif <- data$Value !=  an.data$Value  
 #' df <- cbind (data[flag.dif, c ("VM","Value")], an.data[flag.dif, "Value"])      
 #' colnames (df) <-   c ("VM","old Value","new Value")    
 #' df                                     
-
+#'
+#' # save data in a the new file
+#' #############################
+#' # new.file.name <- "an.dcm"
+#' # zz <- file (new.file.name, "wb")
+#' # writeBin (an.raw.data, zz, size = 1)
+#' # close (zz)
 dicom.raw.data.anonymizer <- function( dicom.raw.data, offset = 0 , new.PIN = "Anonymous ",
                                        reset.private.tag = FALSE,
                                        tag.dictionary = dicom.tag.dictionary ()){

@@ -18,7 +18,7 @@
 grid.equal <- function (vol1, vol2)  {
   if (!is (vol1, "volume") | !is (vol2, "volume")) return (FALSE)
   if (vol1$ref.pseudo != vol2$ref.pseudo) return (FALSE)
-  if (!all (vol1$xyz.from.ijk == vol2$xyz.from.ijk)) return (FALSE)
+  if (!all (abs(vol1$xyz.from.ijk - vol2$xyz.from.ijk) < 1e-6)) return (FALSE)
   if (!all (vol1$n.ijk == vol2$n.ijk)) return (FALSE)
   return (TRUE)
 }

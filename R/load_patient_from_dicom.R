@@ -75,7 +75,7 @@ load.patient.from.dicom <- function (dcm.files, data = FALSE, dvh = FALSE,
                  "reg" = l$header$nb.of.ref, "mesh" = l$header$nb.faces,
                  "histo" = l$header$nb.MC,"dvh" = l$header$nb.MC,
                  "histo2D" = l$header$nb.pixels, 
-                 "rtplan"=sum(l$header$fraction.info[1,c("beam.nb","brachy.app.nb")],na.rm=T), 
+                 "rtplan"=sum(l$header$fraction.info[1,c("nb.of.beam","nb.of.brachy.app")],na.rm=T), 
                  NA)
     subobj.nb <- NA
     idx <- grep ("nb[.]of[.]subobj", names(l$header$object.info))

@@ -95,12 +95,12 @@ std::vector <unsigned int> labelbrowser (
         if (label_under_map <  min_label) {
           min_label = label_under_map;
     
-          if ((label_under_pt != le_vol3D) & (label_under_pt != min_label)) {
+          if ((label_under_pt != le_vol3D) && (label_under_pt != min_label)) {
             min_idx = label_under_pt;
             max_idx = label_last_pt[label_under_pt];
           }
     
-          if ((label_under_line != le_vol3D) & (label_under_line != min_label)) {
+          if ((label_under_line != le_vol3D) && (label_under_line != min_label)) {
             if (label_under_line < min_idx) min_idx = label_under_line;
             if (label_last_pt[label_under_line] > max_idx) max_idx = label_last_pt[label_under_line];
           }

@@ -366,7 +366,7 @@ std::list <std::string> dicombrowser (std::vector <unsigned char> dicomrawdata,
         }
         // prise en compte de endianness et VRness
         if ((stdgrouptag == "0002")  &&  (stdelementtag != "0000")){
-        // if ((stdgrouptag == grouptag_le)  &  (stdelementtag != "0000")){
+        // if ((stdgrouptag == grouptag_le)  &&  (stdelementtag != "0000")){
           length_of_Group = length_of_Group - (my_cursor - counter_start);
           if (length_of_Group == 0) {
             VRness = decoded_VRness;

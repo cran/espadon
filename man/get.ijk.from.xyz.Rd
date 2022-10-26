@@ -38,7 +38,7 @@ patient <- toy.load.patient (modality = "ct", roi.name = "",
                              dxyz = rep (step, 3))
 CT <- patient$ct[[1]]
 
-get.ijk.from.xyz (xyz = CT$patient.xyz0[1,], vol = CT, verbose = TRUE)
+get.ijk.from.xyz (xyz = CT$xyz0[1,], vol = CT, verbose = TRUE)
 get.ijk.from.xyz (xyz = c (1,1,1), vol = CT, verbose = TRUE)
 
 index <- get.ijk.from.xyz (xyz = c (1,1,1), vol = CT)

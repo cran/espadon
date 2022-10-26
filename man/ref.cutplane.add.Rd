@@ -6,7 +6,7 @@
 \usage{
 ref.cutplane.add(
   vol,
-  origin = vol$patient.xyz0[1, ],
+  origin = vol$xyz0[1, ],
   ref.cutplane = paste0(vol$ref.pseudo, "m"),
   T.MAT = NULL
 )

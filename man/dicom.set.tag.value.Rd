@@ -48,4 +48,11 @@ new.raw.data <- dicom.set.tag.value (toy.dicom.raw (),
 # change control 
 data <- dicom.parser (new.raw.data) 
 data[data$TAG \%in\% c ("(0010,0010)", "(0010,0020)"), ]
+
+# save data in a the new file
+#############################
+# new.file.name <- "new.dcm"
+# zz <- file (new.file.name, "wb")
+# writeBin (new.raw.data  , zz, size = 1)
+# close (zz)
 }

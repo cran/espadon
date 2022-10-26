@@ -89,21 +89,19 @@ vol.create <- function (n.ijk, dxyz, mid.pt = NULL, pt000 = NULL,
   back.vol$max.pixel <- default.value
 
   back.vol$dxyz<- dxyz
-  back.vol$patient.orientation <- c(1,0,0,0,1,0)
-  back.vol$patient.xyz0 <- matrix(pt000,ncol=3)
+  back.vol$orientation <- c(1,0,0,0,1,0)
+  back.vol$xyz0 <- matrix(pt000,ncol=3)
  
 
-  
-  
-  back.vol$xyz.from.ijk <- as.matrix( cbind (c (1,0,0,0) * back.vol$dxyz[1],
-                                             c (0,1,0,0) * back.vol$dxyz[2],
-                                             c (0,0,1,0) * back.vol$dxyz[3],
+  back.vol$xyz.from.ijk <- as.matrix( cbind (c (1,0,0,0) * dxyz[1],
+                                             c (0,1,0,0) * dxyz[2],
+                                             c (0,0,1,0) * dxyz[3],
                                              c (pt000,1)))
   
   back.vol$k.idx <- 0:(n.ijk[3]-1)
   back.vol$missing.k.idx <- FALSE
   
-  back.vol$patient.xyz0  <- matrix((as.matrix (expand.grid (0, 0, back.vol$k.idx,1))%*% t(back.vol$xyz.from.ijk))[ ,1:3],ncol=3)
+  back.vol$xyz0  <- matrix((as.matrix (expand.grid (0, 0, back.vol$k.idx,1))%*% t(back.vol$xyz.from.ijk))[ ,1:3],ncol=3)
   
   back.vol$cube.idx <- matrix ( c(0,0,0,1,
                                   n.ijk[1]-1, 0, 0, 1,

@@ -37,6 +37,6 @@ It is used for the test.
 \examples{
 # loading of toy-patient objects (decrease dxyz for  better result)
 step <- 5
-pat <- toy.load.patient (dxyz = rep (step, 3), beam.nb = 1)
+pat <- toy.load.patient (dxyz = rep (step, 3), beam.nb = 2)
 str (pat, max.level = 2)
 }

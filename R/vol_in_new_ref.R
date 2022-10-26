@@ -47,7 +47,14 @@ vol.in.new.ref <- function (vol, new.ref.pseudo, T.MAT, alias="",description=NUL
   V$frame.of.reference <- T.MAT$ref.info[T.MAT$ref.info$ref.pseudo==new.ref.pseudo, ]$ref
   V$xyz.from.ijk <- M %*% vol$xyz.from.ijk
   V$xyz.from.ijk[abs(V$xyz.from.ijk) < 1.0e-6] <- 0
-  V$patient.xyz0 <- matrix ((as.matrix (expand.grid (0, 0, vol$k.idx, 1)) %*% t(V$xyz.from.ijk))[ ,1:3],ncol=3)
-  V$patient.orientation <- c(V$xyz.from.ijk[1:3, 1]/vol$dxyz[1], V$xyz.from.ijk[1:3, 2]/vol$dxyz[2])
+  V$xyz0 <- matrix ((as.matrix (expand.grid (0, 0, vol$k.idx, 1)) %*% t(V$xyz.from.ijk))[ ,1:3],ncol=3)
+  V$orientation <- c(V$xyz.from.ijk[1:3, 1]/vol$dxyz[1], V$xyz.from.ijk[1:3, 2]/vol$dxyz[2])
+  
+  if (!is.null(V$beam.source)){
+    V$beam.source <- matrix((as.matrix(cbind(V$beam.source,1)) %*% t(M))[,1:3], 
+                            byrow=TRUE, ncol=3)
+    V$beam.orientation <- as.numeric((M %*% cbind (c(V$beam.orientation[1:3],0),
+                                                   c(V$beam.orientation[4:6],0)))[1:3,])
+  }
   return (V)
 }

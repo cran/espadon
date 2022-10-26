@@ -78,19 +78,43 @@ vol.regrid <- function (vol, back.vol, T.MAT = NULL, interpolate = TRUE, alias =
   
   new.vol$vol3D.data[] <- NA
   
-  if (is.na(vol$min.pixel) | is.na(vol$max.pixel)) return (new.vol)
-  if (abs (det(vol$xyz.from.ijk))<1e-6) {
-    warning ("non invertible matrix, check arguments.")
-    return (NULL)
-  }
-  M.old.from.new <- solve (vol$xyz.from.ijk) %*% M.Tref %*% new.vol$xyz.from.ijk
-  if (abs (det(M.old.from.new))<1e-6) {
-    warning ("non invertible matrix, check arguments.")
-    return (NULL)
+  # if (is.na(vol$min.pixel) | is.na(vol$max.pixel)) return (new.vol)
+  # if (abs (det(vol$xyz.from.ijk))<1e-6) {
+  #   warning ("non invertible matrix, check arguments.")
+  #   return (NULL)
+  # }
+  # M.old.from.new <- solve (vol$xyz.from.ijk) %*% M.Tref %*% new.vol$xyz.from.ijk
+  # if (abs (det(M.old.from.new))<1e-6) {
+  #   warning ("non invertible matrix, check arguments.")
+  #   return (NULL)
+  # }
+  # 
+  
+  M.xyz.from.new <- M.Tref %*% new.vol$xyz.from.ijk
+  #2D
+  idx.c <- which(apply(abs(vol$xyz.from.ijk[1:3,1:3]),2,sum)==0) 
+  idx.r <-  which(apply(abs(vol$xyz.from.ijk[1:3,1:3]),1,sum)==0)
+  
+  
+  if (length(idx.c)>0) {
+    if(abs(vol$xyz.from.ijk[idx.r,4]-M.xyz.from.new[idx.r,4])>1e-6) return(new.vol)
+    u <- vol$xyz.from.ijk 
+    u[idx.r,idx.c]<- 1
+    M.old.from.new <- solve(u)  %*% M.xyz.from.new
+    
+    M.xyz.from.new[which(apply(abs(M.xyz.from.new[1:3,1:3]),2,sum)==0) ,
+                   which(apply(abs(M.xyz.from.new[1:3,1:3]),1,sum)==0)]<- 1
+    new.cube.idx <- solve(M.xyz.from.new )%*% vol$xyz.from.ijk %*% vol$cube.idx
+    new.cube.idx[abs(new.cube.idx) < 1.0e-6] <- 0
+
+  } else {
+    M.old.from.new <- solve (vol$xyz.from.ijk) %*% M.Tref %*% new.vol$xyz.from.ijk
+    new.cube.idx <- solve (M.old.from.new) %*% vol$cube.idx
+    new.cube.idx[abs(new.cube.idx) < 1.0e-6] <- 0
   }
   
   
-  new.cube.idx <- solve (M.old.from.new) %*% vol$cube.idx
+  # new.cube.idx <- solve (M.old.from.new) %*% vol$cube.idx
   rg.i <- floor (min(new.cube.idx[1,])):ceiling(max(new.cube.idx[1,]))
   rg.j <- floor (min(new.cube.idx[2,])):ceiling(max(new.cube.idx[2,]))
   rg.k <- floor (min(new.cube.idx[3,])):ceiling(max(new.cube.idx[3,]))
@@ -115,7 +139,9 @@ vol.regrid <- function (vol, back.vol, T.MAT = NULL, interpolate = TRUE, alias =
   
   ijk <-matrix((ijk.selection %*% t(M.old.from.new))[ ,1:3],ncol=3)
   if (verbose) pb$tick()
-  new.vol$vol3D.data[ijk.Rselection] <- .getvaluefromijkC (vol3D = as.numeric(vol$vol3D.data),
+  vol3D <- as.numeric(vol$vol3D.data)
+  vol3D[is.na(vol3D)] <- NaN
+  new.vol$vol3D.data[ijk.Rselection] <- .getvaluefromijkC (vol3D = vol3D,
                                                            interpolate = interpolate,
                                                            i = as.numeric(ijk[ ,1]),
                                                            j = as.numeric(ijk[ ,2]),
@@ -123,25 +149,6 @@ vol.regrid <- function (vol, back.vol, T.MAT = NULL, interpolate = TRUE, alias =
                                                            k_idx = k.idx,
                                                            k_loc = k.loc, n_ijk=vol$n.ijk)
   
-  
-  # d <- round(seq(1,nrow(ijk.Rselection),2^20))
-  # f <-c(d-1, nrow(ijk.Rselection))
-  # f <- f[-1]
-  # if (verbose) pb <- progress_bar$new(format = " processing [:bar] :percent",
-  #                                     total = length(d), clear = FALSE, width= 60)
-  # 
-  # for(i in 1:length(d)){
-  #   ijk <-matrix((ijk.selection[d[i]:f[i],] %*% t(M.old.from.new))[ ,1:3],ncol=3)
-  #   new.vol$vol3D.data[ijk.Rselection[d[i]:f[i],]] <- .getvaluefromijkC (vol3D = as.numeric(vol$vol3D.data),
-  #                                                                        interpolate = interpolate,
-  #                                                                        i = as.numeric(ijk[ ,1]), 
-  #                                                                        j = as.numeric(ijk[ ,2]),
-  #                                                                        k = as.numeric(ijk[ ,3]),
-  #                                                                        k_idx = k.idx,
-  #                                                                        k_loc = k.loc, n_ijk=vol$n.ijk)
-  # 
-  # if (verbose) pb$tick()
-  # }
   if (verbose) pb$tick()
   new.vol$vol3D.data[is.nan(new.vol$vol3D.data)] <- NA
   new.vol$vol3D.data[abs(new.vol$vol3D.data)<=1e-6] <- 0

@@ -36,22 +36,17 @@ vol.sum<- function (vol1, vol2, alias = "", description = NULL) {
     return (NULL)
   }
   
-  if (is.null(vol1)|is.null(vol2)) {
-    warning ("vol1 or vol2 must not be null.")
-    return (NULL)
-  }
-  
-  if (vol1$modality!=vol2$modality) {
+   if (vol1$modality!=vol2$modality) {
     warning ("both volumes must have same modality.")
     return (NULL)
   }
   
   if(is.null(vol1$vol3D.data)){
-    warning ("empty vol1$vol3D.data.")
+    warning ("Check input data : empty vol1$vol3D.data.")
     return (NULL)
   }
   if(is.null(vol2$vol3D.data)){
-    warning ("empty vol2$vol3D.data.")
+    warning ("Check input data : empty vol2$vol3D.data.")
     return (NULL)
   }
   

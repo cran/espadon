@@ -47,7 +47,7 @@
 #' at least as many Identity matrices as there are \code{ref.pseudo}.
 #' }
 #' 
-#' @note  A \pkg{espadon} object  of class "dvh","histo","histo2D","mesh", "reg", 
+#' @note  A \pkg{espadon} object  of class "dvh", "fan", "histo","histo2D","mesh", "reg", 
 #' "struct", "t.mat","undef","volume" is a list containing at least:
 #' \itemize{
 #' \item \code{$patient}: patient's PIN.
@@ -86,8 +86,7 @@
 #' 
 #' @note if the object is linked to another DICOM object, the list also contains:
 #' \itemize{
-#' \item \code{$ref.object.name}: Name of the reference object. Available only for 
-#' rtdose.
+#' \item \code{$ref.object.alias}: Alias of the reference object.
 #' \item \code{$ref.object.info}: Information of the reference object (not available 
 #' for mr and ct). It includes:
 #' \tabular{rl}{
@@ -108,6 +107,16 @@
 #' \item \code{$pcv}: percentage of the total volume receiving at least the doses defined by \code{$mids}.
 #' \item if \code{$nb.MC} is different from 0, the arrays \code{MC.vol}, \code{MC.pcv} and 
 #' \code{MC.dxyz} are added. See \link[espadon]{histo.DVH}.
+#' } 
+#'
+#' @note \emph{- the "fan" class also includes :}
+#' \itemize{
+#' \item \code{$origin}: the xyz-coordinates of the source point.
+#' \item \code{$direction}: the xyz-coordinates of the main direction of the fan.
+#' \item \code{$orientation}: the xyz-coordinates of the two unit vectors of the plane orthogonal to the {$direction}.
+#' \item \code{$xyz}: the xyz-coordinates of the unit vectors of the fan rays
+#' \item \code{$local}: depending on the generation of the fan rays, it can be the spherical coordinates, 
+#' the deflection angles, the voxel coordinates...
 #' } 
 #'
 #' @note \emph{- the "histo" class also includes :}
@@ -204,18 +213,17 @@
 #' treatment pattern,\cr
 #' \tab - \code{$frac.pattern} the value of TAG (300A,007B) describing treatment 
 #' pattern every day,\cr
-#' \tab - \code{$beam.nb} the number of beams in current fraction group,\cr
+#' \tab - \code{$nb.of.beam} the number of beams in current fraction group,\cr
 #' \tab - \code{$beam.dose.meaning} the value of TAG (300A,008B) indicating the 
 #' meaning of Beam Dose,\cr
-#' \tab - \code{$brachy.app.nb} the number of brachy application setups in current 
+#' \tab - \code{$nb.of.brachy.app} the number of brachy application setups in current 
 #' fraction group.
 #' }
-
-#' \item \code{$beam.info} (in case of beam treatment): dataframe containing, if 
+#' \item \code{$fraction.beam} (in case of beam treatment): dataframe containing, if 
 #' they exist,
 #' \tabular{rl}{
 #' \tab - \code{$fraction.id},\cr
-#' \tab - \code{$planned.frac.nb},\cr
+#' \tab - \code{$nb.of.frac.planned},\cr
 #' \tab - \code{$beam.dose} the value of TAG (00A,0084),\cr
 #' \tab - \code{$beam.specif.pt} the value of TAG (300A,0082),\cr
 #' \tab - \code{$beam.meterset} the value of TAG (300A,0086),\cr
@@ -223,6 +231,12 @@
 #' \tab - \code{$alt.dose} the value of TAG (300A,0091),\cr
 #' \tab - \code{$alt.type} the value of TAG (300A,0092,\cr
 #' \tab - \code{$duration.lim} the value of TAG (300A,00C5),\cr
+#' \tab - \code{$beam.nb} the value of TAG (300C,0006) or (300A,00C0),\cr
+#' }
+
+#' \item \code{$beam.info} (in case of beam treatment): dataframe containing, if 
+#' they exist,
+#' \tabular{rl}{
 #' \tab - \code{$beam.nb} the value of TAG (300C,0006) or (300A,00C0),\cr
 #' \tab - \code{$beam.name} the value of TAG (300A,00C2),\cr
 #' \tab - \code{$beam.description} the value of TAG (300A,00C3),\cr
@@ -260,10 +274,23 @@
 #' \tab - \code{$fixation.light.polar.angle} the value of TAG (300A,0358).
 #' }
 #' 
+#' \item \code{$beam.ctl.pt} (in case of beam treatment): list containing, for each
+#' beam,
+#' \tabular{rl}{
+#' \tab - \code{$info} a data.frame of control points information from DICOM\cr
+#' \tab - \code{$beam.source} the coordinates of the source in the patient frame of reference\cr
+#' \tab - \code{$beam.direction} the coordinates of the beam direction in the patient frame of reference\cr 
+#' \tab - \code{$beam.direction} the coordinates of the beam orientation in the patient frame of reference\cr 
+#' \tab - \code{$beam.isocenter} the coordinates of the isocenter in the patient frame of reference\cr 
+#' \tab - \code{$spot.map}, if they exist,the coordinates of the spots in the patient frame of reference\cr 
+#' }
+#' For the moment, only the rotations of the gantry and the patient support, and 
+#' the position of the isocenter are taken into account in the calculation of these coordinates.
+#' 
 #' \item \code{$brachy.info} (in case of brachy treatment): dataframe containing, if they exist,
 #' \tabular{rl}{
 #' \tab - \code{$fraction.id}\cr
-#' \tab - \code{$planned.frac.nb},\cr
+#' \tab - \code{$nb.of.frac.planned},\cr
 #' \tab - \code{$brachy.dose} the value of TAG (300A,00A4),\cr
 #' \tab - \code{$brachy.nb} the value of TAG (300C,000C),\cr
 #' \tab - \code{$brachy.specif.pt} the value of TAG (300A,00A).
@@ -342,10 +369,10 @@
 #' \item \code{$min.pixel}: minimum value of voxels in the volume.
 #' \item \code{$max pixel}: maximum value of voxels in the volume.
 #' \item \code{$dxyz}: x, y, z steps in mm.
-#' \item \code{$patient.orientation}: value of TAG (0020,0037).
+#' \item \code{$orientation}: value of TAG (0020,0037).
 #' Vector, comprising the vectors i and j defining the orientation of the patient
 #' with respect to the volume planes.
-#' \item \code{$patient.xyz0}: in the patient frame of reference, position of the
+#' \item \code{$xyz0}: in the patient frame of reference, position of the
 #' first voxel of each plane.
 #' \item \code{$xyz.from.ijk}: transfer matrix of the voxels i, j, k indices to
 #' the position x, y, z in mm in the patient's frame of reference.
@@ -367,6 +394,6 @@
 #' cat ("espadon class names are:", paste (espadon.class(), collapse = ", "))
 #' @export
 espadon.class <- function( ) {
-return(c("dvh","histo","histo2D","mesh","patient", "reg", "rtplan",
+return(c("dvh", "fan", "histo","histo2D","mesh","patient", "reg", "rtplan",
          "struct", "t.mat","undef","volume"))
 }

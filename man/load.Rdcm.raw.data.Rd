@@ -38,7 +38,7 @@ lf <- list.files (pat.dir, pattern = "[.]Rdcm$", full.names = TRUE)
 lf
 
 # Inspect Rdcm raw data
-L <- load.Rdcm.raw.data (lf)
+L <- load.Rdcm.raw.data (lf[1])
 str (L, max.level =3)
 }
 \seealso{

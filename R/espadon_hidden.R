@@ -2,13 +2,20 @@
   library.dynam.unload("espadon", libpath)
 }
 
-.onAttach <- function(libname,pkgname) {
-  packageStartupMessage(c('espadon is a free package and comes with ABSOLUTELY NO WARRANTY.\n',
-                          'Type \'vignette("espadon_overview", package="espadon")\' for an overview of functions'))
-}
+# .onAttach <- function(libname,pkgname) {
+#   packageStartupMessage(c('Make sure you always have the latest version of espadon.\n',
+#                           'For checking, copy-paste :\n',
+#                           '   db <- available.packages(filters = c("duplicates"))\n',
+#                           '   if (packageVersion ("espadon") < as.character (db["espadon","Version"])){\n',
+#                           '       message ("you need to update espadon")\n',
+#                           '   } else {message ("espadon is up to date")}\n '))
+# }
 
 #####################################################################################
-
+.espadon.version <- function(){
+  return ("1.1.1")
+}
+######################################################
 #' @import progress
 #' @import qs
 
@@ -244,10 +251,11 @@
             "rtdose" = {L <- .rtdose.save (object.df[obj.idx, ], data, only.header, save.flag)},
             "ct" = {L <- .img3Dplan.save (object.info=object.df[obj.idx, ], data, only.header, Rdcm.mode=save.flag)},
             "ct1d" = {L <- .img3Dplan.save (object.df[obj.idx, ], data, only.header, save.flag)},
-            # "rtimage" = {L <- .img3Dplan.save (object.df[obj.idx, ], data, only.header, save.flag)},
             "mr" = {L <- .img3Dplan.save (object.df[obj.idx, ], data, only.header, save.flag)},
             "pt" = {L <- .img3Dplan.save (object.df[obj.idx, ], data, only.header, save.flag)},
             "rtplan" = {L <- .rtplan.save (object.df[obj.idx, ], data, only.header, save.flag)},
+            "rtimage" = {L <- .rtimage.save (object.df[obj.idx, ], data, only.header, save.flag)},
+            
             L <- .other.save (object.df[obj.idx, ], data, only.header,save.flag)
     )
     if (save.flag){
@@ -265,7 +273,7 @@
 }
 ################################################################################
 .save.dicom.raw.data.to.Rdcm <- function (obj, Rdcm.filename) {
-  h <- qserialize(obj$header)
+  h <- qserialize(c(obj$header,list(espadon.version=.espadon.version())))
   a <- qserialize(obj$address)
   d <- qserialize(obj$data)
   zz <-  file(Rdcm.filename, "wb")
@@ -278,7 +286,365 @@
   close(zz)
 }
 #############################################################################################
+.rtimage.save <- function (object.info, data, only.header=FALSE, Rdcm.mode=FALSE){
+  
+  address.all <- lapply(data, function(l) l$address)
+  data.all <- lapply(data, function(l) l$data)
+  filename.all <- sapply (data, function(l) l$filename)
+  nb.of.rtimg <- length(address.all)
+  L <- list ()
+  for (rtimg.idx in 1:length(address.all)) {
+    address <- address.all[[rtimg.idx]]
+    data <- data.all[[rtimg.idx]]
+    filename <- filename.all [rtimg.idx]
+    
+    name <- names(data)
+    header <- list()
+    
+    
+    header$patient <- trimws (tryCatch (data[[grep("^[(]0010,0020[)]$",name)]],error = function (e) ""))
+    header$patient.bd <- tryCatch (data[[grep("^[(]0010,0030[)]$",name)]],error = function (e) "")
+    header$patient.sex <- toupper(trimws (tryCatch (data[[grep("^[(]0010,0040[)]$",name)]],error = function (e) "")))
+    header$patient.position <- toupper(trimws (tryCatch (data[[grep("^[(]0018,5100[)]$",name)]],error = function (e) "")))
+    
+    header$file.basename <- ""
+    header$file.dirname <- ""
+    header$object.name <- object.info$outfilename
+    header$object.alias <- ""
+    header$ref.object.alias <- ""
+    
+    header$object.info <- list ()
+    header$ref.object.info <- list ()
+    
+    
+    post.tag <- name[grep ("^[(]300C,0002[)] item[[:digit:]]+$", name)]
+    db.name <- c( "SOP.ID", "SOP.label")
+    dg.tag <- c("(0008,1150)", "(0008,1155)")
+    num.tag <- numeric(0)
+    reference.info <- .get.tag.info (db.name = db.name, 
+                                     db.tag = dg.tag, 
+                                     num.tag = num.tag, post.tag = post.tag,
+                                     data = data, data.name = name)
+    
+    if (is.null(reference.info)){
+      header$ref.object.info <- NULL
+      header$ref.object.alias <- NULL
+    } else {
+      header$ref.object.info$SOP.ID <- as.character(unique (reference.info$SOP.ID))
+      header$ref.object.info$SOP.label <- as.character(unique (reference.info$SOP.label))
+    }
+    
+    
+    
+    header$object.info$SOP.ID <- object.info$SOP.ID
+    header$object.info$transfer.syntax.UID <- object.info$transfer.syntax.UID
+    header$object.info$implementation.ID <- object.info$implementation.ID
+    header$object.info$SOP.type <- object.info$SOP.type
+    header$object.info$study.ID <- object.info$study.ID
+    header$object.info$study.UID <- object.info$study.UID
+    header$object.info$serie.UID <- object.info$serie.UID
+    header$object.info$scanning.sequence <- object.info$scanning.sequence
+    header$object.info$SOP.label <- data[[grep("^[(]0008,0018[)]$",name)]]
+    header$object.info$encoding <- tryCatch (data[[grep("^[(]0008,0005[)]$",name)]],error = function (e) "")
+    if (Rdcm.mode) {
+      header$object.info$dicom.file  <- sort(basename(filename))
+    }
+    
+    header$object.info$nb.of.subobject <- nb.of.rtimg
+    
+    
+    header$frame.of.reference <-  object.info$reference
+    header$ref.pseudo <- paste("ref", object.info$ref.label, sep="")
+    
+    header$modality <- castlow.str (object.info$modality)
+    header$description <- paste(object.info$study.description, object.info$serie.description, sep="|")
+    
+    
+    header$acq.date <- tryCatch (data[[grep("^[(]0008,0022[)]$",name)]],error = function (e) "")
+    header$study.date <- tryCatch (data[[grep("^[(]0008,0020[)]$",name)]],error = function (e) "")
+    header$creation.date <- tryCatch (data[[grep("^[(]0008,0012[)]$",name)]],error = function (e) "")
+    header$study.time <- tryCatch (data[[grep("^[(]0008,0030[)]$",name)]],error = function (e) "")
+    header$approval.status <-  tryCatch (data[[grep("^[(]300E,0002[)]$",name)]],error = function (e) "")
+    
+    header$number <- as.numeric(tryCatch (data[[grep("^[(]0020,0013[)]$",name)]],error = function (e) 1))
+    header$object.alias <- paste(object.info$outfilename, header$number, sep="")
+    if (Rdcm.mode) {
+      header$file.basename <- paste(object.info$outfilename, header$number, ".Rdcm", sep="")
+    } else {
+      header$file.basename <- sort(basename(filename))
+      header$file.dirname <- unique(dirname(filename))
+    }
+    
+    info.name <- c ("conversion.type","exposure.time","exposure.duration",
+                    "photometric.interpretation",
+                    "label", "name","description",                                
+                    "machine.name")
+    info.tag <- c("(0008,0064)", "(0018,1150)",  "(0018,9328)", 
+                  "(0028,0004)",
+                  "(3002,0002)", "(3002,0003)", "(3002,0004)", 
+                  "(3002,0020)")
+    info.num.tag <- c(2, 4)
+    pixel.name <- c ("sample.per.pixel","planar.configuration", "n.i", "n.j", 
+                     "pixel.ratio", "bit.allocated","bit.stored","MSB",
+                     "signed", "pixel.relationship","sign.relation.ship","pixel.spacing",
+                     "min.value", "max.value", "intercept","slope",
+                     "unit")
+    pixel.tag <- c("(0028,0002)", "(0028,0006)", "(0028,0010)", "(0028,0011)",
+                   "(0028,0034)", "(0028,0100)", "(0028,0101)", "(0028,0102)", 
+                   "(0028,0103)", "(0028,1040)", "(0028,1041)","(3002,0011)",
+                   "(0028,0106)", "(0028,0107)","(0028,1052)","(0028,1053)",
+                   "(0028,1054)")
+    pixel.num.tag <- c(1:9,11,13:16)
+    beam.ref.name <- c ("diaphragm.position","collimator.angle")
+    beam.ref.tag <- c("(3002,0034)", "(300A,0120")
+    beam.ref.numtag <- c(2)
+    patient.ref.name <-  c("machine.isocenter.position")
+    patient.ref.tag <- c("(300A,012C)")
+    patient.ref.numtag <-integer(0)
+    fixed.ref.name <- c("gantry.angle", "patient.support.angle","gantry.pitch.angle")
+    fixed.ref.tag <- c("(300A,011E)", "(300A,0122)", "(300A,014A)")
+    fixed.ref.numtag <- 1:3
+    table.ref.name <- c ("table.to.eccentric.axis.distance","eccentric.angle", 
+                         "vertical.position", "longitudinal.position",
+                         "lateral.position", "pitch.angle","roll.angle")
+    table.ref.tag <- c("(300A,0124)", "(300A,0125)", 
+                       "(300A,0128)", "(300A,0129)",
+                       "(300A,012A)", "(300A,0140)", "(300A,0144)")
+    table.numtag <- c(1:7)
+    exposure.info.name <- c("referenced.frame.number", "KVP", "exposureTime", "XRay.tube.current",
+                            "exposure.time.ms","XRay.tube.current.mA", "meterset.exposure")
+    exposure.info.ref.tag <- c("(0008,1160)", "(0018,0060)", "(0018,1150)", "(0018,1151)",
+                               "(0018,9328)","(0018,9330)","(3002,0032)")
+    exposure.info.numtag  <- c(1:7)
+    image.ref.name <- c ("orientation.to.beam","orientation","upper.left.position" )
+    image.ref.tag <- c("(3002,000C)","(3002,0010)", "(3002,0012)")
+    image.ref.num.tag <- numeric(0) #c()
+    coll.name <- c("type", "source.distance", "nb","position.boundaries","position")
+    coll.tag <- c("(300A,00B8)", "(300A,00BA)", "(300A,00BC)", "(300A,00BE)", "(300A,011C)")
+    coll.numtag <- c(2:4)
+    distance.name <- c ("source.gantry", "source.patient", "source.image","source.referenceObject")
+    distance.tag <-  c("(3002,0022)", "(3002,0024)","(3002,0026)", "(3002,0028)")
+    distance.num.tag <- 1:4
+    gantry.ref.name <- c ("img.origin.position", "image.angle", "collimator.angle")
+    gantry.ref.tag <- c( "(3002,000D)","(3002,000E)","(300A,0120)")
+    gantry.ref.num.tag <- c(2:3)
+    
+    pixel.info <- .get.tag.info (pixel.name, pixel.tag, pixel.num.tag, data = data, data.name = name)
+    
+    image.ref <- .get.tag.info (db.name = image.ref.name, 
+                                db.tag = image.ref.tag, 
+                                num.tag = image.ref.num.tag, data = data, data.name = name)
+    distance <- .get.tag.info (distance.name, distance.tag, 
+                               distance.num.tag, data = data, 
+                               data.name = name)
+    
+    header$unit <- pixel.info$unit
+    
+    
+    
+    if (is.null(pixel.info$n.i)) header$error <- c(header$error,"(0028,0011) number of column error")
+    if (is.null(pixel.info$n.j)) header$error <- c(header$error,"(0028,0010) number of line error")
+    header$n.ijk <- c (pixel.info$n.i[1], pixel.info$n.j[1], 1)
+    
+    ## slice.thickness 
+    header$slice.thickness <-  0
+    
+    header$min.pixel <- NA
+    header$max.pixel <- NA
+    
+    ##espacement des pixels en x, y
+    if (is.null(pixel.info$pixel.spacing)) header$error <- c (header$error,"(3002,0011) xy-spacing error")
+    header$dxyz  <- c(as.numeric(unlist(strsplit(pixel.info$pixel.spacing[1],"\\\\"))),1e-6)
+    header$slice.thickness <- header$dxyz[3] <- min(header$dxyz[1:2]/1000)
+    
+    
+    if (image.ref$orientation.to.beam == "NORMAL") {
+      if (is.null(image.ref$orientation)) {header$orientation <- c(1,0,0,0,-1,0)
+      } else  {header$orientation <- as.numeric(unlist(strsplit(image.ref$orientation,"\\\\")))}
+    } else {
+      header$orientation <- as.numeric(unlist(strsplit(image.ref$orientation,"\\\\")))
+    }
+    
+    header$xyz0 <- matrix(0,ncol=3, nrow=1)
+    header$xyz.from.ijk <- 0
+    header$k.idx <- 0 
+    header$missing.k.idx <- FALSE
+    header$cube.idx  <- 0
+    header$beam.source <-  matrix(c(0,0,0,1),ncol=4,byrow = TRUE)
+    header$beam.orientation <- matrix(c(1,0,0,0,0,-1,0,0), ncol=2)
+    header$beam.direction <-  matrix(c(0,0,-1,0),ncol=4,byrow = TRUE)
+    header$beam.isocenter <- matrix(c(0,0,0,1),ncol=4,byrow = TRUE)
+    if (!is.null(image.ref$upper.left.position)) 
+      header$xyz0[1,1:2] <- as.numeric(unlist(strsplit(image.ref$upper.left.position,"\\\\")))
+    if (!is.null(distance$source.gantry)){
+      if (!is.null(distance$source.image)) header$xyz0[1,3] <- distance$source.gantry[1] - distance$source.image[1]
+      header$beam.source[1,3] <- as.numeric(distance$source.gantry[1])
+    }
+    header$xyz.from.ijk <-.xyz.from.ijk.create (header$orientation, header$dxyz, header$xyz0[1, ])
 
+    header$cube.idx <- matrix (c(0,0,0,1,
+                                 header$n.ijk[1]-1, 0, 0, 1,
+                                 header$n.ijk[1]-1, header$n.ijk[2]-1, 0, 1,
+                                 0, header$n.ijk[2]-1, 0, 1,
+                                 0, 0, header$k.idx[length (header$k.idx)], 1,
+                                 header$n.ijk[1]-1, 0, header$k.idx[length (header$k.idx)], 1,
+                                 header$n.ijk[1]-1, header$n.ijk[2]-1, header$k.idx[length (header$k.idx)], 1,
+                                 0, header$n.ijk[2]-1, header$k.idx[length (header$k.idx)], 1), nrow=4, byrow= FALSE)
+    
+    row.names(header$cube.idx) <- c ("i","j","k","t")
+    
+    
+    ##intercept
+
+    if (is.null(pixel.info$intercept)) pixel.info$intercept <- 0
+    ##pente
+
+    if (is.null(pixel.info$slope)) pixel.info$slope <-1
+
+    error.alloc <- FALSE
+    if (any (is.na (match(c ("signed", "bit.stored", "bit.allocated", "MSB"), 
+                          colnames(pixel.info))))) {
+      header$error <- c(header$error,"voxel allocation error")
+      error.alloc <- TRUE
+    } else if (pixel.info$bit.stored >pixel.info$bit.allocated) {
+      header$error <- c(header$error,"voxel allocation error")
+      error.alloc <- TRUE
+    }
+    
+    
+    index.map <-grep("[(]7FE0,0010[)]$", name)
+    if (length(index.map)!=0) {
+      if (!error.alloc) {
+        
+        byte.nb <- length(data[[index.map]])/prod(header$n.ijk)
+        if (byte.nb %in% c(1,2,4)){
+          m <- data[[index.map]]
+          endian <- address[index.map,3]
+          data[[index.map]] <- readBin (m, what="integer", n= length(m)/byte.nb, 
+                                       size = byte.nb, endian = endian)
+          data[[index.map]] [is.na(data[[index.map]])] <- -2^(pixel.info$bit.stored[1])
+          flag <- data[[index.map]] <0
+          if (pixel.info$signed[1]==0) 
+            data[[index.map]] [flag] <-  data[[index.map]] [flag] + 2^(pixel.info$bit.stored[1])
+          range <-  range (data[[index.map]]*pixel.info$slope[1] +  pixel.info$intercept[1], na.rm=TRUE)
+          range[range==Inf | range==-Inf] <- NA
+          header$min.pixel <- range[1]
+          header$max.pixel <- range[2]
+        }
+      }
+      
+      if (prod(header$n.ijk) != length(data[[index.map]])) {
+        header$error <- c(header$error,"number of voxels error")
+        error.alloc <- TRUE
+      } 
+      
+    }
+    
+    header$pixeldecode <- list (MSB=pixel.info$MSB, bit.stored=pixel.info$bit.stored, 
+                                signed=pixel.info$signed, slope=pixel.info$slope, 
+                                intercept=pixel.info$intercept )
+    header$machine.info <- .get.tag.info(db.name = info.name, 
+                                         db.tag = info.tag, num.tag = info.num.tag, data = data, data.name = name)
+    header$exposure <- list()
+    st.idx <- grep ("^[(]3002,0030[)] item[[:digit:]]+$", name)
+    exposure.nb <- as.numeric(gsub("^[(]3002,0030[)] item","",name[st.idx]))
+    for(exp.nb in exposure.nb){
+      header$exposure[[exp.nb]] <- list ()
+      header$exposure[[exp.nb]]$info <- .get.tag.info (db.name = exposure.info.name, 
+                                                db.tag = exposure.info.ref.tag, 
+                                                num.tag = exposure.info.numtag, post.tag = name[st.idx[exp.nb]],
+                                                data = data, data.name = name)
+      
+      n.idx <- grep (paste0("^[(]3002,0030[)] item",exp.nb," [(]300A,00B6[)] item[[:digit:]]+$"),name)
+      header$exposure[[exp.nb]]$leaf.jaw <- .get.tag.info (db.name = coll.name, 
+                                                                  db.tag = coll.tag, 
+                                                                  num.tag = coll.numtag, post.tag = name[n.idx],
+                                                                  data = data, data.name = name)
+      
+      header$exposure[[exp.nb]]$beam.ref <-  .get.tag.info (db.name = beam.ref.name, 
+                                                     db.tag = beam.ref.tag, 
+                                                     num.tag = beam.ref.numtag, post.tag = name[st.idx[exp.nb]],
+                                                     data = data, data.name = name)
+      
+      
+      header$exposure[[exp.nb]]$fixed.ref  <-.get.tag.info (db.name = fixed.ref.name, 
+                                                     db.tag = fixed.ref.tag, 
+                                                     num.tag = fixed.ref.numtag, post.tag = name[st.idx[exp.nb]],
+                                                     data = data, data.name = name)
+      
+      header$exposure[[exp.nb]]$table.ref  <- .get.tag.info (db.name = table.ref.name, 
+                                                      db.tag = table.ref.tag, 
+                                                      num.tag = table.numtag, post.tag = name[st.idx[exp.nb]],
+                                                      data = data, data.name = name)
+      
+      header$exposure[[exp.nb]]$gantry.ref <- .get.tag.info (gantry.ref.name, gantry.ref.tag, 
+                                                      gantry.ref.num.tag, post.tag = name[st.idx[exp.nb]],
+                                                      data = data, data.name = name)
+    }
+    
+    # header$distance <- distance 
+    # header$gantry.ref <- .get.tag.info (gantry.ref.name, gantry.ref.tag, 
+    #                              gantry.ref.num.tag, data = data, data.name = name)
+    patient.ref <- .get.tag.info (db.name = patient.ref.name,
+                                         db.tag = patient.ref.tag,
+                                         num.tag = patient.ref.numtag, data = data,
+                                         data.name = name)
+    fixed.ref <- .get.tag.info (db.name = fixed.ref.name,
+                                       db.tag = fixed.ref.tag,
+                                        num.tag = fixed.ref.numtag, data = data, data.name = name)
+
+    
+    
+    # changement de repère dans le référentiel patient
+    theta <- 0
+    if (!is.null(fixed.ref$gantry.angle)) theta <- fixed.ref$gantry.angle
+    origin <- c(0,0,0)
+    if (!is.null(patient.ref$machine.isocenter.position)) 
+      origin = as.numeric(unlist(strsplit(patient.ref$machine.isocenter.position,"\\\\")))
+    orientation <-switch (header$patient.position,
+                          "HFS" = {c(1,0,0, 0,0,1)},
+                          "HFP" = {c(-1,0,0, 0,0,1)},
+                          "HFDL" = {c(0,-1,0, 0,0,1)},
+                          "HFDR" = {c(0,1,0, 0,0,1)},
+                          "FFS" = {c(-1,0,0, 0,0,-1)},
+                          "FFP" = {c(1,0,0, 0,0,-1)},
+                          "FFDL" = {c(0,1,0, 0,0,-1)},
+                          "FFDR" = {c(0,-1,0, 0,0,-1)},
+                          {c(1,0,0, 0,0,1)})
+    
+
+    M <- .ref.create (orientation = c(cos(theta * pi / 180),0, 
+                                      -sin(theta * pi / 180), 0,1,0)) %*%
+                 .ref.create (orientation = orientation, origin = origin)
+    
+    
+    # header$beam.orientation <- -c(M[1:3,1],M[1:3,2])
+    M <- solve(M)
+
+    header$xyz.from.ijk <- M %*% header$xyz.from.ijk
+    header$xyz.from.ijk[abs(header$xyz.from.ijk) < 1.0e-6] <- 0
+    header$xyz0 <- matrix (matrix (c(0, 0, 0, 1),ncol=4, byrow = TRUE) %*% 
+                             t(header$xyz.from.ijk)[ ,1:3],ncol=3)
+    header$orientation <- c(header$xyz.from.ijk[1:3, 1]/header$dxyz[1], 
+                            header$xyz.from.ijk[1:3, 2]/header$dxyz[2])
+    
+    header$beam.source <- matrix((header$beam.source %*% t(M))[1,1:3],ncol = 3)
+    header$beam.orientation <- as.numeric((M  %*% header$beam.orientation)[1:3,])
+    header$beam.direction <-  matrix((header$beam.direction %*% t(M))[1,1:3],ncol = 3)
+    header$beam.isocenter <- matrix((header$beam.isocenter %*% t(M))[1,1:3],ncol = 3)
+    
+    d <- list()
+    d[[1]]<- data
+    a <- list()
+    a [[1]] <- address
+    
+    if (only.header){ L[[header$object.alias]] <- list (header=header, from.dcm = TRUE)
+    } else {L[[header$object.alias]] <- list (header=header, address=a, data=d, from.dcm = TRUE)}
+    
+  }
+  return(L)
+}
+#############################################################################################
 .rtstruct.save <- function (object.info, data, only.header=FALSE, Rdcm.mode=FALSE){
   # if (object.info$temp!= ""){
   #   tempf <- file.path (OUTDIR, paste ("temp", unlist(strsplit(object.info$temp,";")), sep = ""))
@@ -299,19 +665,32 @@
     header$patient <- trimws (tryCatch (data[[grep("^[(]0010,0020[)]$",name)]],error = function (e) ""))
     header$patient.bd <- tryCatch (data[[grep("^[(]0010,0030[)]$",name)]],error = function (e) "")
     header$patient.sex <- toupper(trimws (tryCatch (data[[grep("^[(]0010,0040[)]$",name)]],error = function (e) "")))
-    
+     
     header$file.basename <- ""
     header$file.dirname <- ""
     header$object.name <- object.info$outfilename
     header$object.alias <- ""
-    header$ref.object.name <- ""
+    header$ref.object.alias <- ""
     
     header$object.info <- list ()
     header$ref.object.info <- list ()
+    # header$ref.object.info$SOP.label <- sort(unique (unlist (data[grepl("^[(]3006,0010[)]",name) & grepl("[(]0008,1155[)]$",name) &
+    #                                                                grepl("[(]3006,0016[)] item",name) & grepl("[(]3006,0014[)] item",name)])))
+    # header$ref.object.info$SOP.ID  <- unique(as.character (sort (unlist (data[grepl("^[(]3006,0010[)]",name) & grepl("[(]0008,1150[)]$",name) &
+    #                                                                             grepl("[(]3006,0016[)] item",name) & grepl("[(]3006,0014[)] item",name)]))))
+    
+    
+    header$ref.object.info$SOP.ID <- unique(as.character (sort (unlist (data[grepl("^[(]3006,0010[)]",name) & grepl("[(]0008,1150[)]$",name) &
+                                                                               grepl("[(]3006,0016[)] item",name) & grepl("[(]3006,0014[)] item",name)]))))
+    if (length(header$ref.object.info$SOP.ID)>0) header$ref.object.info$SOP.ID <- header$ref.object.info$SOP.ID[header$ref.object.info$SOP.ID!=""]
     header$ref.object.info$SOP.label <- sort(unique (unlist (data[grepl("^[(]3006,0010[)]",name) & grepl("[(]0008,1155[)]$",name) &
-                                                                   grepl("[(]3006,0016[)] item",name) & grepl("[(]3006,0014[)] item",name)])))
-    header$ref.object.info$SOP.ID  <- unique(as.character (sort (unlist (data[grepl("^[(]3006,0010[)]",name) & grepl("[(]0008,1150[)]$",name) &
-                                                                                grepl("[(]3006,0016[)] item",name) & grepl("[(]3006,0014[)] item",name)]))))
+                                                                    grepl("[(]3006,0016[)] item",name) & grepl("[(]3006,0014[)] item",name)])))
+    if (length(header$ref.object.info$SOP.label)>0) header$ref.object.info$SOP.label <- header$ref.object.info$SOP.label[header$ref.object.info$SOP.label!=""]
+    
+    if (length(header$ref.object.info$SOP.ID)==0) {
+      header$ref.object.info <- NULL
+      header$ref.object.alias <- NULL
+    }
     
     header$object.info$SOP.ID <- object.info$SOP.ID
     header$object.info$transfer.syntax.UID <- object.info$transfer.syntax.UID
@@ -474,14 +853,10 @@
     header$file.dirname <- ""
     header$object.name <- object.info$outfilename
     header$object.alias <- ""
-    header$ref.object.name <- ""
+    header$ref.object.alias <- ""
     
     header$object.info <- list ()
     header$ref.object.info <- list ()
-    header$ref.object.info$SOP.label <- sort(unique (unlist (data[grepl("^[(]3006,0010[)]",name) & grepl("[(]0008,1155[)]$",name) &
-                                                                    grepl("[(]3006,0016[)] item",name) & grepl("[(]3006,0014[)] item",name)])))
-    header$ref.object.info$SOP.ID  <- unique(as.character (sort (unlist (data[grepl("^[(]3006,0010[)]",name) & grepl("[(]0008,1150[)]$",name) &
-                                                                                grepl("[(]3006,0016[)] item",name) & grepl("[(]3006,0014[)] item",name)]))))
     
     header$object.info$SOP.ID <- object.info$SOP.ID
     header$object.info$transfer.syntax.UID <- object.info$transfer.syntax.UID
@@ -498,16 +873,23 @@
     
     
     header$ref.object.info <- list ()
-    header$ref.object.info$SOP.label <- sort(unique (unlist (data[grep("[(]0008,1155[)]$",name)])))
-    header$ref.object.info$SOP.ID  <- unique(as.character (sort (unlist (data[grepl("^[(]3006,0010[)]",name) & grepl("[(]0008,1150[)]$",name) &
-                                                                                grepl("[(]3006,0016[)] item",name) & grepl("[(]3006,0014[)] item",name)]))))
-    
-    
-    header$ref.object.info$SOP.ID <- unique(unlist(tryCatch (data[[grep("[(]0008,1150[)]$",name)]],error = function (e)  "")))
-    if (length(header$ref.object.info$SOP.ID)>1) header$ref.object.info$SOP.ID <- header$ref.object.info$SOP.ID[header$ref.object.info$SOP.ID!=""]
-    header$ref.object.info$SOP.label <- sort (unique(unlist(tryCatch (data[[grep("[(]0008,1155[)]$",name)]],error = function (e)  ""))))
-    if (length(header$ref.object.info$SOP.label)>1) header$ref.object.info$SOP.label <- header$ref.object.info$SOP.label[header$ref.object.info$SOP.label!=""]
-
+    post.tag <- c (name[grep ("^[(]300C,0002[)] item[[:digit:]]+$", name)], 
+                   name[grep ("^[(]300C,0060[)] item[[:digit:]]+$", name)],
+                   name[grep ("^[(]300C,0080[)] item[[:digit:]]+$", name)])
+    db.name <- c( "SOP.ID", "SOP.label", "rtplan.relation.ship")
+    dg.tag <- c("(0008,1150)", "(0008,1155)", "(300A,0055)")
+    num.tag <- numeric(0)
+    reference.info <- .get.tag.info (db.name = db.name, 
+                                     db.tag = dg.tag, 
+                                     num.tag = num.tag, post.tag = post.tag,
+                                     data = data, data.name = name)
+    if (is.null(reference.info)){
+      header$ref.object.info <- NULL
+      header$ref.object.alias <- NULL
+    } else {
+      header$ref.object.info$SOP.ID <- as.character(unique (reference.info$SOP.ID))
+      header$ref.object.info$SOP.label <- as.character(unique (reference.info$SOP.label))
+    }
     
     header$frame.of.reference <-  object.info$reference
     header$ref.pseudo <- paste("ref", object.info$ref.label, sep="")
@@ -578,45 +960,55 @@
       data.frame (
         fraction.id = as.numeric(tryCatch (data[[grep (paste(str,"[(]300A,0071[)]$"),name)]], error = function (e) "")),
         description = tryCatch (data[[grep (paste(str,"[(]300A,0072[)]$"),name)]], error = function (e) ""),
-        planned.frac.nb = as.numeric(tryCatch (data[[grep (paste(str,"[(]300A,0078[)]$"),name)]], error = function (e) "")),
-        frac.pattern.digit.per.day.nb = as.numeric(tryCatch (data[[grep (paste(str,"[(]300A,0079[)]$"),name)]], error = function (e) "")),
+        nb.of.frac.planned = as.numeric(tryCatch (data[[grep (paste(str,"[(]300A,0078[)]$"),name)]], error = function (e) "")),
+        nb.of.frac.pattern.digit.per.day = as.numeric(tryCatch (data[[grep (paste(str,"[(]300A,0079[)]$"),name)]], error = function (e) "")),
         repeat.frac.cycle.le = as.numeric(tryCatch (data[[grep (paste(str,"[(]300A,007A[)]$"),name)]], error = function (e) "")),
         frac.pattern = tryCatch (data[[grep (paste(str,"[(]300A,007B[)]$"),name)]], error = function (e) ""),
-        beam.nb = as.numeric(tryCatch (data[[grep (paste(str,"[(]300A,0080[)]$"),name)]], error = function (e) "")),
+        nb.of.beam = as.numeric(tryCatch (data[[grep (paste(str,"[(]300A,0080[)]$"),name)]], error = function (e) "")),
         beam.dose.meaning = tryCatch (data[[grep (paste(str,"[(]300A,008B[)]$"),name)]], error = function (e) ""),
-        brachy.app.nb = as.numeric(tryCatch (data[[grep (paste(str,"[(]300A,00A0[)]$"),name)]], error = function (e) "")))})))
+        nb.of.brachy.app = as.numeric(tryCatch (data[[grep (paste(str,"[(]300A,00A0[)]$"),name)]], error = function (e) "")))})))
     
-    fraction.beam <- do.call(rbind,lapply(st.nb, function (st.idx){
-      str <- paste0("^[(]300A,0070[)] item",st.idx)
-      beam.idx <- grep (paste(str,"[(]300C,0004[)] item[[:digit:]]+$" ),name)
-      beam.nb <- as.numeric(gsub(paste(str,"[(]300C,0004[)] item"),"",name[beam.idx]))
-      beam.info <- lapply (beam.nb, function(beam.idx){
-        str_ <- paste0(str," [(]300C,0004[)] item",beam.idx)
-        data.frame (
-          fraction.id = as.numeric(fraction.info$fraction.id[st.idx]),
-          planned.frac.nb = as.numeric(fraction.info$planned.frac.nb[st.idx]),
-          # beam.uid = tryCatch (data[[grep (paste(str_,"[(]300A,0083[)]$"),name)]], error = function (e) ""),
-          beam.dose = as.numeric(tryCatch (data[[grep (paste(str_,"[(]300A,0084[)]$"),name)]], error = function (e) "")),
-          beam.specif.pt  = tryCatch (data[[grep (paste(str_,"[(]300A,0082[)]$"),name)]], error = function (e) ""),
-          beam.meterset = as.numeric(tryCatch (data[[grep (paste(str_,"[(]300A,0086[)]$"),name)]], error = function (e) "")),
-          beam.type = tryCatch (data[[grep (paste(str_,"[(]300A,0090[)]$"),name)]], error = function (e) ""),
-          alt.dose = as.numeric(tryCatch (data[[grep (paste(str_,"[(]300A,0091[)]$"),name)]], error = function (e) "")),
-          alt.type = tryCatch (data[[grep (paste(str_,"[(]300A,0092[)]$"),name)]], error = function (e) ""),
-          duration.lim = as.numeric(tryCatch (data[[grep (paste(str_,"[(]300A,00C5[)]$"),name)]], error = function (e) "")),
-          beam.nb = as.numeric(tryCatch (data[[grep (paste(str_,"[(]300C,0006[)]$"),name)]], error = function (e) ""))
-        )})
-      
-      do.call(rbind ,beam.info)
-    }))
-    fraction.beam <- .reduc.tab(fraction.beam)
+
+  
     
     header$fraction.info<- fraction.info
+
     
+    patient.setup  <- .get.tag.info(db.name = c("beam.nb","patient.position", "position.label"), 
+                                    db.tag = c("(300A,0182)","(0018,5100)","(300A,0183)"), 
+                                    num.tag = 1, 
+                                    post.tag =  name[grep("^[(]300A,0180[)] item[[:digit:]]+$",name)],
+                                    data = data, data.name = name)
     
-    if (sum(header$fraction.info$beam.nb)>0){
+    if (sum(header$fraction.info$nb.of.beam)>0){
+      
+      fraction.beam <- .reduc.tab(do.call(rbind,lapply(st.nb, function (st.idx){
+        str <- paste0("^[(]300A,0070[)] item",st.idx)
+        beam.idx <- grep (paste(str,"[(]300C,0004[)] item[[:digit:]]+$" ),name)
+        beam.nb <- as.numeric(gsub(paste(str,"[(]300C,0004[)] item"),"",name[beam.idx]))
+        beam.info <- lapply (beam.nb, function(beam.idx){
+          str_ <- paste0(str," [(]300C,0004[)] item",beam.idx)
+          data.frame (
+            fraction.id = as.numeric(fraction.info$fraction.id[st.idx]),
+            nb.of.frac.planned = as.numeric(fraction.info$nb.of.frac.planned[st.idx]),
+            # beam.uid = tryCatch (data[[grep (paste(str_,"[(]300A,0083[)]$"),name)]], error = function (e) ""),
+            beam.dose = as.numeric(tryCatch (data[[grep (paste(str_,"[(]300A,0084[)]$"),name)]], error = function (e) "")),
+            beam.specif.pt  = tryCatch (data[[grep (paste(str_,"[(]300A,0082[)]$"),name)]], error = function (e) ""),
+            beam.meterset = as.numeric(tryCatch (data[[grep (paste(str_,"[(]300A,0086[)]$"),name)]], error = function (e) "")),
+            beam.type = tryCatch (data[[grep (paste(str_,"[(]300A,0090[)]$"),name)]], error = function (e) ""),
+            alt.dose = as.numeric(tryCatch (data[[grep (paste(str_,"[(]300A,0091[)]$"),name)]], error = function (e) "")),
+            alt.type = tryCatch (data[[grep (paste(str_,"[(]300A,0092[)]$"),name)]], error = function (e) ""),
+            duration.lim = as.numeric(tryCatch (data[[grep (paste(str_,"[(]300A,00C5[)]$"),name)]], error = function (e) "")),
+            beam.nb = as.numeric(tryCatch (data[[grep (paste(str_,"[(]300C,0006[)]$"),name)]], error = function (e) ""))
+          )})
+        
+        do.call(rbind ,beam.info)
+      })))
+      header$fraction.beam<- fraction.beam
+      
       post.tag <- paste0("^[(]",unique(substring(name[grep("[(]300A,00C0[)]$", name)],2,10)),"[)]")
-      st.idx <- grep (paste (post.tag,"item[[:digit:]]+$"), name)
-      st.nb <- as.numeric(gsub(paste (post.tag, "item"),"",name[st.idx]))
+      post.tag <- name[grep (paste (post.tag,"item[[:digit:]]+$"), name)]
+      
       
       db.name <- c ("beam.nb","beam.name","beam.description","beam.type","radiation.type",
                     "high.dose.technique.type","treatment.machine.name","device.serial.nb",                                 
@@ -640,28 +1032,167 @@
                   "(300A,02E3)", "(300A,00F3)", "(300A,0312)", "(300A,0330)",
                   "(300A,0340)", "(300A,0356)", "(300A,0358)")
       
-      rtbeam.info <- array("", dim=c(length(st.nb),length(db.name)))
-      colnames(rtbeam.info) <- db.name
-      rc.db <- expand.grid(st.nb,1:length(db.name))
-      str_ <- paste0 ("(", substring(post.tag,5,13),")")
-      tag.list <- apply(rc.db,1, function(rc){paste0(str_," item",as.numeric(rc[1])," ",db.tag[as.numeric(rc[2])])})
-      ma <- match(tag.list, name)
-      not.na <- which(!is.na(ma))
-      rtbeam.info[as.matrix(rc.db[not.na,])] <- sapply (data[ma[not.na]],paste,collapse="\\")
+      num.tag <- c(1,10:12,14:24,27:35)
+      rtbeam.info <- .get.tag.info(db.name = db.name, 
+                                   db.tag = db.tag, num.tag = num.tag, post.tag =  post.tag,
+                                   data = data, data.name = name)
+      m <- match (patient.setup$beam.nb,rtbeam.info$beam.nb)
+      rtbeam.info$patient.position <- "" 
+      rtbeam.info$patient.position[m] <- patient.setup$patient.position
+      rtbeam.info[,c("beam.nb","patient.position")] <- .fill.db (rtbeam.info[,c("beam.nb","patient.position")])
+      header$beam.info  <- rtbeam.info
       
-      rtbeam.info <- data.frame(rtbeam.info,stringsAsFactors = F)
+      # m <- match (fraction.beam$beam.nb,rtbeam.info$beam.nb)
+      # header$beam.info  <- cbind(fraction.beam,rtbeam.info[m,-1])
+
       
-      # str (rtbeam.info)
-      f <- c(11,grep("nb$|factor",db.name))
-      rtbeam.info[,f] <- lapply(rtbeam.info[,c(f)], as.numeric)
-      rtbeam.info <- .reduc.tab(rtbeam.info)
-      m <- match (fraction.beam$beam.nb,rtbeam.info$beam.nb)
       
-      header$beam.info  <- cbind(fraction.beam,rtbeam.info[m,-1])
+      ctl.pt.tag <- c("(0018,0060)",
+                      "(300A,0112)","(300A,0114)","(300A,0115)","(300A,011E)",
+                      "(300A,011F)","(300A,0120)","(300A,0121)","(300A,0122)",
+                      "(300A,0123)","(300A,0124)","(300A,0125)","(300A,0126)",
+                      "(300A,0128)","(300A,0129)","(300A,012A)","(300A,012C)",
+                      "(300A,012E)","(300A,0130)","(300A,0132)","(300A,0133)",
+                      "(300A,0134)","(300A,0140)","(300A,0142)","(300A,0144)",
+                      "(300A,0146)","(300A,014A)","(300A,014C)",
+                      "(300A,0151)","(300A,030D)","(300A,035A)",
+                      "(300A,0390)","(300A,0392)","(300A,0394)","(300A,0395)",
+                      "(300A,0396)","(300A,0398)","(300A,039A)")
+      ctl.pt.name <- c("KVP",
+                       "ctl.pt.idx","energy","dose.rate","gantry.angle","gantry.rot","beam.lim.angle","beam.lim.rot",
+                       "pat.support.angle","pat.support.rot","table.top.ecc.dist","table.top.ecc.angle",
+                       "table.top.ecc.rot","table.top.vert.pos","table.top.long.pos","table.top.lat.pos",
+                       "isocenter","surf.xyz0","src.surf.dist","src.ext.ctr.dist","ext.ctr.entry.pt",
+                       "cum.meterset.weight","table.top.pitch.angle","table.top.pitch.rot",
+                       "table.top.roll.angle","table.top.roll.rot","gantry.pitch.angle","gantry.pitch.rot",
+                       "chair.head.frame.position", "snout.position", "meterset.rate",
+                       "scan.spot.id","scan.spot.pos.nb","scan.spot.pos.map","scan.spot.reordering.allowed",
+                       "scan.spot.meterset.weight","scanning.spot.size","painting.nb")
+      ctl.pt.num.tag <- c(1:5,7,9,11:12,14:16,19:23,25,27,30:31,33,36:38)
+      
+      coll.name <- c("type", "source.distance", "nb","position.boundaries","position")
+      coll.tag <- c("(300A,00B8)", "(300A,00BA)", "(300A,00BC)", "(300A,00BE)", "(300A,011C)")
+      coll.numtag <- c(2:4)
+      
+      header$beam.ctl.pt <-  lapply( 1:nrow(header$beam.info)   , function(i){
+        p.t <- gsub(")","[)]",gsub("(","[(]",post.tag[i], fixed=TRUE), fixed=TRUE)
+        p.t <- name[grepl (paste0 ("^",p.t," [(]300A,0111[)] item[[:digit:]]+$"), name)|  
+                      grepl (paste0 ("^",p.t," [(]300A,03A8[)] item[[:digit:]]+$"), name)]
+        if (length(p.t)==0) return(NULL)
+        info <- .get.tag.info(db.name = ctl.pt.name, 
+                              db.tag = ctl.pt.tag, num.tag = ctl.pt.num.tag, post.tag =  p.t,
+                              data = data, data.name = name)
+        info <- .fill.db(info)
+       
+        orientation <-switch (header$beam.info$patient.position[i],
+                              "HFS" = {c(1,0,0, 0,0,1)},
+                              "HFP" = {c(-1,0,0, 0,0,1)},
+                              "HFDL" = {c(0,-1,0, 0,0,1)},
+                              "HFDR" = {c(0,1,0, 0,0,1)},
+                              "FFS" = {c(-1,0,0, 0,0,-1)},
+                              "FFP" = {c(1,0,0, 0,0,-1)},
+                              "FFDL" = {c(0,1,0, 0,0,-1)},
+                              "FFDR" = {c(0,-1,0, 0,0,-1)},
+                              {c(1,0,0, 0,0,1)})
+        
+        beam.source0 <-c(0,0,0,1)  
+        if (!is.null(header$beam.info$src.axis.dist)) beam.source0[3] <- header$beam.info$src.axis.dist[i]
+       
+        L <- lapply(1:nrow(info),function(j){
+          beam.source <- beam.source0
+          beam.orientation <- matrix(c(1,0,0,0,0,-1,0,0), ncol=2)
+          beam.direction <-c(0,0,-1,0) 
+          beam.isocenter <- c(0,0,0,1)  
+          if (!is.null(info$snout.position)) if(info$snout.position[j]!="NA") 
+            beam.source[3] <-info$snout.position[j]
+          
+          M <- .ref.create (orientation = c(cos(info$gantry.angle[j] * pi / 180),
+                                                      0, 
+                                                      -sin(info$gantry.angle[j] * pi / 180), 0,1,0))
+          
+          M <- M %*% .ref.create (orientation = c(cos(info$pat.support.angle[j] * pi / 180),
+                                                  -sin(info$pat.support.angle[j] * pi / 180),0,
+                                                  sin(info$pat.support.angle[j] * pi / 180),
+                                                  cos(info$pat.support.angle[j] * pi / 180),0))
+          
+          origin <- c(0,0,0)
+          if (!is.null(info$isocenter)) if(info$isocenter[j]!="NA") 
+            origin <-  as.numeric(unlist(strsplit(info$isocenter[j],"\\\\")))
+          
+          M <- M %*% .ref.create (orientation = orientation, origin = origin)
+          M <- solve(M)
+          beam.source <-(beam.source %*%  t(M)) [,1:3]
+          beam.source[abs(beam.source) < 1e-10] <- 0
+          beam.orientation <- as.numeric((M  %*% beam.orientation)[1:3,])
+          beam.orientation[abs(beam.orientation) < 1e-10] <- 0
+          beam.direction <-(beam.direction %*%  t(M)) [,1:3]
+          beam.direction[abs(beam.direction) < 1e-10] <- 0
+          beam.isocenter <-(beam.isocenter %*%  t(M)) [,1:3]
+          beam.isocenter[abs(beam.isocenter) < 1e-10] <- 0
+       
+          spot.map <- NULL
+          if (!is.null(info$scan.spot.pos.map)) {
+            
+            spot.map<- cbind(matrix(as.numeric(unlist(strsplit(info$scan.spot.pos.map[j],",|c[(]|[)]"))[-1]), 
+                                    ncol=2, byrow=TRUE),0,1)
+            spot.map <-  (spot.map %*% t(M))
+            spot.map <- cbind(rep(info$ctl.pt.idx[j],nrow(spot.map)),spot.map)
+            colnames(spot.map) <- c("ctl.pt.idx","x","y","z","t")
+          } 
+  
+          list(beam.orientation = beam.orientation, beam.source= beam.source, 
+               beam.direction=beam.direction, beam.isocenter=beam.isocenter, 
+               spot.map = spot.map)
+        })
+        
+        beam.orientation <- as.matrix(do.call(rbind,lapply(L,function(l) l$beam.orientation)))
+        beam.source <- as.matrix(do.call(rbind,lapply(L,function(l) l$beam.source)))
+        colnames(beam.source) <- c("x","y","z")
+        beam.direction <- as.matrix(do.call(rbind,lapply(L,function(l) l$beam.direction)))
+        colnames(beam.direction) <- c("x","y","z")
+        beam.isocenter <- as.matrix(do.call(rbind,lapply(L,function(l) l$beam.isocenter)))
+        colnames(beam.isocenter) <- c("x","y","z")
+        spot.map <- do.call(rbind,lapply(L,function(l) l$spot.map))
+        if (!is.null(spot.map)) spot.map <- spot.map[,1:4]
+        ########################
+        p.t_ <- gsub(")","[)]",gsub("(","[(]",p.t, fixed=TRUE), fixed=TRUE)
+        p.t2 <- paste0 ("^",p.t_," [(]300A,011A[)] item[[:digit:]]+$")
+        leaf.jaw <- do.call(rbind,lapply(1:length(p.t2), function(i){
+          db <- .get.tag.info(db.name = coll.name, 
+                        db.tag = coll.tag, num.tag = coll.numtag, post.tag =  name[grepl (p.t2[i],name)],
+                        data = data, data.name = name, adjust=FALSE)
+          
+          if (!is.null(.reduc.tab(db))) db$ctl.pt.idx <- info$ctl.pt.idx[i]
+          db
+          }))
+        leaf.jaw <- .reduc.tab(leaf.jaw)
+        if(!is.null(leaf.jaw)) {
+          leaf.jaw <- leaf.jaw[ , c(ncol(leaf.jaw),1:(ncol(leaf.jaw)-1))]
+          n <- unique(leaf.jaw$type)
+          leaf.jaw <- lapply(n, function(type) leaf.jaw[leaf.jaw$type == type, c(1,3)])
+          names(leaf.jaw) <- n
+          return(list(info=info, leaf.jaw = leaf.jaw, beam.source = beam.source, 
+                      beam.direction = beam.direction, 
+                      beam.orientation = beam.orientation,
+                      beam.isocenter = beam.isocenter))
+        }
+        
+        
+        ###########################
+        if (!is.null(spot.map)) 
+          return (list(info=info, beam.source = beam.source, beam.direction = beam.direction,
+                       beam.orientation = beam.orientation, 
+                       beam.isocenter = beam.isocenter,
+                       spot.map = spot.map))
+        return (list(info=info, beam.source = beam.source, beam.direction = beam.direction,
+                     beam.orientation = beam.orientation, beam.isocenter = beam.isocenter))
+      })
+      if (!is.null(rtbeam.info$beam.name)) names(header$beam.ctl.pt) <- rtbeam.info$beam.name
+      
     }
     
     
-    if (sum(header$fraction.info$brachy.app.nb)>0){
+    if (sum(header$fraction.info$nb.of.brachy.app)>0){
       
       st.idx <- grep ("^[(]300A,0070[)] item[[:digit:]]+$", name)
       st.nb <- as.numeric(gsub("^[(]300A,0070[)] item","",name[st.idx]))
@@ -673,7 +1204,7 @@
           str_ <- paste0(str," [(]300C,000A[)] item",brach.idx)
           data.frame (
             fraction.id = as.numeric(fraction.info$fraction.id[st.idx]),
-            planned.frac.nb = as.numeric(fraction.info$planned.frac.nb[st.idx]),
+            nb.of.frac.planned = as.numeric(fraction.info$nb.of.frac.planned[st.idx]),
             brachy.dose = as.numeric(tryCatch (data[[grep (paste(str_,"[(]300A,00A4[)]$"),name)]], error = function (e) "")),
             brachy.nb = as.numeric(tryCatch (data[[grep (paste(str_,"[(]300C,000C[)]$"),name)]], error = function (e) "")),
             brachy.specif.pt = tryCatch (data[[grep (paste(str_,"[(]300A,00A2[)]$"),name)]], error = function (e) "")
@@ -710,7 +1241,6 @@
   header$patient.bd <- tryCatch (data[[1]][[grep("^[(]0010,0030[)]$",name)]],error = function (e) "")
   header$patient.sex <- toupper(trimws (tryCatch (data[[1]][[grep("^[(]0010,0040[)]$",name)]],error = function (e) "")))
   
-  
   header$file.basename <- ""
   if (Rdcm.mode) {
     header$file.basename <- paste(object.info$outfilename, ".Rdcm", sep="")
@@ -721,7 +1251,7 @@
   header$file.dirname <- ""
   header$object.name <- object.info$outfilename
   header$object.alias <- object.info$outfilename
-  header$ref.object.name <- ""
+  header$ref.object.alias <- ""
 
   
   
@@ -740,11 +1270,15 @@
   header$object.info$nb.of.subobject <- NA
   
   header$ref.object.info <- list ()
-  header$ref.object.info$SOP.ID <- unique(unlist(lapply(data, function (d) tryCatch (d[[grep("[(]0008,1150[)]$",names(d))]],error = function (e)  ""))))
-  if (length(header$ref.object.info$SOP.ID)>1) header$ref.object.info$SOP.ID <- header$ref.object.info$SOP.ID[header$ref.object.info$SOP.ID!=""]
-  header$ref.object.info$SOP.label <- sort (unique(unlist(lapply(data, function (d) tryCatch (d[[grep("[(]0008,1155[)]$",names(d))]],error = function (e)  "")))))
-  if (length(header$ref.object.info$SOP.label)>1) header$ref.object.info$SOP.label <- header$ref.object.info$SOP.label[header$ref.object.info$SOP.label!=""]
+  header$ref.object.info$SOP.ID <- unique(unlist(lapply(data, function (d) tryCatch (d[grep("[(]0008,1150[)]$",names(d))],error = function (e)  ""))))
+  if (length(header$ref.object.info$SOP.ID)>0) header$ref.object.info$SOP.ID <- header$ref.object.info$SOP.ID[header$ref.object.info$SOP.ID!=""]
+  header$ref.object.info$SOP.label <- sort (unique(unlist(lapply(data, function (d) tryCatch (d[grep("[(]0008,1155[)]$",names(d))],error = function (e)  "")))))
+  if (length(header$ref.object.info$SOP.label)>0) header$ref.object.info$SOP.label <- header$ref.object.info$SOP.label[header$ref.object.info$SOP.label!=""]
   
+  if (length(header$ref.object.info$SOP.ID)==0) {
+    header$ref.object.info <- NULL
+    header$ref.object.alias <- NULL
+  }
   
   header$frame.of.reference <-  object.info$reference
   header$ref.pseudo <- paste("ref", object.info$ref.label, sep="")
@@ -757,6 +1291,8 @@
   header$study.date <- unique(sapply(data, function (d) tryCatch (d[[grep("^[(]0008,0020[)]$",names(d))]],error = function (e)  "")))
   header$creation.date <- unique(sapply(data, function (d) tryCatch (d[[grep("^[(]0008,0012[)]$",names(d))]],error = function (e)  "")))
   header$study.time <- unique(sapply(data, function (d) tryCatch (d[[grep("^[(]0008,0030[)]$",names(d))]],error = function (e)  "")))
+  header$approval.status <- unique(sapply(data, function (d) tryCatch (d[[grep("^[(]300E,0002[)]$",names(d))]],error = function (e)  "")))
+
   
   
   L <- list ()
@@ -781,7 +1317,6 @@
   header$patient <- trimws (tryCatch (data[[1]][[grep("^[(]0010,0020[)]$",name)]],error = function (e) ""))
   header$patient.bd <- tryCatch (data[[1]][[grep("^[(]0010,0030[)]$",name)]],error = function (e) "")
   header$patient.sex <- toupper(trimws (tryCatch (data[[1]][[grep("^[(]0010,0040[)]$",name)]],error = function (e) "")))
-  
   
   header$file.basename <- ""
   if (Rdcm.mode) {
@@ -880,7 +1415,7 @@
   header$file.dirname <- ""
   header$object.name <- object.info$outfilename
   header$object.alias <- ""
-  header$ref.object.name <- ""
+  header$ref.object.alias <- ""
   
   
   header$object.info <- list ()
@@ -942,9 +1477,20 @@
     header$study.time <- tryCatch (dat[[grep("^[(]0008,0030[)]$",name)]],error = function (e) "")
     
     header$object.info$SOP.label <- sort(unique(unlist(dat[grepl("^[(]0008,0018[)]$",name)])))
-    header$ref.object.info$SOP.ID <- unique (unlist(dat[grep("[(]0008,1150[)]$", name)]))
-    header$ref.object.info$SOP.label <- sort (unique (unlist(dat[grep("[(]0008,1155[)]$", name)])))
     
+    
+    # header$ref.object.info$SOP.ID <- unique (unlist(dat[grep("[(]0008,1150[)]$", name)]))
+    # header$ref.object.info$SOP.label <- sort (unique (unlist(dat[grep("[(]0008,1155[)]$", name)])))
+    
+    header$ref.object.info$SOP.ID <- unique (unlist(dat[grep("[(]0008,1150[)]$", name)]))
+    if (length(header$ref.object.info$SOP.ID)>0) header$ref.object.info$SOP.ID <- header$ref.object.info$SOP.ID[header$ref.object.info$SOP.ID!=""]
+    header$ref.object.info$SOP.label <-  sort (unique (unlist(dat[grep("[(]0008,1155[)]$", name)])))
+    if (length(header$ref.object.info$SOP.label)>0) header$ref.object.info$SOP.label <- header$ref.object.info$SOP.label[header$ref.object.info$SOP.label!=""]
+    
+    if (length(header$ref.object.info$SOP.ID)==0) {
+      header$ref.object.info <- NULL
+      header$ref.object.alias <- NULL
+    }
     #
     beam.idx <- grep("[(]300C,0006[)]$", name)
     if (length(beam.idx)>0) {header_$beam.number <- as.numeric(unlist(dat[beam.idx]))
@@ -957,7 +1503,12 @@
     #unit
     header_$unit <- tryCatch (dat[[grep("^[(]3004,0002[)]$", name)]],error = function (e) "")
     if (header_$unit=="") {header$warning <- c(header$warning,"no specified unit")
-    } else {if (tolower (trimws (header_$unit))!="gy") header$warning <- c(header$warning,"(3004,0002) should be Gy for map")
+    } else {
+      if (tolower (trimws (header_$unit))!="gy") {
+        header$warning <- c(header$warning,"(3004,0002) should be Gy for map")
+      } else { 
+        header_$unit <- "Gy"
+      }
     }
     physical <- tryCatch (dat[[grep("^[(]3004,0004[)]$", name)]],error = function (e) "")
     if (physical=="") {header$warning <- c(header$warning,"not Physical dose")
@@ -989,59 +1540,58 @@
     if (length(sep)==1)  {header_$dxyz <- c(as.numeric (unlist(strsplit(header_$dxyz,sep, fixed=TRUE))),header_$slice.thickness)
     } else {header_$dxyz <- c (0, 0, header_$slice.thickness)}
     ## referientiel patient
-    header_$patient.orientation <- tryCatch (dat[[grep("[(]0020,0037[)]$", name)]],error = function (e) "")
-    if (header_$patient.orientation =="")  header$error <- c(header$error,"(0020,0037) patient orientation error")
-    sep <-unique(unlist(strsplit(tolower(header_$patient.orientation),"[[:digit:]]|[ ]|[.]|[e]|[+]|[-]")))
+    header_$orientation <- tryCatch (dat[[grep("[(]0020,0037[)]$", name)]],error = function (e) "")
+    if (header_$orientation =="")  header$error <- c(header$error,"(0020,0037) patient orientation error")
+    sep <-unique(unlist(strsplit(tolower(header_$orientation),"[[:digit:]]|[ ]|[.]|[e]|[+]|[-]")))
     sep <- sep[sep!=""]
     ref.machine <- NULL
     if (length(sep)==1){
-      header_$patient.orientation <- as.numeric (unlist(strsplit(header_$patient.orientation,sep, fixed=TRUE)))
-      ref.machine <-  (.ref.create (header_$patient.orientation))
-    } else {header_$patient.orientation <- c(1,0,0,0,1,0)}
+      header_$orientation <- as.numeric (unlist(strsplit(header_$orientation,sep, fixed=TRUE)))
+      ref.machine <-  (.ref.create (header_$orientation))
+    } else {header_$orientation <- c(1,0,0,0,1,0)}
     
     ## z coordinates
-    z <- tryCatch (dat[[grep("[(]3004,000C[)]$", name)]],error = function (e) "")
-    if (z =="")  {
+    z <- tryCatch (dat[[grep("[(]3004,000C[)]$", name)]],error = function (e) "0")
+    if (z == "0" & header_$n.ijk[3]>1)  {
       header$error <- c(header$error,"no (3004,000C) definition")
-      z<-"0"
     }
     sep <-unique(unlist(strsplit(tolower(z),"[[:digit:]]|[ ]|[.]|[e]|[+]|[-]")))
     sep <- sep[sep!=""]
     if (length(sep)==1)  {z <- as.numeric (unlist(strsplit(z,sep, fixed=TRUE)))
     } else {z=0}
     
-    if (length(z)>0) {
+    if (length(z)>1) {
       dz <- unique(round(z[2:length(z)]-z[1:(length(z)-1)],3))
       dz <- dz[dz!=0]
       if (length (dz)>0) {
-        header_$dxyz[3] <- dz [ which.min(abs(dz))]
+        header_$dxyz[3] <- dz [ which(abs(dz)==min(abs(dz)))]
         header_$slice.thickness <- abs(header_$dxyz[3])
       }
     }
     
     ## position de l'image dans le référentiel patient
-    header_$patient.xyz0 <- tryCatch (dat[[grep("[(]0020,0032[)]$", name)]],error = function (e) "")
-    if (any(header_$patient.xyz0 == "")) header$error <- c(header$error,"(0020,0032) pos. in referentiel error")
-    sep <- unique(unlist(strsplit(tolower(header_$patient.xyz0[1]),"[[:digit:]]|[ ]|[.]|[e]|[+]|[-]")))
+    header_$xyz0 <- tryCatch (dat[[grep("[(]0020,0032[)]$", name)]],error = function (e) "")
+    if (any(header_$xyz0 == "")) header$error <- c(header$error,"(0020,0032) pos. in referentiel error")
+    sep <- unique(unlist(strsplit(tolower(header_$xyz0[1]),"[[:digit:]]|[ ]|[.]|[e]|[+]|[-]")))
     sep <- sep[sep!=""]
     if (length(sep)==1) {
-      header_$patient.xyz0 <- as.numeric(unlist(sapply (header_$patient.xyz0, function(st) unlist(strsplit(st,sep,fixed=TRUE)))))
+      header_$xyz0 <- as.numeric(unlist(sapply (header_$xyz0, function(st) unlist(strsplit(st,sep,fixed=TRUE)))))
     } else {
-      header_$patient.xyz0 <- c(0,0,0)
+      header_$xyz0 <- c(0,0,0)
     }                                                     
     
-    header_$patient.xyz0  <-  matrix (rep (header_$patient.xyz0, length(z)), 
+    header_$xyz0  <-  matrix (rep (header_$xyz0, length(z)), 
                                       ncol= 3, 
                                       byrow = TRUE,
                                       dimnames = list(NULL,c("x0","y0","z0")))
     # if (z[1]==0) {
-    header_$patient.xyz0[, 3] <- header_$patient.xyz0[, 3] + z
+    header_$xyz0[, 3] <- header_$xyz0[, 3] + z
     # } else {
-    #   header_$patient.xyz0[, 3] <-  z
+    #   header_$xyz0[, 3] <-  z
     # }  
     
     
-    header_$xyz.from.ijk <-.xyz.from.ijk.create (header_$patient.orientation, header_$dxyz, header_$patient.xyz0[1, ])
+    header_$xyz.from.ijk <-.xyz.from.ijk.create (header_$orientation, header_$dxyz, header_$xyz0[1, ])
     if (header_$dxyz[3]!=0) {header_$k.idx <- round ((z-z[1])/header_$dxyz[3], 0 )
     } else {header_$k.idx <- 0 }
     header_$missing.k.idx <- FALSE
@@ -1089,7 +1639,7 @@
     index.map <-grep("[(]7FE0,0010[)]$", name)
     if (length(index.map)!=0) {
       
-      if (length(index.map)!=0 & !error.alloc) {
+      if (!error.alloc) {
         
         byte.nb <- length(dat[[index.map]])/prod(header_$n.ijk)
         if (byte.nb %in% c(1,2,4)){
@@ -1170,7 +1720,7 @@
     if (length(idx.dvh)>0) {
       
       header_$dvh <- list(nb.of.dvh = length (unique (idx.dvh)))
-      header_$dvh$ref.object.name  <- ""
+      header_$dvh$ref.object.alias  <- ""
       header_$dvh$ref.object.info <- list (SOP.ID =tryCatch ( dat[[which(grepl("^[(]300C,0060[)]", name) & grepl("[(]0008,1150[)]$", name))]],error = function (e) ""),
                                            SOP.label = tryCatch ( dat[[which(grepl("^[(]300C,0060[)]", name) & grepl("[(]0008,1155[)]$", name))]],error = function (e) ""))
       
@@ -1238,7 +1788,7 @@
         for (idx in 1:length(pt.idx)){ 
           p <- as.numeric(unlist(strsplit(pt[idx],sep.pt, fixed = TRUE)))
           if (header_$dvh$info$pixel.nb[idx] != length(p)/2) {
-            warning ("dvh loading error : number of points is not a multiple of 2.")
+            warning ("dvh loading error : number of points is not a multiple of 2." , call.=FALSE)
             
           } else {
             header_$dvh$data [[idx.dvh[pt.idx[idx]]]] =  data.frame (matrix (p, byrow=TRUE, ncol=2, dimnames = list(NULL,c ("x","y"))),
@@ -1281,12 +1831,11 @@
   header$patient.bd <- tryCatch (data[[1]][[grep("^[(]0010,0030[)]$",names(data[[1]]))]],error = function (e) "")
   header$patient.sex <- toupper(trimws (tryCatch (data[[1]][[grep("^[(]0010,0040[)]$",names(data[[1]]))]],error = function (e) "")))
   
-  
   header$file.basename <- ""
   header$file.dirname <- ""
   header$object.name<- object.info$outfilename
   header$object.alias <- ""
-  # header$ref.object.name <- ""
+  # header$ref.object.alias <- ""
   
   header$object.info <- list ()
   header$object.info$SOP.ID <- object.info$SOP.ID
@@ -1377,34 +1926,34 @@
     } else { header_$dxyz <- c (0, 0, header_$slice.thickness)}
     
     ## referientiel patient
-    header_$patient.orientation <- tryCatch (dat[[1]][[grep("[(]0020,0037[)]$",names(dat[[1]]))]],error = function (e) "")
-    if (header_$patient.orientation[1] =="")  header$error <- c (header$error,"(0020,0037) patient orientation error")
-    sep <-unique(unlist(strsplit(tolower(header_$patient.orientation),"[[:digit:]]|[ ]|[.]|[e]|[+]|[-]")))
+    header_$orientation <- tryCatch (dat[[1]][[grep("[(]0020,0037[)]$",names(dat[[1]]))]],error = function (e) "")
+    if (header_$orientation[1] =="")  header$error <- c (header$error,"(0020,0037) patient orientation error")
+    sep <-unique(unlist(strsplit(tolower(header_$orientation),"[[:digit:]]|[ ]|[.]|[e]|[+]|[-]")))
     sep <- sep[sep!=""]
     ref.machine <- NULL
     if (length(sep)==1){
-      header_$patient.orientation <- as.numeric (unlist(strsplit(header_$patient.orientation,sep, fixed=TRUE)))
-      ref.machine <-  (.ref.create (header_$patient.orientation))
-    } else {header_$patient.orientation <- c(1,0,0,0,1,0,0)}
+      header_$orientation <- as.numeric (unlist(strsplit(header_$orientation,sep, fixed=TRUE)))
+      ref.machine <-  (.ref.create (header_$orientation))
+    } else {header_$orientation <- c(1,0,0,0,1,0,0)}
     
     ## position de l'image dans le référentiel patient
-    header_$patient.xyz0 <- sapply(dat, function (d) tryCatch (d[[grep("[(]0020,0032[)]$",names(d))]],error = function (e) ""))
-    if (any(header_$patient.xyz0 == "")) header$error <- c(header$error,"(0020,0032) pos. in referentiel error")
-    sep <- unique(unlist(strsplit(tolower(header_$patient.xyz0[1]),"[[:digit:]]|[ ]|[.]|[e]|[+]|[-]")))
+    header_$xyz0 <- sapply(dat, function (d) tryCatch (d[[grep("[(]0020,0032[)]$",names(d))]],error = function (e) ""))
+    if (any(header_$xyz0 == "")) header$error <- c(header$error,"(0020,0032) pos. in referentiel error")
+    sep <- unique(unlist(strsplit(tolower(header_$xyz0[1]),"[[:digit:]]|[ ]|[.]|[e]|[+]|[-]")))
     sep <- sep[sep!=""]
     if (length(sep)==1) {
-      header_$patient.xyz0 <- matrix (as.numeric(unlist(sapply (header_$patient.xyz0, 
+      header_$xyz0 <- matrix (as.numeric(unlist(sapply (header_$xyz0, 
                                                                 function(st) unlist(strsplit(st,sep,fixed=TRUE))))), 
                                       ncol= 3, 
                                       byrow = TRUE,
                                       dimnames = list(NULL,c("x0","y0","z0")))
       if (!is.null(ref.machine)) {
-        machine.xyz0 <- header_$patient.xyz0 %*% t (ref.machine[1:3,1:3])
+        machine.xyz0 <- header_$xyz0 %*% t (ref.machine[1:3,1:3])
         if (nrow(machine.xyz0)>1) {
           Z.order <- order(machine.xyz0[,3])
           machine.xyz0 <- machine.xyz0[Z.order,]
           
-          header_$patient.xyz0 <- header_$patient.xyz0[Z.order, ]
+          header_$xyz0 <- header_$xyz0[Z.order, ]
           header$object.info$SOP.label  <- header$object.info$SOP.label[Z.order] 
           if (Rdcm.mode) {
             header$object.info$dicom.file  <- header$object.info$dicom.file[Z.order] 
@@ -1420,7 +1969,7 @@
           header_$dxyz[3] <- mean(dz[round(abs(dz)/dz0,0)==1])
           
         }
-        header_$xyz.from.ijk <-.xyz.from.ijk.create (header_$patient.orientation, header_$dxyz, header_$patient.xyz0[1, ])
+        header_$xyz.from.ijk <-.xyz.from.ijk.create (header_$orientation, header_$dxyz, header_$xyz0[1, ])
         if (nrow(machine.xyz0)>1){ header_$k.idx <- round((machine.xyz0[ ,3] - machine.xyz0[1,3])/header_$dxyz[3],0)
         } else {header_$k.idx <- 0}
         header_$missing.k.idx <- FALSE
@@ -1574,6 +2123,7 @@
 #############################################################################################
 .xyz.from.ijk.create <- function(orientation_vect, dxyz, corner.pt){
   orientation <- matrix(orientation_vect,ncol=2, byrow=FALSE)
+  
   as.matrix(cbind(c(orientation[,1],0) * dxyz[1],
                   c(orientation[,2],0) * dxyz[2],
                   c(vector.product(orientation[,1],orientation[,2]),0) * dxyz[3],
@@ -1602,7 +2152,7 @@
       db <- cbind( data.frame (file=rep (names(reg.list)[idx],nrow(db)), dest.ref = rep(reg.list[[idx]]$frame.of.reference,nrow(db))),
                    db, data.frame (matrix.index= 1:nrow(db)), creation.date = rep (reg.list[[idx]]$creation.date,nrow(db)))
 
-      db$path <- file.path(reg.list[[idx]]$file.dirname,reg.list[[idx]]$file.basename)
+      db$path <- sub("^[/]","",file.path(reg.list[[idx]]$file.dirname,reg.list[[idx]]$file.basename))
       db[] <- data.frame (lapply(db [], as.character), stringsAsFactors=FALSE)
       return (db)
     })
@@ -1625,14 +2175,18 @@
   ref.info <- ref.info [order(ref.info$ref.pseudo), ]
   row.names(ref.info) <- NULL
   
+  ref.info_ <- unique(ref.info[,1:2])
+  if (nrow(ref.info_) != nrow(ref.info)) warning("Check the uniqueness of the patient : different PID birthday or sex.", call.=FALSE)
+  
+  
   reg.list <- lapply (reg.list, function (l) l$reg.list)
   reg.list <- reg.list[which(!sapply(reg.list, is.null))]
   names(reg.list) <- sapply (reg.list,function (l) l$object.alias)
   ref.tab <- NULL
   if (length (reg.list)>0){
     ref.tab <- .transfert.ref.tab.create (reg.list)
-    ref.tab$dest.ref <-sapply(ref.tab$dest.ref, function(r) ref.info$ref.pseudo[ref.info$ref==r])
-    ref.tab$src.ref <-sapply(ref.tab$src.ref, function(r) ref.info$ref.pseudo[ref.info$ref==r])
+    ref.tab$dest.ref <-sapply(ref.tab$dest.ref, function(r) ref.info_$ref.pseudo[ref.info_$ref==r])
+    ref.tab$src.ref <-sapply(ref.tab$src.ref, function(r) ref.info_$ref.pseudo[ref.info_$ref==r])
   }
   
   reg.info <- list()
@@ -1650,7 +2204,7 @@
   }
 
  
-  comb <- unlist(lapply(ref.info$ref.pseudo,function(r) paste(paste(ref.info$ref.pseudo,r,sep="<-"),r,ref.info$ref.pseudo, sep=";")))
+  comb <- unlist(lapply(ref.info_$ref.pseudo,function(r) paste(paste(ref.info_$ref.pseudo,r,sep="<-"),r,ref.info_$ref.pseudo, sep=";")))
   
   if (length(comb) == 0) return (NULL)
   
@@ -1671,14 +2225,14 @@
     } else if (!is.null (ref.tab)){
       tab.idx <- which(ref.tab$src.ref==comb$src[comb.idx] & ref.tab$dest.ref==comb$dest[comb.idx] )
       if (length(tab.idx)>0){
-        label  <- ref.info$ref [ref.info$ref.pseudo==comb$src[comb.idx]]
+        label  <- ref.info_$ref [ref.info_$ref.pseudo==comb$src[comb.idx]]
         comb$type[comb.idx] <- ref.tab$type[tab.idx]
         list.matrix[[comb.idx]] <- (reg.list[[ref.tab$file[tab.idx]]]$ref.data[[label]]$matrix)
         
       }
       tab.idx <- which(ref.tab$dest.ref==comb$src[comb.idx] & ref.tab$src.ref==comb$dest[comb.idx] )
       if (length(tab.idx)>0){
-        label  <- ref.info$ref [ref.info$ref.pseudo == comb$dest[comb.idx]]
+        label  <- ref.info_$ref [ref.info_$ref.pseudo == comb$dest[comb.idx]]
         comb$type[comb.idx] <- ref.tab$type[tab.idx]
         list.matrix[[comb.idx]] <- solve (reg.list[[ref.tab$file[tab.idx]]]$ref.data[[label]]$matrix)
         
@@ -1720,6 +2274,9 @@
   switch( modality,
           "rtstruct" = {
             return (.load.rtstruct (Lobj, nb, raw.data.list))
+          },
+          "rtimage" = {
+            return (.load.vol.object(Lobj, raw.data.list))
           },
           "rtdose" = {
             return (.load.vol.object(Lobj, raw.data.list))
@@ -1864,7 +2421,9 @@
   return(db)
 }
 
-
+#######################################################################################
+.load.rtimage<- function (Lobj, roi.nb = NULL, raw.data.list=NULL) {
+}
 #######################################################################################
 #' @importFrom stats median
 #' @importFrom sp point.in.polygon
@@ -1910,11 +2469,11 @@
   
   for(Rdcmf in dicomlist){
     if (any(!is.na(match(Rdcmf$header$object.info$SOP.label,L$ref.object.info$SOP.label)))) {
-      L$ref.object.name <- c(L$ref.object.name, Rdcmf$header$object.name)
-      L$ref.object.name <- L$ref.object.name[L$ref.object.name!=""]
+      L$ref.object.alias <- c(L$ref.object.alias, Rdcmf$header$object.alias)
+      L$ref.object.alias <- L$ref.object.alias[L$ref.object.alias!=""]
       ref.object.f <- FALSE
-      if(!is.null(Rdcmf$header$patient.orientation)) {
-        ori <- Rdcmf$header$patient.orientation #unlist(Rdcmf[[1]][[grep("^[(]0020,0037[)]$",names(Rdcmf[[1]]))]])
+      if(!is.null(Rdcmf$header$orientation)) {
+        ori <- Rdcmf$header$orientation #unlist(Rdcmf[[1]][[grep("^[(]0020,0037[)]$",names(Rdcmf[[1]]))]])
         if (!any(is.na(ori)))
           L$ref.from.contour <- matrix(c (ori[1:3],0,ori[4:6],0,vector.product(ori[1:3],ori[4:6]),
                                           0,0,0,0,1), ncol=4, byrow = FALSE)
@@ -1993,7 +2552,7 @@
         
         p <- as.numeric(unlist(strsplit(pt[idx],sep.pt, fixed = TRUE)))
         if (nb.pt[idx] != length(p)/3) {
-          warning ("struct loading error : number of points is not a multiple of 3.")
+          warning ("struct loading error : number of points is not a multiple of 3.", call.=FALSE)
           return(NULL)
         }
         if (any(is.na(p)))  return (NULL)
@@ -2058,7 +2617,7 @@
   
   # Lobj <- load.Rdcm.raw.data (filename)
   L <- Lobj$header
-  if (!is.null (L$ref.object.name) & (length(L$ref.object.info)!=0)) {
+  if (!is.null (L$ref.object.alias) & (length(L$ref.object.info)!=0)) {
     if (is.null(raw.data.list)){
       lf <- list.files(L$file.dirname, pattern="[.]Rdcm", full.names = T)
       dicomlist <-lapply (lf,function(f) {
@@ -2074,7 +2633,7 @@
         if (length(L$ref.object.info$SOP.ID)!=0){
           if(is.null(d$header$object.info$SOP.ID)) return(NULL)
           if (!(d$header$object.info$SOP.ID %in% L$ref.object.info$SOP.ID)) return(NULL)}
-        if (d$header$ref.pseudo!=L$ref.pseudo) return(NULL)
+        # if (d$header$ref.pseudo!=L$ref.pseudo) return(NULL)
         return(list(header=d$header))
       })
     }
@@ -2084,8 +2643,8 @@
     
     for(Rdcmf in dicomlist){
       if (any(!is.na(match(Rdcmf$header$object.info$SOP.label, L$ref.object.info$SOP.label)))) {
-         L$ref.object.name <- c(L$ref.object.name, Rdcmf$header$object.name)
-         L$ref.object.name <- L$ref.object.name[L$ref.object.name!=""]
+         L$ref.object.alias <- c(L$ref.object.alias, Rdcmf$header$object.alias)
+         L$ref.object.alias <- L$ref.object.alias[L$ref.object.alias!=""]
       }
     }
     
@@ -2148,7 +2707,7 @@
   
   # Lobj <- load.Rdcm.raw.data (filename, data=TRUE)
   L <- Lobj$header
-  if (!is.null (L$ref.object.name) & (length(L$ref.object.info)!=0)) {
+  if (!is.null (L$ref.object.alias) & (length(L$ref.object.info)!=0)) {
     if (is.null(raw.data.list)){
       lf <- list.files(L$file.dirname, pattern="[.]Rdcm", full.names = T)
       dicomlist <-lapply (lf,function(f) {
@@ -2156,7 +2715,7 @@
         if (length(L$ref.object.info$SOP.ID)!=0){
           if(is.null(d$header$object.info$SOP.ID)) return(NULL)
           if (!(d$header$object.info$SOP.ID %in% L$ref.object.info$SOP.ID)) return(NULL)}
-        if (d$header$ref.pseudo!=L$ref.pseudo) return(NULL)
+        # if (d$header$ref.pseudo!=L$ref.pseudo) return(NULL)
         return(d)
       })
     } else {
@@ -2164,7 +2723,7 @@
         if (length(L$ref.object.info$SOP.ID)!=0){
           if(is.null(d$header$object.info$SOP.ID)) return(NULL)
           if (!(d$header$object.info$SOP.ID %in% L$ref.object.info$SOP.ID)) return(NULL)}
-        if (d$header$ref.pseudo!=L$ref.pseudo) return(NULL)
+        # if (d$header$ref.pseudo!=L$ref.pseudo) return(NULL)
         return(list(header=d$header))
       })
     }
@@ -2175,8 +2734,8 @@
     
     for(Rdcmf in dicomlist){
       if (any(!is.na(match(Rdcmf$header$object.info$SOP.label, L$ref.object.info$SOP.label)))) {
-        L$ref.object.name <- c(L$ref.object.name, Rdcmf$header$object.name)
-        L$ref.object.name <- L$ref.object.name[L$ref.object.name!=""]
+        L$ref.object.alias <- c(L$ref.object.alias, Rdcmf$header$object.alias)
+        L$ref.object.alias <- L$ref.object.alias[L$ref.object.alias!=""]
         # break
       }
     }
@@ -2205,7 +2764,7 @@
   }
   if (L$missing.k.idx) 
   warning(paste("some imaging plans of",L$object.alias, 
-                "are missing. Some results of espadon calculations are unpredictable") )
+                "are missing. Some results of espadon calculations are unpredictable"), call.=FALSE )
   return (L)
 }
 
@@ -2249,19 +2808,19 @@
     matrix (c(i,j,k_,t), byrow=FALSE, ncol=4)
   }
   if (!is (vol, "volume")) {
-    warning ("vol should be a volume class object.")
+    warning ("vol should be a volume class object.", call.=FALSE)
     return (NULL)
   }
   
   if (length(idx)==0) {
-    warning ("idx is not defined in vol.")
+    warning ("idx is not defined in vol.", call.=FALSE)
     return (NULL)
   }
   if (is.null(dim(idx))){
     idx_ <- .get.ijk.from.index (idx,vol)
   } else {
     if (dim(idx)[2]!=3) {
-      warning ("idx has to be a vector or 3-columns matrix.")
+      warning ("idx has to be a vector or 3-columns matrix.", call.=FALSE)
       return(NULL)
     } else {
       idx[, 1:2] <- idx[, 1:2]-1
@@ -2486,36 +3045,7 @@
 }
 
 
-#####################################################################################################
-#' @export
-.uniform.unit.vector <- function(angle=1){
-
-  N <- ceiling (4*pi/(angle*pi/180)^2)
-  a <- 4*pi/N 
-  M.theta <- round (pi/sqrt(a))
-  d.theta <- pi/M.theta 
-  d.phi <- a/d.theta
-  
-  N <- sum(sapply(1:M.theta, function(m) round(2*pi*sin( pi*(m - 0.5)/M.theta)/d.phi)))
-  pt <- matrix(NA,ncol=3,nrow=N)
-  Ncount <- 0
-  for (m in 1:M.theta){
-    theta <- pi*(m - 0.5)/M.theta
-    M.phi <- round(2*pi*sin(theta)/d.phi)
-    for (n in 0:(M.phi-1)){
-      Ncount  <- Ncount+1
-      phi <- 2*pi*n/M.phi
-      
-      pt[Ncount, ] <- c(sin(theta)*cos(phi), sin(theta)*sin(phi), cos(theta))
-    }
-  }
-  pt <- pt[1:Ncount,1:3]
-  pt[abs(pt)<1e-6] <- 0
-  pt
-  # pt[1:Ncount,1:3]
-}
-
-###############################################################################################
+################################################################################
 #' @importFrom Rvcg setRays vcgRaySearch nfaces
 #' @export 
 .mesh.pt.distance <- function(mesh, xyz.pt, unit.vector) {
@@ -2651,6 +3181,23 @@
 #  m
 # }
 
+.get.tag.info <- function(db.name, db.tag, num.tag = numeric(), post.tag="",
+                          data,  data.name=names(data), adjust = TRUE){
+  if (length(post.tag)==0) return (NULL)
+  db <- array("", dim=c(length(post.tag),length(db.name)))
+  colnames(db) <- db.name
+  rc.db <- expand.grid(1:length(post.tag),1:length(db.name))
+  tag.list <- trimws(apply(expand.grid(post.tag, db.tag), 1, paste, collapse=" "))
+  ma <- match(tag.list, data.name)
+  not.na <- which(!is.na(ma))
+  if (length(not.na)==0) return(NULL)
+  db[as.matrix(rc.db[not.na,])] <- unlist(trimws(data[ma[not.na]]))
+  db <- data.frame(trimws(db),stringsAsFactors = F)
+  if (length(num.tag)!=1) db[ ,num.tag] <- suppressWarnings(lapply(db[,num.tag], as.numeric))
+  else if ((length(num.tag)==1)) db[ ,num.tag] <- as.numeric(db[ ,num.tag])
+  if (adjust) db <- .reduc.tab(db)
+  db
+}
 
 .reduc.tab <- function (db) { 
   if (is.null(db)) return (NULL)
@@ -2670,4 +3217,19 @@
   }
   colnames(db) <- n
   db
+}
+
+.fill.db <- function(db) {
+  n <- colnames(db)
+  num.tag <- which(as.logical(sapply(db,is.numeric)))
+  nr <- nrow(db)
+  db_ <- data.frame(do.call(cbind,lapply(1: ncol(db),function(col.nb){
+    idx <-c(which(!(is.na(db[,col.nb]) | db[,col.nb]=="")), nr+1)
+    d.idx <- idx[2:length(idx)] - idx[1:(length(idx)-1)]
+    db[unlist(lapply(1:length(d.idx),function (i) rep(idx[i],d.idx[i]))),col.nb]
+  })))
+  colnames (db_) <- n
+  if (length(num.tag)>1) db_[ ,num.tag] <- suppressWarnings(lapply(db_[,num.tag], as.numeric))
+  else if (length(num.tag)==1) db_[,num.tag] <- as.numeric(db_[,num.tag])
+  db_
 }

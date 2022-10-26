@@ -39,7 +39,8 @@ palette. If \code{bottom = NULL}, no bottom image is displayed.}
 \item{top}{"volume" class object, displayed as an overlay, using \code{top.col}
 palette. If \code{top = NULL}, no overlay image is displayed.}
 
-\item{struct}{"struct" class object. If \code{NULL}, no RoI is displayed.}
+\item{struct}{"struct" class object. If \code{NULL}, no RoI is displayed. Only
+RoI of closed planar or point type are displayed.}
 
 \item{roi.name}{Vector of exact names of the RoI in the \code{struct} object.
 By default \code{roi.name = NULL}. See Details.}
@@ -132,7 +133,7 @@ frame of reference chosen by the user.
 }
 \details{
 If \code{roi.name}, \code{roi.sname}, and \code{roi.idx} are
-all set to \code{NULL}, all closed planar RoI are selected.
+all set to \code{NULL}, all closed planar or point RoI are selected.
 If a RoI is not present in the requested plane, the RoI legend won't mention it.
 }
 \note{
@@ -145,16 +146,23 @@ written on the image.
 \examples{
 # loading of toy-patient objects (decrease dxyz and increase beam.nb for 
 # better result)
-step <- 5
-patient <- toy.load.patient (modality = c("ct", "rtstruct", "rtdose"), 
+step <- 4
+patient <- toy.load.patient (modality = c("ct", "mr", "rtstruct", "rtdose"), 
                              roi.name  = "",
                              dxyz = rep (step, 3), beam.nb = 3)
 CT <- patient$ct[[1]]
+MR <- patient$mr[[1]]
 D <- patient$rtdose[[1]]
 S <- patient$rtstruct[[1]]
 
 display.plane (bottom = CT, top = D, struct = S, view.coord = -30, 
                interpolate = FALSE, legend.shift = -80)
+# Display of CT in reference frame "ref1" and  MR in "ref2"               
+display.plane (bottom = CT, top = MR, interpolate = FALSE)
+
+# Display of CT and MR in reference frame "ref2"
+display.plane (bottom = CT, top = MR, interpolate = FALSE, display.ref ="ref2",
+               T.MAT = patient$T.MAT)
 }
 \seealso{
 \link[espadon]{display.kplane}.

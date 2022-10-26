@@ -115,7 +115,7 @@ struct.from.bin <- function (vol, roi.name = vol$description, roi.nb = 1,
                                      code.meaning = "", type=roi.type, interpreter="")
                                      
   struct$roi.data <- list()
-  # struct$roi.data[[1]] <- .display.roi.data.from.bin(bin_, bin_$patient.xyz0[1,])
+  # struct$roi.data[[1]] <- .display.roi.data.from.bin(bin_, bin_$xyz0[1,])
   struct$roi.data[[1]] <- .display.roi.data.from.bin(bin_)
   #contour fermé
   

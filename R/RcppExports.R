@@ -5,11 +5,35 @@
     .Call('_espadon_dicombrowser', PACKAGE = 'espadon', dicomrawdata, tagdico, nbTAG, stop_tag, stop_level, full_info, verbose)
 }
 
+.fansphereC <- function(angle) {
+    .Call('_espadon_fansphereC', PACKAGE = 'espadon', angle)
+}
+
+.fantovoxelC <- function(p, n_ijk, k_idx, k_loc, O_ijk, vol_data, att = FALSE, vol_value_flag = FALSE, vol_value = 1.0) {
+    .Call('_espadon_fantovoxelC', PACKAGE = 'espadon', p, n_ijk, k_idx, k_loc, O_ijk, vol_data, att, vol_value_flag, vol_value)
+}
+
+.gammaindex <- function(vol3D, vol3D_ref, inspect_idx, n_ijk, rel_dxyz, ball_i, ball_j, ball_k, around_idx, distance, D_norm, local, local_th_pc, ref_pc) {
+    .Call('_espadon_gammaindex', PACKAGE = 'espadon', vol3D, vol3D_ref, inspect_idx, n_ijk, rel_dxyz, ball_i, ball_j, ball_k, around_idx, distance, D_norm, local, local_th_pc, ref_pc)
+}
+
+.getijktfromindexC <- function(index, k_idx, n_ijk) {
+    .Call('_espadon_getijktfromindexC', PACKAGE = 'espadon', index, k_idx, n_ijk)
+}
+
 .getvaluefromijkC <- function(vol3D, interpolate, i, j, k, k_idx, k_loc, n_ijk) {
     .Call('_espadon_getvaluefromijkC', PACKAGE = 'espadon', vol3D, interpolate, i, j, k, k_idx, k_loc, n_ijk)
 }
 
 .labelbrowser <- function(vol3D, n_ijk) {
     .Call('_espadon_labelbrowser', PACKAGE = 'espadon', vol3D, n_ijk)
+}
+
+.mean_voxC <- function(vol3D, index, index_list, value_list, value_att_list) {
+    .Call('_espadon_mean_voxC', PACKAGE = 'espadon', vol3D, index, index_list, value_list, value_att_list)
+}
+
+.medianfilterC <- function(vol3D, n_ijk, ball_i, ball_j, ball_k) {
+    .Call('_espadon_medianfilterC', PACKAGE = 'espadon', vol3D, n_ijk, ball_i, ball_j, ball_k)
 }
 
