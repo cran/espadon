@@ -10,7 +10,7 @@ vol.create(
   mid.pt = NULL,
   pt000 = NULL,
   default.value = NA,
-  ref.pseudo = "",
+  ref.pseudo = "ref1",
   frame.of.reference = "",
   alias = "",
   modality = "",
@@ -35,7 +35,7 @@ first voxel of the first plane.}
 value of the voxels.}
 
 \item{ref.pseudo}{Character string, frame of reference pseudonym of the
-created object.}
+created object.By defaukt equal to "ref1"}
 
 \item{frame.of.reference}{Character string, frame of reference of the
 created object.}

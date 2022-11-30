@@ -36,6 +36,7 @@ vol.median <- function (vol,  alias = "", description = NULL) {
 
   ball_ijk <- as.matrix(expand.grid((-1):1,(-1):1,(-1):1))
   Md$vol3D.data[] <- .medianfilterC(as.numeric(vol$vol3D.data),vol$n.ijk, 
+                                    0:(prod(vol$n.ijk)-1),
                                     as.numeric(ball_ijk[,1]), as.numeric(ball_ijk[,2]), 
                                     as.numeric(ball_ijk[,3]))
   

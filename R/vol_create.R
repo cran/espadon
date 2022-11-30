@@ -12,7 +12,7 @@
 #' @param default.value Numerical or boolean value, representing the default 
 #' value of the voxels.
 #' @param ref.pseudo Character string, frame of reference pseudonym of the 
-#' created object.
+#' created object.By defaukt equal to "ref1"
 #' @param frame.of.reference Character string, frame of reference of the 
 #' created object.
 #' @param alias Character string, \code{$alias} of the created object.
@@ -42,16 +42,16 @@
 
 #' @export
 vol.create <- function (n.ijk, dxyz, mid.pt = NULL, pt000 = NULL, 
-                        default.value = NA, ref.pseudo = "", 
+                        default.value = NA, ref.pseudo = "ref1", 
                         frame.of.reference = "",
                         alias = "", modality = "",  
                         description = "", number = 0) {
   
   if (is.null(pt000) & is.null(mid.pt)) {
     mid.pt <- c (0, 0, 0)
-    pt000 <- mid.pt - n.ijk*dxyz/2.0
+    pt000 <- mid.pt + (0.5 - n.ijk/2.0) * dxyz
   } else if(is.null(pt000)){
-    pt000 <- mid.pt - n.ijk*dxyz/2.0
+    pt000 <- mid.pt + (0.5 - n.ijk/2.0) * dxyz
   }
   
   back.vol <- list()

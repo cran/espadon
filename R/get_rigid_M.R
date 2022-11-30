@@ -24,10 +24,12 @@ get.rigid.M <- function (T.MAT, src.ref, dest.ref) {
   
   if (is.null (T.MAT)) {
     if (src.ref != dest.ref) return (NULL)
-    return (matrix (c (rep ( c (1.0, 0.0, 0.0, 0.0, 0.0), 3), 1.0), nrow=4))
+    return (diag(4))
   }
   
   if (!is(T.MAT,"t.mat")) stop("T.MAT should be a t.mat class object.")
+  if (src.ref == dest.ref) return (diag(4))
+  
   T.name <- paste (dest.ref, src.ref, sep = "<-")
   T.info <- T.MAT$matrix.description[T.MAT$matrix.description == T.name, ]
   if (nrow(T.info)==1) if (castlow.str(T.info$type)== "rigid")

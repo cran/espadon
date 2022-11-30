@@ -28,6 +28,8 @@
 #' requested margins.
 #' @details If \code{roi.name}, \code{roi.sname}, and \code{roi.idx} are all set
 #' to NULL, all RoI are selected.
+#' @seealso \link[espadon]{add.margin}, \link[espadon]{nesting.cube} and  
+#' \link[espadon]{nesting.bin}.
 #' @examples
 #' # loading of toy-patient objects (decrease dxyz for  better result)
 #' step <- 4

@@ -44,5 +44,6 @@ display.3D.stack (new.CT, line.col="red")
 }
 }
 \seealso{
-\link[espadon]{add.margin}.
+\link[espadon]{add.margin}, \link[espadon]{nesting.roi} and
+\link[espadon]{nesting.bin}.
 }

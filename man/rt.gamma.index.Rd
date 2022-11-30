@@ -7,6 +7,7 @@
 rt.gamma.index(
   vol,
   vol.ref,
+  over.sampling.factor = 1,
   vol.max = vol.ref$max.pixel,
   dose.th = 0.02,
   delta.r = 3,
@@ -21,6 +22,10 @@ rt.gamma.index(
 \item{vol}{"volume" class object, which represents the measured volume.}
 
 \item{vol.ref}{"volume" class object, which represents the reference volume.}
+
+\item{over.sampling.factor}{Strictly positive integer, or a vector of 3 strictly
+positive integers, default to 1. Defined to oversample grids of \code{vol} and \code{vol.ref}.
+Oversampling can be very time consuming.}
 
 \item{vol.max}{Positive number, by default equal to the maximum value of the reference volume.
 See Details.}
@@ -49,8 +54,9 @@ Returns a "volume" class object (see \link[espadon]{espadon.class}
 for class definitions).  The \code{$vol3D.data} field represents the Gamma index.
 Two fields are added:
 the \code{$setup} field recalls the calculation setup, and the \code{$gamma.info} field
-details the rate of Gamma indices below 1, above 1.2 and 1.5, the max and the
-mean Gamma index.
+details the number of dose points, the number of evaluated dose points,the rate
+of evaluated dose points, the rate of Gamma indices below 1, above 1.2 and 1.5,
+the max and the mean Gamma index.
 }
 \description{
 The \code{rt.gamma.index} function computes the local or global
@@ -81,9 +87,9 @@ patient <- toy.load.patient (modality = c ("rtdose", "rtstruct"),
                              roi.name = "ptv", dxyz = c (3, 3, 3))
 D.ref <- patient$rtdose[[1]]  
 # We will assume that the measured dose is equal to the reference dose shifted
-# by one pixel on the x axis
+# by 3 pixels on the x axis
 D.meas <- vol.copy (D.ref, alias = "measured_dose")
-D.meas$vol3D.data[1:(D.meas$n.ijk[1] - 1) ,,] <- D.ref$vol3D.data[2:D.ref$n.ijk[1],,] 
+D.meas$vol3D.data[1:(D.meas$n.ijk[1] - 3) ,,] <- D.ref$vol3D.data[4:D.ref$n.ijk[1],,] 
 
 gamma <- rt.gamma.index (D.meas, D.ref, delta.r = 6)  
 gamma$gamma.info  

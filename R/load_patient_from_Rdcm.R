@@ -126,27 +126,27 @@ load.patient.from.Rdcm <- function (dirname, data = FALSE, dvh = FALSE){
   })
   names(obj) <- modality
   l <- do.call(c, list(l, obj))
-  
-  l$dicom.dvh <- lapply(dicomlist, function(obj) return(obj$header$dvh))
-  l$dicom.dvh <- l$dicom.dvh [which(!sapply (l$dicom.dvh, is.null))]
-  
-  if (length( l$dicom.dvh)>0){
-    for (dvh.idx in 1:length(l$dicom.dvh)){
-      ref.object <- names(dicomlist)[(sapply(dicomlist,function(dl) dl$header$object.info$SOP.ID)==l$dicom.dvh[[dvh.idx]]$ref.object.info$SOP.ID) & 
-                                       (sapply(lapply(dicomlist, function(dl) dl$header$object.info$SOP.label), function(v) l$dicom.dvh[[dvh.idx]]$ref.object.info$SOP.label %in% v))]
-      if (length(ref.object)>0) l$dicom.dvh[[dvh.idx]]$ref.object.name <- ref.object
-      
-      if (l$dicom.dvh[[dvh.idx]]$ref.object.name!=""){
-        ma <- match(l$dicom.dvh[[dvh.idx]]$info$number, dicomlist[[l$dicom.dvh[[dvh.idx]]$ref.object.name]]$header$roi.info$number)
-        l$dicom.dvh[[dvh.idx]]$info$roi.name[!is.na(ma)] <- 
-          dicomlist[[l$dicom.dvh[[dvh.idx]]$ref.object.name]]$header$roi.info$name[ma[!is.na(ma)]]
-        # n <- names(l$dicom.dvh[[dvh.idx]]$data)
-        # n[!is.na(ma)] <- l$dicom.dvh[[dvh.idx]]$info$roi.name[!is.na(ma)]
-        # names(l$dicom.dvh[[dvh.idx]]$data) <- n
+  if (dvh){
+    l$dicom.dvh <- lapply(dicomlist, function(obj) return(obj$header$dvh))
+    l$dicom.dvh <- l$dicom.dvh [which(!sapply (l$dicom.dvh, is.null))]
+    
+    if (length( l$dicom.dvh)>0){
+      for (dvh.idx in 1:length(l$dicom.dvh)){
+        ref.object <- names(dicomlist)[(sapply(dicomlist,function(dl) dl$header$object.info$SOP.ID)==l$dicom.dvh[[dvh.idx]]$ref.object.info$SOP.ID) & 
+                                         (sapply(lapply(dicomlist, function(dl) dl$header$object.info$SOP.label), function(v) l$dicom.dvh[[dvh.idx]]$ref.object.info$SOP.label %in% v))]
+        if (length(ref.object)>0) l$dicom.dvh[[dvh.idx]]$ref.object.alias <- ref.object
+        
+        if (l$dicom.dvh[[dvh.idx]]$ref.object.alias[1]!=""){
+          ma <- match(l$dicom.dvh[[dvh.idx]]$info$number, dicomlist[[l$dicom.dvh[[dvh.idx]]$ref.object.alias[1]]]$header$roi.info$number)
+          l$dicom.dvh[[dvh.idx]]$info$roi.name[!is.na(ma)] <- 
+            dicomlist[[l$dicom.dvh[[dvh.idx]]$ref.object.alias[1]]]$header$roi.info$name[ma[!is.na(ma)]]
+          # n <- names(l$dicom.dvh[[dvh.idx]]$data)
+          # n[!is.na(ma)] <- l$dicom.dvh[[dvh.idx]]$info$roi.name[!is.na(ma)]
+          # names(l$dicom.dvh[[dvh.idx]]$data) <- n
+        }
       }
-    }
-  } else {l$dicom.dvh <- NULL}
-  
+    } else {l$dicom.dvh <- NULL}
+  }
   
   l.reg <- strsplit(names(l$T.MAT$matrix.list)[sapply(l$T.MAT$matrix.list, function(m) !is.null(m))],"<-")
   l.reg <- lapply(l.reg,function(li) sort(unique(li)))

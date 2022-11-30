@@ -45,7 +45,7 @@
 
 #' @importFrom graphics locator
 #' @importFrom igraph graph_from_adjacency_matrix plot.igraph norm_coords layout_nicely
-#' @importFrom grDevices dev.cur dev.list
+#' @importFrom grDevices dev.off dev.cur dev.list
 #' @export
 display.obj.links <- function (pat, obj.selected = NULL, exclusion = NULL, 
                                square = "rtdose", group.by.connected.FoR = TRUE, 
@@ -59,7 +59,10 @@ display.obj.links <- function (pat, obj.selected = NULL, exclusion = NULL,
 
   on.exit(
     expr = {
-      if (my.dev %in% dev.list()) (par(old.par))
+      if ((my.dev %in% dev.list()) & interactive) dev.off(which = my.dev)
+      
+      suppressWarnings (par (old.par))
+        
       options(locatorBell = old.lb)
       if (!is.na(rs[1]))  .Random.seed <- rs
     })
@@ -70,74 +73,77 @@ display.obj.links <- function (pat, obj.selected = NULL, exclusion = NULL,
   if (!is.null(random.seed)) set.seed(random.seed)
   ## Plot function
   F_Plot <- function (pat, network, network.same.obj, coords, obj.approv, obj.be.careful, obj.ref, 
-                      obj.list, obj.selected, choice) {
-    
-    if (group.by.connected.FoR) {
-      M.T.MAT <- matrix (pat$T.MAT$matrix.description$type != '', nrow=sqrt (length (pat$T.MAT$matrix.description$type)))
-      src.T.MAT <- matrix (pat$T.MAT$matrix.description$src, nrow=sqrt (length (pat$T.MAT$matrix.description$type)))
-      codes.T.MAT <- apply (M.T.MAT, 1, function (V) {
-        sum (2^(1:length (V))*V)
-      })
-      ncolors <- length (unique (codes.T.MAT))
-      obj.code <- sapply (obj.ref, function (ref) {
-        V <- M.T.MAT[src.T.MAT == ref]
-        sum (2^(1:length (V))*V)
-      })
-      color.levels <- as.numeric (factor (obj.code))
-    } else {
-      color.levels <- as.numeric (factor (obj.ref))
-      ncolors <- max (color.levels)
-    }
-    color.levels[obj.be.careful] <- max (color.levels) + 1
-    
-    if (!is.null (square)) {
-      to.square <- sapply (square, function (keep) grepl (paste0 ("^", keep), obj.list))
-    } else to.square <- matrix (rep (FALSE, length (obj.list)), nrow=length (obj.list))
-    to.square <- apply (to.square, 1, function (resp) any (resp))
-    
-    bold <- vector("logical",length(obj.alias))
-    if (dim(obj.selected)[1]!=0){
-      for (i in 1:dim(obj.selected)[1]){
-        bold <- bold | sapply(as.matrix(obj.alias), function (alias) (alias==obj.selected$PIN.exam[i]))
-      }
-    }
+                      obj.list, obj.selected, no.shape,choice) {
     par(mar=c(0,0,3,0))
     plot(range(coords[,1])*1.5, range(coords[,2])*1.5, type="n", main=pat$pat.pseudo)
-    
-    plot.igraph (network, layout = coords, add=TRUE,
-                 vertex.color = c(hcl.colors (ncolors, "Pastel 1"), "#b0b0b0")[color.levels],
-                 vertex.shape = c("circle", "square")[to.square + 1],
-                 vertex.frame.color = c(NA, "green")[(obj.approv == "APPROVED") + 1],
-                 vertex.label.color = "black",
-                 vertex.label.font = c(1,4)[bold +1],
-                 vertex.label.cex = c(0.9,1)[bold +1],
-                 edge.arrow.size =0.7, edge.color="black")
-    
-    plot.igraph (network.same.obj, layout = coords, add=TRUE,
-                 vertex.color = c(hcl.colors (ncolors, "Pastel 1"), "#b0b0b0")[color.levels],
-                 vertex.shape = c("circle", "square")[to.square + 1],
-                 vertex.frame.color = c(NA, "green")[(obj.approv == "APPROVED") + 1],
-                 vertex.label.color = "black",
-                 vertex.label.font = c(1,4)[bold +1],
-                 vertex.label.cex = c(0.9,1)[bold +1],
-                 edge.arrow.size = 0, edge.color="grey80")
-    
-    
-    if (choice == "Get infos") {
-      text(0, par()$usr[4]-0.08, "GET INFOS")
-      text(par()$usr[1]+0.15, par()$usr[4]-0.08, "QUIT")
-      text(0, par()$usr[3]+0.08, cex=0.9, font=3, "Click on an exam to display informations.")
-      rect (par()$usr[1]+0.03, par()$usr[4]-0.019, par()$usr[1]+0.27, par()$usr[4]-0.141)
-    } else if (choice == "Select exams") {
-      text(0, par()$usr[4]-0.08, "Select the exams to be kept")
-      text(par()$usr[1]+0.15, par()$usr[4]-0.08, "QUIT")
-      text(0, par()$usr[3]+0.08, cex=0.9, font=3, "Click on an exam to add it at the data frame.")
-      rect (par()$usr[1]+0.03, par()$usr[4]-0.019, par()$usr[1]+0.27, par()$usr[4]-0.141)
-    } else if (choice == "Remove exams") {
-      text(0, par()$usr[4]-0.08, "Remove from the data frame")
-      text(par()$usr[1]+0.15, par()$usr[4]-0.08, "QUIT")
-      text(0, par()$usr[3]+0.08, cex=0.9, font=3, "Click on an exams to remove it on the data frame.")
-      rect (par()$usr[1]+0.03, par()$usr[4]-0.019, par()$usr[1]+0.27, par()$usr[4]-0.141)
+    if (!is.null(network)){
+      
+      if (group.by.connected.FoR) {
+        M.T.MAT <- matrix (pat$T.MAT$matrix.description$type != '', nrow=sqrt (length (pat$T.MAT$matrix.description$type)))
+        src.T.MAT <- matrix (pat$T.MAT$matrix.description$src, nrow=sqrt (length (pat$T.MAT$matrix.description$type)))
+        codes.T.MAT <- apply (M.T.MAT, 1, function (V) {
+          sum (2^(1:length (V))*V)
+        })
+        ncolors <- length (unique (codes.T.MAT))
+        obj.code <- sapply (obj.ref, function (ref) {
+          V <- M.T.MAT[src.T.MAT == ref]
+          sum (2^(1:length (V))*V)
+        })
+        color.levels <- as.numeric (factor (obj.code))
+      } else {
+        color.levels <- as.numeric (factor (obj.ref))
+        ncolors <- max (color.levels)
+      }
+      color.levels[obj.be.careful] <- max (color.levels) + 1
+      
+      if (!is.null (square)) {
+        to.square <- as.logical(sapply (square, function (keep) grepl (paste0 ("^", keep), obj.list)))
+      } else to.square <- rep (FALSE, length (obj.list))
+      
+      vertex.shape = c("circle", "square")[to.square + 1]
+      vertex.shape[no.shape] <- "none"
+      bold <- vector("logical",length(obj.alias))
+      if (dim(obj.selected)[1]!=0){
+        for (i in 1:dim(obj.selected)[1]){
+          bold <- bold | sapply(as.matrix(obj.alias), function (alias) (alias==obj.selected$PIN.exam[i]))
+        }
+      }
+      
+      plot.igraph (network, layout = coords, add=TRUE,
+                   vertex.color = c(hcl.colors (ncolors, "Pastel 1"), "#b0b0b0")[color.levels],
+                   vertex.shape = vertex.shape,
+                   vertex.frame.color = c(NA, "green")[(obj.approv == "APPROVED") + 1],
+                   vertex.label.color = "black",
+                   vertex.label.font = c(1,4)[bold +1],
+                   vertex.label.cex = c(0.9,1)[bold +1],
+                   edge.arrow.size =0.7, edge.color="black")
+      
+      plot.igraph (network.same.obj, layout = coords, add=TRUE,
+                   vertex.color = c(hcl.colors (ncolors, "Pastel 1"), "#b0b0b0")[color.levels],
+                   vertex.shape = vertex.shape,
+                   vertex.frame.color = c(NA, "green")[(obj.approv == "APPROVED") + 1],
+                   vertex.label.color = "black",
+                   vertex.label.font = c(1,4)[bold +1],
+                   vertex.label.cex = c(0.9,1)[bold +1],
+                   edge.arrow.size = 0, edge.color="grey80")
+      
+      
+      if (choice == "Get infos") {
+        text(0, par()$usr[4]-0.08, "GET INFOS")
+        text(par()$usr[1]+0.15, par()$usr[4]-0.08, "QUIT")
+        text(0, par()$usr[3]+0.08, cex=0.9, font=3, "Click on an exam to display informations.")
+        rect (par()$usr[1]+0.03, par()$usr[4]-0.019, par()$usr[1]+0.27, par()$usr[4]-0.141)
+      } else if (choice == "Select exams") {
+        text(0, par()$usr[4]-0.08, "Select the exams to be kept")
+        text(par()$usr[1]+0.15, par()$usr[4]-0.08, "QUIT")
+        text(0, par()$usr[3]+0.08, cex=0.9, font=3, "Click on an exam to add it at the data frame.")
+        rect (par()$usr[1]+0.03, par()$usr[4]-0.019, par()$usr[1]+0.27, par()$usr[4]-0.141)
+      } else if (choice == "Remove exams") {
+        text(0, par()$usr[4]-0.08, "Remove from the data frame")
+        text(par()$usr[1]+0.15, par()$usr[4]-0.08, "QUIT")
+        text(0, par()$usr[3]+0.08, cex=0.9, font=3, "Click on an exams to remove it on the data frame.")
+        rect (par()$usr[1]+0.03, par()$usr[4]-0.019, par()$usr[1]+0.27, par()$usr[4]-0.141)
+      }
     }
   }
   
@@ -253,9 +259,9 @@ display.obj.links <- function (pat, obj.selected = NULL, exclusion = NULL,
   }
   
   ## Object selection function
-  F_Select_Exams <- function ( network, network.same.obj, obj.selected, pat, coords, obj.type, obj.idx, obj.alias, choice) {
+  F_Select_Exams <- function ( network, network.same.obj, obj.selected, pat, coords, obj.type, obj.idx, obj.alias, no.shape, choice) {
     tryCatch(error = function(e) {choice<-"Quit";return(list(obj=obj.selected,ch=choice))},{
-      F_Plot(pat, network, network.same.obj, coords, obj.approv, obj.be.careful, obj.ref, obj.list, obj.selected, choice)
+      F_Plot(pat, network, network.same.obj, coords, obj.approv, obj.be.careful, obj.ref, obj.list, obj.selected, no.shape, choice)
       xy <- rbind(coords,c(par()$usr[1]+0.15, par()$usr[4]-0.08))
       repeat {
         M <- unlist (locator (n=1))
@@ -272,16 +278,18 @@ display.obj.links <- function (pat, obj.selected = NULL, exclusion = NULL,
           if (!(TRUE %in% (sapply(obj.selected$PIN.exam, function (alias) (alias==keep$PIN.exam))))){
             obj.selected <- rbind(obj.selected, keep)
           }
-          F_Plot(pat, network, network.same.obj, coords, obj.approv, obj.be.careful, obj.ref, obj.list, obj.selected, choice)
+          F_Plot(pat, network, network.same.obj, coords, obj.approv, obj.be.careful, 
+                 obj.ref, obj.list, obj.selected, no.shape, choice)
         }
       }
       return(list(obj=obj.selected,ch=choice))})
   }
   
   ## Object remove function
-  F_Remove_Exams <- function ( network, network.same.obj, obj.selected, pat, coords, obj.type, obj.idx, obj.alias, choice) {
+  F_Remove_Exams <- function ( network, network.same.obj, obj.selected, pat, coords, obj.type, obj.idx, obj.alias, no.shape,choice) {
     tryCatch(error = function(e) {choice<-"Quit";return(list(obj=obj.selected,ch=choice))},{
-      F_Plot(pat, network, network.same.obj, coords, obj.approv, obj.be.careful, obj.ref, obj.list, obj.selected, choice)
+      F_Plot(pat, network, network.same.obj, coords, obj.approv, obj.be.careful, obj.ref, obj.list, obj.selected, no.shape,
+             choice)
       xy <- rbind(coords,c(par()$usr[1]+0.15, par()$usr[4]-0.08))
       repeat {
         M <- unlist (locator (n=1))
@@ -297,7 +305,8 @@ display.obj.links <- function (pat, obj.selected = NULL, exclusion = NULL,
           remove.PIN <- obj.alias[idx]
           remove.idx <- which(obj.selected$PIN.exam==remove.PIN)
           if (length(remove.idx)!=0) (obj.selected <- obj.selected[-remove.idx,])
-          F_Plot(pat, network, network.same.obj, coords, obj.approv, obj.be.careful, obj.ref, obj.list, obj.selected, choice)
+          F_Plot(pat, network, network.same.obj, coords, obj.approv, obj.be.careful, obj.ref, obj.list, obj.selected, no.shape,
+                 choice)
         }
       }
       return(list(obj=obj.selected,ch=choice))})
@@ -310,57 +319,87 @@ display.obj.links <- function (pat, obj.selected = NULL, exclusion = NULL,
   obj.list <- obj.alias <- obj.name <- obj.ref <- obj.nb <- obj.approv <- c()
   obj.type <- obj.idx <- obj.be.careful <- c()
   obj.con <- list ()
-  for (i in (which(names(pat)=="T.MAT")+1):length (pat)) {
-    toggle = TRUE
-    if (names (pat)[i] %in% exclusion) toggle <- FALSE
-    if (toggle) {
-      for (j in 1:length (pat[[i]])) {
-        obj.type <- c(obj.type, i)
-        obj.idx <- c(obj.idx, j)
-        obj.list <- c (obj.list, paste(names (pat)[i], j))
-        obj.alias <- c (obj.alias, pat[[i]][[j]]$object.alias)
-        obj.name <- c (obj.name, pat[[i]][[j]]$object.name)
-        obj.ref <- c (obj.ref, pat[[i]][[j]]$ref.pseudo)
-        obj.nb <- c (obj.nb, pat[[i]][[j]]$number)
-        obj.be.careful <- c(obj.be.careful,
-                            !is.null (pat[[i]][[j]]$error) | !is.null (pat[[i]][[j]]$warning) |
-                              ifelse (is.null (pat[[i]][[j]]$missing.k.idx), FALSE, pat[[i]][[j]]$missing.k.idx))
-        if (is.null (pat[[i]][[j]]$approval.status)) obj.approv <- c (obj.approv, "")
-        else obj.approv <- c (obj.approv, pat[[i]][[j]]$approval.status)
-        if (is.null (pat[[i]][[j]]$ref.object.alias)) obj.con <- c(obj.con, "NA")
-        else obj.con <- c(obj.con, list (pat[[i]][[j]]$ref.object.alias))
+  no.shape <- c()
+  network <- network.same.obj <- NULL
+  coords<- matrix(c(0,0,1,1),nrow=2)
+  boutons <- c("Quit")
+  if ((which(names(pat)=="T.MAT")+1) <= length (pat)){
+    for (i in (which(names(pat)=="T.MAT")+1):length (pat)) {
+      toggle = TRUE
+      if (names (pat)[i] %in% exclusion) toggle <- FALSE
+      if (toggle) {
+        for (j in 1:length (pat[[i]])) {
+          obj.type <- c(obj.type, i)
+          obj.idx <- c(obj.idx, j)
+          obj.list <- c (obj.list, paste(names (pat)[i], j))
+          obj.alias <- c (obj.alias,names(pat[[i]])[j])
+          # obj.alias <- c (obj.alias, pat[[i]][[j]]$object.alias)
+          if (is.null( pat[[i]][[j]]$object.name)) {
+            obj.name <- c (obj.name,"")
+            no.shape <- c(no.shape,TRUE)
+          } else {
+            obj.name <- c (obj.name, pat[[i]][[j]]$object.name)
+            no.shape <- c(no.shape,FALSE)
+            }
+          
+          if (is.null( pat[[i]][[j]]$ref.pseudo)) {obj.ref <- c (obj.ref,"")
+          } else {obj.ref <- c (obj.ref, pat[[i]][[j]]$ref.pseudo)}
+          
+          if (is.null( pat[[i]][[j]]$number)) {obj.nb <- c (obj.nb,NA)
+          } else {obj.nb <- c (obj.nb, pat[[i]][[j]]$number)}
+          
+          obj.be.careful <- c(obj.be.careful,
+                              !is.null (pat[[i]][[j]]$error) | #!is.null (pat[[i]][[j]]$warning) |
+                                ifelse (is.null (pat[[i]][[j]]$missing.k.idx), FALSE, pat[[i]][[j]]$missing.k.idx))
+          if (is.null (pat[[i]][[j]]$approval.status)) obj.approv <- c (obj.approv, "")
+          else obj.approv <- c (obj.approv, pat[[i]][[j]]$approval.status)
+          if (is.null (pat[[i]][[j]]$ref.object.alias)) obj.con <- c(obj.con, "NA")
+          else obj.con <- c(obj.con, list (pat[[i]][[j]]$ref.object.alias))
+        }
       }
     }
+    
+    M <- matrix (0, nrow=length (obj.list), ncol=length (obj.list))
+    rownames (M) <- obj.list
+    colnames (M) <- obj.list
+  
+    for (i in which(no.shape)) {
+      j <- which(obj.alias == obj.alias[i])
+      j <- j[j!=i]
+      if (length(j)>0){
+        obj.name[i] <- pat[[obj.type[j]]][[obj.idx[j]]]$object.name
+        obj.ref[i] <- pat[[obj.type[j]]][[obj.idx[j]]]$ref.pseudo
+        obj.nb[i] <- pat[[obj.type[j]]][[obj.idx[j]]]$number
+      }
+    }
+    
+    
+    for (i in 1:length (obj.list)) {
+      idx <- which (sapply (obj.con, function (V) obj.alias[i] %in% V))
+      M[i, idx] <- 1
+      # idx <- which (sapply (obj.name, function (V) obj.name[i] %in% V))
+      # M[i, idx] <- 1
+    }
+    # M[cbind (1:length (obj.list), 1:length (obj.list))] <- 0
+    
+    
+    M.same.obj <- matrix (0, nrow=length (obj.list), ncol=length (obj.list))
+    rownames (M.same.obj) <- obj.list
+    colnames (M.same.obj) <- obj.list
+    for (i in 1:length (obj.list)) {
+      idx <- which (sapply (obj.name, function (V) obj.name[i] %in% V))
+      M.same.obj[i, idx] <- 1
+    }
+    
+    M.same.obj[cbind (1:length (obj.list), 1:length (obj.list))] <- 0
+    
+    network <- graph_from_adjacency_matrix(M)
+    network.same.obj <- graph_from_adjacency_matrix(M.same.obj)
+    coords <- norm_coords(layout_nicely(network))
+    boutons <- c("Get infos","Select exams","Remove exams","Quit")
   }
   
-  M <- matrix (0, nrow=length (obj.list), ncol=length (obj.list))
-  rownames (M) <- obj.list
-  colnames (M) <- obj.list
-  
-  for (i in 1:length (obj.list)) {
-    idx <- which (sapply (obj.con, function (V) obj.alias[i] %in% V))
-    M[i, idx] <- 1
-    # idx <- which (sapply (obj.name, function (V) obj.name[i] %in% V))
-    # M[i, idx] <- 1
-  }
-  # M[cbind (1:length (obj.list), 1:length (obj.list))] <- 0
-  
-  
-  M.same.obj <- matrix (0, nrow=length (obj.list), ncol=length (obj.list))
-  rownames (M.same.obj) <- obj.list
-  colnames (M.same.obj) <- obj.list
-  for (i in 1:length (obj.list)) {
-    idx <- which (sapply (obj.name, function (V) obj.name[i] %in% V))
-    M.same.obj[i, idx] <- 1
-  }
-  
-  M.same.obj[cbind (1:length (obj.list), 1:length (obj.list))] <- 0
-  
-  network <- graph_from_adjacency_matrix(M)
-  network.same.obj <- graph_from_adjacency_matrix(M.same.obj)
-  
-  coords <- norm_coords(layout_nicely(network))
-  boutons <- c("Get infos","Select exams","Remove exams","Quit")
+ 
   choice <- ""
   
   ## Start repetition display until quit
@@ -369,19 +408,19 @@ display.obj.links <- function (pat, obj.selected = NULL, exclusion = NULL,
     my.dev <- dev.cur ()
     repeat {
       if (choice=="Quit") break
-      F_Plot(pat, network, network.same.obj, coords, obj.approv, obj.be.careful, obj.ref, obj.list, obj.selected, "")
+      F_Plot(pat, network, network.same.obj, coords, obj.approv, obj.be.careful, obj.ref, obj.list, obj.selected, no.shape, "")
       choice <- F_Select_Action(boutons, choice)
       if (choice == "Get infos")  {
-        F_Plot(pat, network, network.same.obj, coords, obj.approv, obj.be.careful, obj.ref, obj.list, obj.selected, choice)
+        F_Plot(pat, network, network.same.obj, coords, obj.approv, obj.be.careful, obj.ref, obj.list, obj.selected, no.shape, choice)
         choice <- F_Display_Infos(pat, coords, obj.type, obj.idx, choice)
       } 
-      if (choice == "Select exams") {
-        r <-  F_Select_Exams( network, network.same.obj, obj.selected, pat, coords, obj.type, obj.idx, obj.alias, choice)
+      else if (choice == "Select exams") {
+        r <-  F_Select_Exams( network, network.same.obj, obj.selected, pat, coords, obj.type, obj.idx, obj.alias,no.shape, choice)
         obj.selected <- r$obj
         choice<-r$ch
       }  
-      if (choice == "Remove exams") {
-        r <- F_Remove_Exams( network, network.same.obj, obj.selected, pat, coords, obj.type, obj.idx, obj.alias, choice)
+      else if (choice == "Remove exams") {
+        r <- F_Remove_Exams( network, network.same.obj, obj.selected, pat, coords, obj.type, obj.idx, obj.alias,no.shape, choice)
         obj.selected <- r$obj
         choice<-r$ch
       }
@@ -392,7 +431,7 @@ display.obj.links <- function (pat, obj.selected = NULL, exclusion = NULL,
     }
     return (NULL)
   } 
-  F_Plot(pat, network, network.same.obj, coords, obj.approv, obj.be.careful, obj.ref, obj.list, obj.selected, "")
+  F_Plot(pat, network, network.same.obj, coords, obj.approv, obj.be.careful, obj.ref, obj.list, obj.selected, no.shape,"")
   
 }
 

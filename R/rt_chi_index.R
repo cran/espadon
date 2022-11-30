@@ -40,8 +40,9 @@
 #' for class definitions).  The \code{$vol3D.data} field represents the Chi index. 
 #' Two fields are added: 
 #' the \code{$setup} field recalls the calculation setup, and the \code{$chi.info} field
-#' details the rate of absolute values of the Chi index below 1, above 1.2 and 1.5, 
-#' the max and the mean Chi index.
+#' details the number of dose points, the number of evaluated dose points,the rate 
+#' of evaluated dose points, the rate of absolute values of the Chi index below 1, 
+#' above 1.2 and 1.5,the max and the mean Chi index.
 
 #' @importFrom Rdpack reprompt
 #' @references \strong{\[1\]} \insertRef{bakai2003}{espadon}
@@ -54,9 +55,9 @@
 #'                              roi.name = "ptv", dxyz = c (3, 3, 3))
 #' D.ref <- patient$rtdose[[1]]  
 #' # We will assume that the measured dose is equal to the reference dose shifted
-#' # by one pixel on the x axis
+#' # by 3 pixels on the x axis
 #' D.meas <- vol.copy (D.ref, alias = "measured_dose")
-#' D.meas$vol3D.data[1:(D.meas$n.ijk[1] - 1) ,,] <- D.ref$vol3D.data[2:D.ref$n.ijk[1],,] 
+#' D.meas$vol3D.data[1:(D.meas$n.ijk[1] - 3) ,,] <- D.ref$vol3D.data[4:D.ref$n.ijk[1],,] 
 #' 
 #' abs_chi <- rt.chi.index (D.meas, D.ref, delta.r = 6)  
 #' abs_chi$chi.info  
@@ -93,9 +94,34 @@ rt.chi.index <- function (vol, vol.ref, abs = TRUE, vol.max = vol.ref$max.pixel,
     return (NULL)
   }
   
+  desc <-  paste0(ifelse(local, "local ", "global "),
+                  dose.th*100, "% ", delta.r,"mm", 
+                  ifelse(local, paste0(" - local th ", 100*local.th,"%"),""))
+  if (is.null(description)) description <- desc
+  
+  chiindex <- vol.copy(vol.ref,alias = "chi_index", modality ="chiindex",
+                       description = description)
+  
+  chiindex$vol3D.data[] <- NA
+  chiindex$max.pixel  <-  chiindex$min.pixel  <- NA
+  
   
   a.th <- analysis.th * vol.max
   f.analyse <- !is.na(vol.ref$vol3D.data) & !is.na(vol$vol3D.data) & vol.ref$vol3D.data >= a.th
+  le <- sum(f.analyse)
+  
+  chiindex$setup <-  data.frame(label= c("Measure", "Reference", "Analysis threshold", "mode"),
+                                value = c(vol$object.alias, vol.ref$object.alias, 
+                                          paste0(analysis.th * 100,"%"), desc))
+  
+  nb.pt <- prod(chiindex$n.ijk)
+  chiindex$chi.info <-  data.frame(label= c("nb of pts","evaluated pts","evaluated pts (%)",
+                                            "<1 (%)","max", "mean",
+                                            ">1.5 (%)",">1.2 (%)"),
+                                   value = round(c(nb.pt, 0,  0,0,NA,NA,0,0),2))
+  
+  if (le==0) return(chiindex)
+  
   
   delta.D <- abs(vol$vol3D.data - vol.ref$vol3D.data)
   chi <- delta.D
@@ -113,13 +139,7 @@ rt.chi.index <- function (vol, vol.ref, abs = TRUE, vol.max = vol.ref$max.pixel,
     chi <- delta.D / sqrt((th^2) + (delta.r^2) * (grad.D$vol3D.data)^2)
   }
   chi[!f.analyse] <- NA
-  desc <-  paste0(ifelse(local, "local ", "global "),
-                  dose.th*100, "% ", delta.r,"mm", 
-                  ifelse(local, paste0(" - local th ", 100*local.th,"%"),""))
-  if (is.null(description)) description <- desc
-  
-  chiindex <- vol.copy(vol.ref,alias = "chi_index", modality ="chiindex",
-                       description = description)
+
   if (abs) {
     chiindex$vol3D.data <- abs(chi)
   } else {
@@ -128,13 +148,13 @@ rt.chi.index <- function (vol, vol.ref, abs = TRUE, vol.max = vol.ref$max.pixel,
   chiindex$max.pixel <- max(chiindex$vol3D.data, na.rm = TRUE)
   chiindex$min.pixel <- min(chiindex$vol3D.data, na.rm = TRUE)
   
-  le <- sum(f.analyse)
-  chiindex$setup <-  data.frame(label= c("Measure", "Reference", "Analysis threshold", "mode"),
-                                value = c(vol$object.alias, vol.ref$object.alias, 
-                                          paste0(analysis.th * 100,"%"), desc))
-  
-  chiindex$chi.info <-  data.frame(label= c("<1 (%)","max","mean",">1.5 (%)",">1.2 (%)"),
-                                   value = round(c(sum(abs(chi[f.analyse])<1)*100/le,
+ 
+
+  chiindex$chi.info <-  data.frame(label= c("nb of pts","evaluated pts","evaluated pts (%)",
+                                            "<1 (%)","max","mean",">1.5 (%)",">1.2 (%)"),
+                                   value = round(c(nb.pt, le, 
+                                                   100*le/nb.pt,
+                                                   sum(abs(chi[f.analyse])<1)*100/le,
                                                    chiindex$max.pixel, mean(abs(chi[f.analyse])),
                                                    sum(abs(chi[f.analyse])>1.5)*100/le,
                                                    sum(abs(chi[f.analyse])>1.2)*100/le),2))

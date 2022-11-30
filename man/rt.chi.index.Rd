@@ -52,8 +52,9 @@ Returns a "volume" class object (see \link[espadon]{espadon.class}
 for class definitions).  The \code{$vol3D.data} field represents the Chi index.
 Two fields are added:
 the \code{$setup} field recalls the calculation setup, and the \code{$chi.info} field
-details the rate of absolute values of the Chi index below 1, above 1.2 and 1.5,
-the max and the mean Chi index.
+details the number of dose points, the number of evaluated dose points,the rate
+of evaluated dose points, the rate of absolute values of the Chi index below 1,
+above 1.2 and 1.5,the max and the mean Chi index.
 }
 \description{
 The \code{rt.chi.index} function computes the local or global
@@ -86,9 +87,9 @@ patient <- toy.load.patient (modality = c ("rtdose", "rtstruct"),
                              roi.name = "ptv", dxyz = c (3, 3, 3))
 D.ref <- patient$rtdose[[1]]  
 # We will assume that the measured dose is equal to the reference dose shifted
-# by one pixel on the x axis
+# by 3 pixels on the x axis
 D.meas <- vol.copy (D.ref, alias = "measured_dose")
-D.meas$vol3D.data[1:(D.meas$n.ijk[1] - 1) ,,] <- D.ref$vol3D.data[2:D.ref$n.ijk[1],,] 
+D.meas$vol3D.data[1:(D.meas$n.ijk[1] - 3) ,,] <- D.ref$vol3D.data[4:D.ref$n.ijk[1],,] 
 
 abs_chi <- rt.chi.index (D.meas, D.ref, delta.r = 6)  
 abs_chi$chi.info  

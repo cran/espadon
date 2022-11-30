@@ -102,8 +102,8 @@ display.kplane <- function(vol, k = vol$k.idx [ceiling (length (vol$k.idx) / 2)]
   map <- aperm (as.matrix(vol$vol3D.data[,,which(k==vol$k.idx)], 
                           dim =vol$n.ijk[1:2] ), perm=c (2, 1))
   
-  rg.min <- pt00
-  rg.max <- pt00 + (vol$n.ijk[1:2]-1) * dxy[1:2]
+  rg.min <- pt00 - 0.5 * dxy[1:2] 
+  rg.max <- pt00 + (vol$n.ijk[1:2]-0.5) * dxy[1:2] 
   # rg.min <- c (min (rg.min_[1],rg.max_[1]), min(rg.min_[2],rg.max_[2]))
   # rg.max <- c (max (rg.min_[1],rg.max_[1]), max(rg.min_[2],rg.max_[2]))
   
@@ -133,11 +133,14 @@ display.kplane <- function(vol, k = vol$k.idx [ceiling (length (vol$k.idx) / 2)]
     
   }
   if (!is.na(vol$min.pixel) & !is.na(vol$max.pixel)) {
-    abs.left <- rg.min[1] - dxy[1]/2.0
-    ord.bottom <- rg.min[2] - dxy[2]/2.0
-    abs.right <- rg.max[1] + dxy[1]/2.0
-    ord.top <- rg.max[2] + dxy[2]/2.0
-    
+    # abs.left <- rg.min[1] - dxy[1]/2.0
+    # ord.bottom <- rg.min[2] - dxy[2]/2.0
+    # abs.right <- rg.max[1] + dxy[1]/2.0
+    # ord.top <- rg.max[2] + dxy[2]/2.0
+    abs.left <- rg.min[1] 
+    ord.bottom <- rg.min[2] 
+    abs.right <- rg.max[1]
+    ord.top <- rg.max[2]
     
     imin <- as.numeric(vol$min.pixel) #r[1]
     imax <- as.numeric(vol$max.pixel) #r[2]

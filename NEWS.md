@@ -1,3 +1,40 @@
+# SIGNIFICANT USER-VISIBLE CHANGES IN espadon 1.2.0 
+
+## NEW FEATURES:
+
+* New vol.oversampling() and vol.sub.sampling functions to oversample or 
+subsample the grid of a volume class object.
+
+## ENHANCEMENTS
+* load.patient.from.dicom() now issues a warning when espadon cannot import 
+one of several DICOM objects, instead of crashing.
+
+* get.rigid.M() now returns diag(4) when source reference frame is equal to 
+destination reference frame, regardless T.MAT. It therefore has an impact on  
+all functions that use a T.MAT to change the reference frame.
+
+* rt.indices.from.roi no longer uses all RoI containing "ptv" as target RoI 
+by default.
+
+* rt.gamma.index() and  rt.chi.index() now details, in the gamma.info field 
+or the chi.info field, the number of dose points, the number of evaluated dose 
+points, the rate of evaluated dose points.
+
+## BUG FIXES:
+
+* load.patient.from.dicom() and load.patient.from.Rdcm() no longer fail when 
+the dicom.dvh file has no region of interest as reference.
+
+* get.obj.connection() now provides an error-free components matrix.
+
+* display.obj.links() now have a better representation of dicom.dvh
+
+* rt.incices.from.roi, and hence rt.indices.from.bin no longer crash when no 
+volume information is requested.
+
+* vol.create() now has a well calculated midpoint.
+
+
 # SIGNIFICANT USER-VISIBLE CHANGES IN espadon 1.1.1                    
   
 ## NEW FEATURES:

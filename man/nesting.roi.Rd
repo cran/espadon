@@ -86,3 +86,7 @@ display.plane (bottom = CT.brain.with.margin,view.coord = Gz,
                bottom.breaks = seq(-1000, 1000, length.out = 1001),
                bg = "#00ff00", interpolate  = FALSE, legend.shift = -20)
 }
+\seealso{
+\link[espadon]{add.margin}, \link[espadon]{nesting.cube} and
+\link[espadon]{nesting.bin}.
+}

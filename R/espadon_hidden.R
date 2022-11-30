@@ -13,7 +13,7 @@
 
 #####################################################################################
 .espadon.version <- function(){
-  return ("1.1.1")
+  return ("1.2.0")
 }
 ######################################################
 #' @import progress
@@ -245,24 +245,34 @@
     
     tempf <- file.path (tempdir(),  unlist(strsplit(object.df[obj.idx, ]$temp,";")))
     data <- lapply(tempf,function(f) qread (f))
-    switch (modality,
-            "rtstruct" = {L <- .rtstruct.save (object.df[obj.idx, ], data, only.header, save.flag)},
-            "reg" = {L <- .reg.save (object.df[obj.idx, ], data, only.header, save.flag)},
-            "rtdose" = {L <- .rtdose.save (object.df[obj.idx, ], data, only.header, save.flag)},
-            "ct" = {L <- .img3Dplan.save (object.info=object.df[obj.idx, ], data, only.header, Rdcm.mode=save.flag)},
-            "ct1d" = {L <- .img3Dplan.save (object.df[obj.idx, ], data, only.header, save.flag)},
-            "mr" = {L <- .img3Dplan.save (object.df[obj.idx, ], data, only.header, save.flag)},
-            "pt" = {L <- .img3Dplan.save (object.df[obj.idx, ], data, only.header, save.flag)},
-            "rtplan" = {L <- .rtplan.save (object.df[obj.idx, ], data, only.header, save.flag)},
-            "rtimage" = {L <- .rtimage.save (object.df[obj.idx, ], data, only.header, save.flag)},
+    L <- tryCatch(switch (modality,
+            "rtstruct" = {.rtstruct.save (object.df[obj.idx, ], data, only.header, save.flag)},
+            "reg" = {.reg.save (object.df[obj.idx, ], data, only.header, save.flag)},
+            "rtdose" = {.rtdose.save (object.df[obj.idx, ], data, only.header, save.flag)},
+            "ct" = {.img3Dplan.save (object.info=object.df[obj.idx, ], data, only.header, Rdcm.mode=save.flag)},
+            "ct1d" = {.img3Dplan.save (object.df[obj.idx, ], data, only.header, save.flag)},
+            "mr" = {.img3Dplan.save (object.df[obj.idx, ], data, only.header, save.flag)},
+            "pt" = {.img3Dplan.save (object.df[obj.idx, ], data, only.header, save.flag)},
+            "rtplan" = {.rtplan.save (object.df[obj.idx, ], data, only.header, save.flag)},
+            "rtimage" = {.rtimage.save (object.df[obj.idx, ], data, only.header, save.flag)},
             
-            L <- .other.save (object.df[obj.idx, ], data, only.header,save.flag)
-    )
-    if (save.flag){
-      for (L.idx in  1:length(L))  .save.dicom.raw.data.to.Rdcm (L[[L.idx]], file.path (save.dir,  L[[L.idx]]$header$file.basename))
-      L.list <- c (L.list, L[[L.idx]]$header$file.basename)
+            .other.save (object.df[obj.idx, ], data, only.header,save.flag)
+    ), error = function(e) NULL)
+    
+    if (is.null(L)) {
+      fn <- paste(sapply(data,function(d) basename(d$filename)),collapse = ", ")
+      dn <- paste(unique(sapply(data,function(d) basename(dirname(d$filename)))),collapse = ", ")
+      warning (paste(fn,"in",dn, "directory can not be read by espadon. Please, contact maintainer."),
+               call. = FALSE)
     } else {
-      L.list <- do.call(c, list(L.list, L))
+      if (save.flag){
+        for (L.idx in  1:length(L))  
+          .save.dicom.raw.data.to.Rdcm (L[[L.idx]], 
+                                        file.path (save.dir, L[[L.idx]]$header$file.basename))
+        L.list <- c (L.list, L[[L.idx]]$header$file.basename)
+      } else {
+        L.list <- do.call(c, list(L.list, L))
+      }
     }
     file.remove(tempf)
     if (verbose ) pb$tick()
@@ -459,10 +469,12 @@
     
     
     if (image.ref$orientation.to.beam == "NORMAL") {
-      if (is.null(image.ref$orientation)) {header$orientation <- c(1,0,0,0,-1,0)
-      } else  {header$orientation <- as.numeric(unlist(strsplit(image.ref$orientation,"\\\\")))}
+      idx.orientation <- which(colnames(image.ref) == "orientation")
+      
+      if (length(idx.orientation)==0) {header$orientation <- c(1,0,0,0,-1,0)
+      } else  {header$orientation <- as.numeric(unlist(strsplit(image.ref[,idx.orientation],"\\\\")))}
     } else {
-      header$orientation <- as.numeric(unlist(strsplit(image.ref$orientation,"\\\\")))
+      header$orientation <- as.numeric(unlist(strsplit(image.ref[,idx.orientation],"\\\\")))
     }
     
     header$xyz0 <- matrix(0,ncol=3, nrow=1)
@@ -545,42 +557,46 @@
                                 intercept=pixel.info$intercept )
     header$machine.info <- .get.tag.info(db.name = info.name, 
                                          db.tag = info.tag, num.tag = info.num.tag, data = data, data.name = name)
-    header$exposure <- list()
+    
     st.idx <- grep ("^[(]3002,0030[)] item[[:digit:]]+$", name)
     exposure.nb <- as.numeric(gsub("^[(]3002,0030[)] item","",name[st.idx]))
-    for(exp.nb in exposure.nb){
-      header$exposure[[exp.nb]] <- list ()
-      header$exposure[[exp.nb]]$info <- .get.tag.info (db.name = exposure.info.name, 
-                                                db.tag = exposure.info.ref.tag, 
-                                                num.tag = exposure.info.numtag, post.tag = name[st.idx[exp.nb]],
-                                                data = data, data.name = name)
-      
-      n.idx <- grep (paste0("^[(]3002,0030[)] item",exp.nb," [(]300A,00B6[)] item[[:digit:]]+$"),name)
-      header$exposure[[exp.nb]]$leaf.jaw <- .get.tag.info (db.name = coll.name, 
-                                                                  db.tag = coll.tag, 
-                                                                  num.tag = coll.numtag, post.tag = name[n.idx],
-                                                                  data = data, data.name = name)
-      
-      header$exposure[[exp.nb]]$beam.ref <-  .get.tag.info (db.name = beam.ref.name, 
-                                                     db.tag = beam.ref.tag, 
-                                                     num.tag = beam.ref.numtag, post.tag = name[st.idx[exp.nb]],
-                                                     data = data, data.name = name)
-      
-      
-      header$exposure[[exp.nb]]$fixed.ref  <-.get.tag.info (db.name = fixed.ref.name, 
-                                                     db.tag = fixed.ref.tag, 
-                                                     num.tag = fixed.ref.numtag, post.tag = name[st.idx[exp.nb]],
-                                                     data = data, data.name = name)
-      
-      header$exposure[[exp.nb]]$table.ref  <- .get.tag.info (db.name = table.ref.name, 
-                                                      db.tag = table.ref.tag, 
-                                                      num.tag = table.numtag, post.tag = name[st.idx[exp.nb]],
-                                                      data = data, data.name = name)
-      
-      header$exposure[[exp.nb]]$gantry.ref <- .get.tag.info (gantry.ref.name, gantry.ref.tag, 
-                                                      gantry.ref.num.tag, post.tag = name[st.idx[exp.nb]],
-                                                      data = data, data.name = name)
+    if (length(exposure.nb)>0){
+      header$exposure <- list()
+      for(exp.nb in exposure.nb){
+        header$exposure[[exp.nb]] <- list ()
+        header$exposure[[exp.nb]]$info <- .get.tag.info (db.name = exposure.info.name, 
+                                                         db.tag = exposure.info.ref.tag, 
+                                                         num.tag = exposure.info.numtag, post.tag = name[st.idx[exp.nb]],
+                                                         data = data, data.name = name)
+        
+        n.idx <- grep (paste0("^[(]3002,0030[)] item",exp.nb," [(]300A,00B6[)] item[[:digit:]]+$"),name)
+        header$exposure[[exp.nb]]$leaf.jaw <- .get.tag.info (db.name = coll.name, 
+                                                             db.tag = coll.tag, 
+                                                             num.tag = coll.numtag, post.tag = name[n.idx],
+                                                             data = data, data.name = name)
+        
+        header$exposure[[exp.nb]]$beam.ref <-  .get.tag.info (db.name = beam.ref.name, 
+                                                              db.tag = beam.ref.tag, 
+                                                              num.tag = beam.ref.numtag, post.tag = name[st.idx[exp.nb]],
+                                                              data = data, data.name = name)
+        
+        
+        header$exposure[[exp.nb]]$fixed.ref  <-.get.tag.info (db.name = fixed.ref.name, 
+                                                              db.tag = fixed.ref.tag, 
+                                                              num.tag = fixed.ref.numtag, post.tag = name[st.idx[exp.nb]],
+                                                              data = data, data.name = name)
+        
+        header$exposure[[exp.nb]]$table.ref  <- .get.tag.info (db.name = table.ref.name, 
+                                                               db.tag = table.ref.tag, 
+                                                               num.tag = table.numtag, post.tag = name[st.idx[exp.nb]],
+                                                               data = data, data.name = name)
+        
+        header$exposure[[exp.nb]]$gantry.ref <- .get.tag.info (gantry.ref.name, gantry.ref.tag, 
+                                                               gantry.ref.num.tag, post.tag = name[st.idx[exp.nb]],
+                                                               data = data, data.name = name)
+      }
     }
+    
     
     # header$distance <- distance 
     # header$gantry.ref <- .get.tag.info (gantry.ref.name, gantry.ref.tag, 
@@ -1036,7 +1052,8 @@
       rtbeam.info <- .get.tag.info(db.name = db.name, 
                                    db.tag = db.tag, num.tag = num.tag, post.tag =  post.tag,
                                    data = data, data.name = name)
-      m <- match (patient.setup$beam.nb,rtbeam.info$beam.nb)
+      m <- unique(c(1,match (patient.setup$beam.nb,rtbeam.info$beam.nb)))
+      m <- m[!is.na(m)]
       rtbeam.info$patient.position <- "" 
       rtbeam.info$patient.position[m] <- patient.setup$patient.position
       rtbeam.info[,c("beam.nb","patient.position")] <- .fill.db (rtbeam.info[,c("beam.nb","patient.position")])
@@ -3193,8 +3210,11 @@
   if (length(not.na)==0) return(NULL)
   db[as.matrix(rc.db[not.na,])] <- unlist(trimws(data[ma[not.na]]))
   db <- data.frame(trimws(db),stringsAsFactors = F)
-  if (length(num.tag)!=1) db[ ,num.tag] <- suppressWarnings(lapply(db[,num.tag], as.numeric))
-  else if ((length(num.tag)==1)) db[ ,num.tag] <- as.numeric(db[ ,num.tag])
+  if (length(num.tag)!=1) {
+    db[ ,num.tag] <- suppressWarnings(lapply(db[,num.tag], as.numeric))
+  } else {
+    if ((length(num.tag)==1)) db[ ,num.tag] <- as.numeric(db[ ,num.tag])
+  }
   if (adjust) db <- .reduc.tab(db)
   db
 }
@@ -3225,11 +3245,18 @@
   nr <- nrow(db)
   db_ <- data.frame(do.call(cbind,lapply(1: ncol(db),function(col.nb){
     idx <-c(which(!(is.na(db[,col.nb]) | db[,col.nb]=="")), nr+1)
+    if (length(idx)==1) return(db[,col.nb]) 
     d.idx <- idx[2:length(idx)] - idx[1:(length(idx)-1)]
-    db[unlist(lapply(1:length(d.idx),function (i) rep(idx[i],d.idx[i]))),col.nb]
+    postdb <- NULL
+    if (idx[1]>1) postdb <- db[1:(idx[1]-1),col.nb]
+    return (c(postdb, 
+              db[unlist(lapply(1:length(d.idx),function (i) rep(idx[i],d.idx[i]))),col.nb]))
   })))
   colnames (db_) <- n
-  if (length(num.tag)>1) db_[ ,num.tag] <- suppressWarnings(lapply(db_[,num.tag], as.numeric))
-  else if (length(num.tag)==1) db_[,num.tag] <- as.numeric(db_[,num.tag])
+  if (length(num.tag)>1) {
+    db_[ ,num.tag] <- suppressWarnings(lapply(db_[,num.tag], as.numeric))
+  } else {
+    if (length(num.tag)==1) db_[,num.tag] <- as.numeric(db_[,num.tag])
+  }
   db_
 }

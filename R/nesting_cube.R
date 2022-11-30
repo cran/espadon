@@ -11,7 +11,8 @@
 #' @return Returns a "volume" class object, in which 3D volume is restricted 
 #' or increased to be circumscribed to the requested rectangular parallelepiped. 
 #' If the created volume exceeds the initial volume, new voxels are set to \code{NA}.
-#' @seealso \link[espadon]{add.margin}.
+#' @seealso \link[espadon]{add.margin}, \link[espadon]{nesting.roi} and  
+#' \link[espadon]{nesting.bin}.
 #' @examples
 #' # loading of toy-patient objects (decrease dxyz for better result)
 #' step <- 5

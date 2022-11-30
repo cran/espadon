@@ -53,7 +53,17 @@ vol.regrid <- function (vol, back.vol, T.MAT = NULL, interpolate = TRUE, alias =
     warning ("back.vol should be a volume class object.")
     return (NULL)
   }
-  
+  if (!is.logical(interpolate)) {
+    warning ("interpolate should be TRUE or FALSE.")
+    return (NULL)
+  }
+  if (!is.null(T.MAT)){
+    if (!is (T.MAT, "t.mat")) {
+      warning ("T.MAT should be a t.mat class object or NULL.")
+      return (NULL)
+      }
+  }
+
   
   if (grid.equal (vol, back.vol)) return (vol.copy (vol, alias = alias, modality = vol$modality, description =description))
   M.Tref <- get.rigid.M (T.MAT, back.vol$ref.pseudo, vol$ref.pseudo)

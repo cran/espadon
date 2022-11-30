@@ -14,26 +14,28 @@ using namespace Rcpp;
 std::vector <double> medianfilterC (
     std::vector <double> vol3D,
     std::vector <int> n_ijk,
+    std::vector <long> analyse_idx_vect,
     std::vector  <int> ball_i,
     std::vector  <int> ball_j,
     std::vector  <int> ball_k
 ){
   // std::vector  <float> max_slice_value,
   
-  long idx, le, le_map,le_i, nb;
+  long analyse_idx, idx, le;
   long  i, j, k, rest;
   
   long jdx, new_jdx;
-  int new_k, new_j, new_i;
+  int new_k, new_j, new_i, le_i, le_map, nb;
 
-  le = (int) vol3D.size ();
+  le = (long) analyse_idx_vect.size ();
   le_i = (int) ball_i.size ();
   
   le_map = n_ijk[0] * n_ijk[1];
   std::vector <double> vect(le_i*le_i*le_i);
   std::vector <double> pr(le);
 
-  for (idx= 0; idx < le; idx ++){
+  for (analyse_idx= 0; analyse_idx < le; analyse_idx ++){
+    idx = analyse_idx_vect[analyse_idx];
     k = (int) (idx/le_map);
     rest = idx - k*le_map;
     j = (int) (rest / n_ijk[0]);
@@ -57,9 +59,9 @@ std::vector <double> medianfilterC (
     if (nb>1) std::sort(&(vect[0]), &(vect[0]) + nb);
      
     if (nb % 2 != 0) {
-      pr[idx] = vect[(int)nb / 2];
+      pr[analyse_idx] = vect[(int)nb / 2];
     } else {
-      pr[idx]  = (vect[(int) ((nb - 1) / 2)] + vect[nb / 2]) / 2.0;
+      pr[analyse_idx]  = (vect[(int) ((nb - 1) / 2)] + vect[nb / 2]) / 2.0;
     } 
 
   }

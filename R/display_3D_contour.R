@@ -65,6 +65,7 @@ display.3D.contour <- function (struct, roi.name = NULL, roi.sname = NULL, roi.i
     # return (NULL)
   }
   
+
   if (is.null(roi.col)) {
     col <- struct$roi.info$color[s.idx]
   } else {
@@ -83,6 +84,8 @@ display.3D.contour <- function (struct, roi.name = NULL, roi.sname = NULL, roi.i
       
       if (roi.print) text3d (pt[1], pt[2], pt[3], struct$roi.info$roi.pseudo[i], 
                              col=col[sel], cex=roi.cex, offset = 0, adj=0.5)
+    } else {
+      warning(paste("struct have no data", struct$roi.info$roi.pseudo[[i]], "loaded."))
     }
   }
   

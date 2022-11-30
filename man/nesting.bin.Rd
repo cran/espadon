@@ -9,7 +9,8 @@ nesting.bin(
   sel.bin,
   alias = "",
   description = NULL,
-  xyz.margin = c(0, 0, 0)
+  xyz.margin = c(0, 0, 0),
+  vol.restrict = FALSE
 )
 }
 \arguments{
@@ -27,6 +28,10 @@ If \code{description = NULL}, it will be
 to the x, y and z directions of the rectangular parallelepiped circumscribed
 to the voxels selected in \code{sel.bin}, in the cutting planes frame of reference.
 By default xyz.margin = c (0, 0, 0).}
+
+\item{vol.restrict}{Boolean. If \code{vol.restrict = TRUE}, the rectangular
+parallelepiped circumscribed to the selected voxels, enlarged by xyz.margin cannot
+exceed the initial volume.}
 }
 \value{
 Returns a "volume" class object, in which 3D volume is limited to the
@@ -50,4 +55,8 @@ display.plane (bottom = CT.restricted, top = b, view.type = "sagi",
              bottom.col = pal.RVV (1000),
              bottom.breaks = seq (-1000, 1000, length.out = 1001),
              bg = "#00ff00",  interpolate  = FALSE)
+}
+\seealso{
+\link[espadon]{add.margin}, \link[espadon]{nesting.cube} and
+\link[espadon]{nesting.roi}.
 }

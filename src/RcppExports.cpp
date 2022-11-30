@@ -140,17 +140,18 @@ BEGIN_RCPP
 END_RCPP
 }
 // medianfilterC
-std::vector <double> medianfilterC(std::vector <double> vol3D, std::vector <int> n_ijk, std::vector  <int> ball_i, std::vector  <int> ball_j, std::vector  <int> ball_k);
-RcppExport SEXP _espadon_medianfilterC(SEXP vol3DSEXP, SEXP n_ijkSEXP, SEXP ball_iSEXP, SEXP ball_jSEXP, SEXP ball_kSEXP) {
+std::vector <double> medianfilterC(std::vector <double> vol3D, std::vector <int> n_ijk, std::vector <long> analyse_idx_vect, std::vector  <int> ball_i, std::vector  <int> ball_j, std::vector  <int> ball_k);
+RcppExport SEXP _espadon_medianfilterC(SEXP vol3DSEXP, SEXP n_ijkSEXP, SEXP analyse_idx_vectSEXP, SEXP ball_iSEXP, SEXP ball_jSEXP, SEXP ball_kSEXP) {
 BEGIN_RCPP
     Rcpp::RObject rcpp_result_gen;
     Rcpp::RNGScope rcpp_rngScope_gen;
     Rcpp::traits::input_parameter< std::vector <double> >::type vol3D(vol3DSEXP);
     Rcpp::traits::input_parameter< std::vector <int> >::type n_ijk(n_ijkSEXP);
+    Rcpp::traits::input_parameter< std::vector <long> >::type analyse_idx_vect(analyse_idx_vectSEXP);
     Rcpp::traits::input_parameter< std::vector  <int> >::type ball_i(ball_iSEXP);
     Rcpp::traits::input_parameter< std::vector  <int> >::type ball_j(ball_jSEXP);
     Rcpp::traits::input_parameter< std::vector  <int> >::type ball_k(ball_kSEXP);
-    rcpp_result_gen = Rcpp::wrap(medianfilterC(vol3D, n_ijk, ball_i, ball_j, ball_k));
+    rcpp_result_gen = Rcpp::wrap(medianfilterC(vol3D, n_ijk, analyse_idx_vect, ball_i, ball_j, ball_k));
     return rcpp_result_gen;
 END_RCPP
 }
@@ -164,7 +165,7 @@ static const R_CallMethodDef CallEntries[] = {
     {"_espadon_getvaluefromijkC", (DL_FUNC) &_espadon_getvaluefromijkC, 8},
     {"_espadon_labelbrowser", (DL_FUNC) &_espadon_labelbrowser, 2},
     {"_espadon_mean_voxC", (DL_FUNC) &_espadon_mean_voxC, 5},
-    {"_espadon_medianfilterC", (DL_FUNC) &_espadon_medianfilterC, 5},
+    {"_espadon_medianfilterC", (DL_FUNC) &_espadon_medianfilterC, 6},
     {NULL, NULL, 0}
 };
 

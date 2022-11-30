@@ -47,5 +47,6 @@ display.plane (bottom = new.CT, view.coord = z.mid, bottom.col = pal.RVV(1000),
 
 }
 \seealso{
-\link[espadon]{nesting.cube}
+\link[espadon]{nesting.cube}, \link[espadon]{nesting.roi} and
+\link[espadon]{nesting.bin}.
 }

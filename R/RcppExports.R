@@ -33,7 +33,7 @@
     .Call('_espadon_mean_voxC', PACKAGE = 'espadon', vol3D, index, index_list, value_list, value_att_list)
 }
 
-.medianfilterC <- function(vol3D, n_ijk, ball_i, ball_j, ball_k) {
-    .Call('_espadon_medianfilterC', PACKAGE = 'espadon', vol3D, n_ijk, ball_i, ball_j, ball_k)
+.medianfilterC <- function(vol3D, n_ijk, analyse_idx_vect, ball_i, ball_j, ball_k) {
+    .Call('_espadon_medianfilterC', PACKAGE = 'espadon', vol3D, n_ijk, analyse_idx_vect, ball_i, ball_j, ball_k)
 }
 

@@ -284,8 +284,8 @@
 # @references \strong{\[18\]} \insertRef{niemierko1999generalized}{espadon}
 
 #' @details If \code{target.roi.name}, \code{target.roi.sname}, and \code{target.roi.idx} 
-#' are all set to \code{NULL},all RoI that include 'ptv', if they exist, are 
-#' selected by default.
+#' are all set to \code{NULL},no target RoI are selected.
+#' 
 #' @details If \code{healthy.roi.name}, \code{healthy.roi.sname}, and 
 #' \code{healthy.roi.idx} are all set to \code{NULL}, no healthy RoI are selected.
 #' 
@@ -298,7 +298,8 @@
 
 #' patient <- toy.load.patient (modality = c("rtdose", "rtstruct"), roi.name = "eye",
 #'                              dxyz = rep (step, 3), beam.nb = 3)
-#' indices <- rt.indices.from.roi (patient$rtdose[[1]],  patient$rtstruct[[1]], 
+#' indices <- rt.indices.from.roi (patient$rtdose[[1]],  patient$rtstruct[[1]],
+#'                                 target.roi.sname = "ptv",
 #'                                 healthy.roi.sname = "eye", presc.dose = 50,
 #'                                 conformity.indices = c("PITV", "PDS", "CI.lomax2003", 
 #'                                                        "CN", "NCI", "DSC","COIN"),
@@ -352,10 +353,16 @@ rt.indices.from.roi <- function (vol, struct = NULL, T.MAT = NULL,
   vol.L <- NULL
   vol.names <- NULL
   
-  if (is.null(target.roi.name) &  is.null(target.roi.sname) & is.null(target.roi.idx))
-    target.roi.sname <- "ptv"
-  target.roi.idx <- select.names(struct$roi.info$roi.pseudo, roi.name=target.roi.name, 
-                                 roi.sname=target.roi.sname, roi.idx=target.roi.idx)
+  # if (is.null(target.roi.name) &  is.null(target.roi.sname) & is.null(target.roi.idx))
+  #   target.roi.sname <- "ptv"
+  if (is.null(target.roi.name) &  is.null(target.roi.sname) & is.null(target.roi.idx)){
+    target.roi.idx <- NULL
+  } else {
+    target.roi.idx <- select.names(struct$roi.info$roi.pseudo, roi.name=target.roi.name, 
+                                   roi.sname=target.roi.sname, roi.idx=target.roi.idx)
+  }  
+  
+ 
   
   if (is.null(healthy.roi.name) &  is.null(healthy.roi.sname) & is.null(healthy.roi.idx)){
     healthy.roi.idx <- NULL
@@ -543,11 +550,11 @@ rt.indices.from.roi <- function (vol, struct = NULL, T.MAT = NULL,
  ####################################################################################### 
   V.target <- do.call (rbind, lapply(vol.L[L.target.idx],function(V) vol.over.val.df (V, 0)))
   V.healthy <- do.call (rbind, lapply(vol.L[L.healthy.idx],function(V) vol.over.val.df (V, 0)))
-  V.target.over.refdose <- NA
-  V.target.over.refdose.95pc <- NA
-  V.target.over.refdose.105pc <- NA
-
-  V.target.under.refdose <- NA
+  V.target.over.refdose <- NULL
+  V.target.over.refdose.95pc <- NULL
+  V.target.over.refdose.105pc <- NULL
+  
+  V.target.under.refdose <- NULL
   V.healthy.over.refdose <- NULL
   
   
@@ -577,7 +584,7 @@ rt.indices.from.roi <- function (vol, struct = NULL, T.MAT = NULL,
       vcgArea(m$mesh, perface = FALSE)}), dimnames=list(presc.dose,"area"))/100
   }
  
-  if (f.conformity | "area" %in% volume.indices){   
+  if (!is.null(L.target.idx) &  (f.conformity | "area" %in% volume.indices)){   
     mesh.target <-lapply(bin.L[L.target.idx], function (b) 
       mesh.from.bin(b, alias=b$object.alias, smooth.iteration = 10, smooth.type ="angWeight")) 
     names(mesh.target) <- names (bin.L[L.target.idx])
@@ -598,7 +605,7 @@ rt.indices.from.roi <- function (vol, struct = NULL, T.MAT = NULL,
 
 
   if ((("CI.distance" %in% conformity.indices) |  ("CI.abs_distance" %in% conformity.indices)) 
-      & !is.na(presc.dose[1])) {
+      & !is.na(presc.dose[1]) & !is.null(L.target.idx)) {
     dist.fct<- function(vect) {sqrt(sum(vect^2))}
     G.target <- lapply(bin.L[L.target.idx], function (b)apply(get.xyz.from.index(which(b$vol3D.data), b),2, mean))
     
@@ -650,7 +657,7 @@ rt.indices.from.roi <- function (vol, struct = NULL, T.MAT = NULL,
   
   ################################################
   
-  if (!is.na(presc.dose[1])){
+  if (!is.na(presc.dose[1]) & !is.null(L.target.idx)){
     tol.dose_ <- NULL
     healthy.weight_ <- NULL
     COSI.info <- NULL 
@@ -778,49 +785,52 @@ rt.indices.from.roi <- function (vol, struct = NULL, T.MAT = NULL,
   }
 
   ################################################ 
-  m <- match(homogeneity.indices,  c("HI.RTOG.max_ref", "HI.RTOG.5_95", 
-                                  "HI.ICRU.max_min", #"HI.ICRU.max_ref", 
-                                  "HI.ICRU.2.98_ref", "HI.ICRU.2.98_50", 
-                                  "HI.ICRU.5.95_ref", "HI.mayo2010", 
-                                  "HI.heufelder"))
-  cn <- homogeneity.indices[!is.na(m)]
-  homogeneity.b <- data.frame (matrix(NA, ncol =length(cn), nrow =length(L.target.idx),
-                                   dimnames = list(vol.names[L.target.idx], cn)))
-  
-  if (ncol(homogeneity.b)>0){
-    homogeneity.b$target <- vol.names[L.target.idx]
-    homogeneity.b$presc.dose <- NA
-    homogeneity.b <- homogeneity.b[, c(ncol(homogeneity.b):(ncol(homogeneity.b)-1), 1:(ncol(homogeneity.b)-2))]
+  homogeneity <- NULL
+  if (!is.null(L.target.idx)){
+    m <- match(homogeneity.indices,  c("HI.RTOG.max_ref", "HI.RTOG.5_95", 
+                                       "HI.ICRU.max_min", #"HI.ICRU.max_ref", 
+                                       "HI.ICRU.2.98_ref", "HI.ICRU.2.98_50", 
+                                       "HI.ICRU.5.95_ref", "HI.mayo2010", 
+                                       "HI.heufelder"))
+    cn <- homogeneity.indices[!is.na(m)]
+    homogeneity.b <- data.frame (matrix(NA, ncol =length(cn), nrow =length(L.target.idx),
+                                        dimnames = list(vol.names[L.target.idx], cn)))
     
-    
-    homogeneity <- as.data.frame(do.call (rbind, lapply (1:length(presc.dose), function(col.idx) {
-      df <- homogeneity.b
-      df$presc.dose <- presc.dose[col.idx]
-      if ("HI.RTOG.max_ref" %in% colnames(df)) df$HI.RTOG.max_ref = Dosimetry[L.target.idx, "D.max"]/presc.dose[col.idx]
-      if ("HI.RTOG.5_95" %in% colnames(df)) df$HI.RTOG.5_95 = Dosimetry[L.target.idx, "D.5%"] / Dosimetry[L.target.idx, "D.95%"] 
-      if ("HI.ICRU.max_min" %in% colnames(df)) df$HI.ICRU.max_min = Dosimetry[L.target.idx, "D.max"] / Dosimetry[L.target.idx, "D.min"]
-      # if ("HI.ICRU.max_ref" %in% colnames(df)) df$HI.ICRU.max_ref = Dosimetry[L.target.idx, "D.max"] / presc.dose[col.idx]
-      if ("HI.ICRU.2.98_ref" %in% colnames(df)) df$HI.ICRU.2.98_ref = 100 * (Dosimetry[L.target.idx, "D.2%"] - Dosimetry[L.target.idx, "D.98%"])/presc.dose[col.idx]
-      if ("HI.ICRU.2.98_50" %in% colnames(df)) df$HI.ICRU.2.98_50 = 100 * (Dosimetry[L.target.idx, "D.2%"] - Dosimetry[L.target.idx, "D.98%"])/ Dosimetry[L.target.idx, "D.median"]
-      if ("HI.ICRU.5.95_ref" %in% colnames(df)) df$HI.ICRU.5.95_ref = 100 * (Dosimetry[L.target.idx, "D.5%"] - Dosimetry[L.target.idx, "D.95%"])/presc.dose[col.idx]
-      if ("HI.mayo2010" %in% colnames(df)) df$HI.mayo2010 = sqrt ((Dosimetry[L.target.idx, "D.max"] / presc.dose[col.idx])*(1+ Dosimetry[L.target.idx, "STD"]/presc.dose[col.idx]))
-      if ("HI.heufelder" %in% colnames(df)) df$ HI.heufelder = exp (-0.01 *  ((1 - (Dosimetry[L.target.idx, "D.mean"] / presc.dose[col.idx]))^2 + (Dosimetry[L.target.idx, "STD"]/presc.dose[col.idx])^2))
-      # if ("D.STD" %in% colnames(df)) df$D.STD= Dosimetry[, "STD"]
-      df
-    })))
-    rownames(homogeneity) <- NULL
-  }else {
-    homogeneity <- NULL
+    if (ncol(homogeneity.b)>0){
+      homogeneity.b$target <- vol.names[L.target.idx]
+      homogeneity.b$presc.dose <- NA
+      homogeneity.b <- homogeneity.b[, c(ncol(homogeneity.b):(ncol(homogeneity.b)-1), 1:(ncol(homogeneity.b)-2))]
+      
+      
+      homogeneity <- as.data.frame(do.call (rbind, lapply (1:length(presc.dose), function(col.idx) {
+        df <- homogeneity.b
+        df$presc.dose <- presc.dose[col.idx]
+        if ("HI.RTOG.max_ref" %in% colnames(df)) df$HI.RTOG.max_ref = Dosimetry[L.target.idx, "D.max"]/presc.dose[col.idx]
+        if ("HI.RTOG.5_95" %in% colnames(df)) df$HI.RTOG.5_95 = Dosimetry[L.target.idx, "D.5%"] / Dosimetry[L.target.idx, "D.95%"] 
+        if ("HI.ICRU.max_min" %in% colnames(df)) df$HI.ICRU.max_min = Dosimetry[L.target.idx, "D.max"] / Dosimetry[L.target.idx, "D.min"]
+        # if ("HI.ICRU.max_ref" %in% colnames(df)) df$HI.ICRU.max_ref = Dosimetry[L.target.idx, "D.max"] / presc.dose[col.idx]
+        if ("HI.ICRU.2.98_ref" %in% colnames(df)) df$HI.ICRU.2.98_ref = 100 * (Dosimetry[L.target.idx, "D.2%"] - Dosimetry[L.target.idx, "D.98%"])/presc.dose[col.idx]
+        if ("HI.ICRU.2.98_50" %in% colnames(df)) df$HI.ICRU.2.98_50 = 100 * (Dosimetry[L.target.idx, "D.2%"] - Dosimetry[L.target.idx, "D.98%"])/ Dosimetry[L.target.idx, "D.median"]
+        if ("HI.ICRU.5.95_ref" %in% colnames(df)) df$HI.ICRU.5.95_ref = 100 * (Dosimetry[L.target.idx, "D.5%"] - Dosimetry[L.target.idx, "D.95%"])/presc.dose[col.idx]
+        if ("HI.mayo2010" %in% colnames(df)) df$HI.mayo2010 = sqrt ((Dosimetry[L.target.idx, "D.max"] / presc.dose[col.idx])*(1+ Dosimetry[L.target.idx, "STD"]/presc.dose[col.idx]))
+        if ("HI.heufelder" %in% colnames(df)) df$ HI.heufelder = exp (-0.01 *  ((1 - (Dosimetry[L.target.idx, "D.mean"] / presc.dose[col.idx]))^2 + (Dosimetry[L.target.idx, "STD"]/presc.dose[col.idx])^2))
+        # if ("D.STD" %in% colnames(df)) df$D.STD= Dosimetry[, "STD"]
+        df
+      })))
+      rownames(homogeneity) <- NULL
+    }
+    homogeneity <- .reduc.tab(homogeneity)
   }
-  homogeneity <- .reduc.tab(homogeneity)
   ################################################ 
 
   ### gradient
+  gradient <- NULL
+  if (!is.null(L.target.idx)){
     m <- match(gradient.indices, c("GI.ratio.50", "mGI"))
     cn <- gradient.indices[!is.na(m)]
     gradient.b <- data.frame (matrix(NA, ncol =length(cn), nrow =length(L.target.idx),
                                      dimnames = list(vol.names[L.target.idx], cn)))
-  
+    
     
     if (!is.na(presc.dose[1]) & ncol(gradient.b)>0){
       gradient.b$target <- vol.names[L.target.idx]
@@ -838,8 +848,7 @@ rt.indices.from.roi <- function (vol, struct = NULL, T.MAT = NULL,
       })))
       rownames(gradient) <- NULL
       gradient <- .reduc.tab(gradient)
-    } else {
-      gradient <- NULL
+    } 
     }
     
  
@@ -926,7 +935,11 @@ rt.indices.from.roi <- function (vol, struct = NULL, T.MAT = NULL,
     if (length(m)>0) V.xGy.b <- V.xGy.b[,-m]
   }
   
-  volume.indices.b <- .reduc.tab(cbind (volume.indices.b, V.xGy.b))
+  volume.indices.b <- cbind (volume.indices.b, V.xGy.b)
+  if (ncol(volume.indices.b)==0) {
+    volume.indices.b <- NULL
+  } else {volume.indices.b <- .reduc.tab(volume.indices.b)}
+  
 
   ###################################################################################
   #dosimetry suite

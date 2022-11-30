@@ -29,7 +29,9 @@ get.obj.connection <- function (pat) {
   obj.list <- obj.alias  <- obj.name <- c()
   obj.type <- obj.idx <- c()
   obj.con <- list ()
-  for (i in (which(names(pat)=="T.MAT")+1):length (pat)) {
+  end.idx <- length (pat)
+  if (names(pat)[end.idx]=="dicom.dvh") end.idx <- end.idx - 1
+  for (i in (which(names(pat)=="T.MAT")+1):end.idx) {
     for (j in 1:length (pat[[i]])) {
       obj.idx <- c(obj.idx, j)
       obj.list <- c (obj.list, paste(names (pat)[i], j))
@@ -73,14 +75,14 @@ get.obj.connection <- function (pat) {
   
   for(idx in 1:length(L)){
     old.vect <-rep(FALSE, ncol(M_))
-    new.vect <-  L[[idx]][idx,]>0
+    new.vect <-  L[[idx]][pere.idx[idx],]>0
     while(!all(new.vect==old.vect)){
-      old.vect <- L[[idx]][idx,]>0
+      old.vect <- L[[idx]][pere.idx[idx],]>0
       L[[idx]] <- L[[idx]] %*% M_
-      new.vect <- L[[idx]][idx,]>0
+      new.vect <- L[[idx]][pere.idx[idx],]>0
     }
     L[[idx]] <- L[[idx]]>0
-    L[[idx]][new.vect,] <- L[[idx]][rep(idx,sum(new.vect)),]
+    L[[idx]][new.vect,] <- L[[idx]][rep(pere.idx[idx],sum(new.vect)),]
     L[[idx]] [] <- sapply(L[[idx]],as.numeric)
   }
   

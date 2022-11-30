@@ -267,8 +267,7 @@ If \code{target.roi.name}, \code{target.roi.sname}, and
 (if they exist) are selected.
 
 If \code{target.roi.name}, \code{target.roi.sname}, and \code{target.roi.idx}
-are all set to \code{NULL},all RoI that include 'ptv', if they exist, are
-selected by default.
+are all set to \code{NULL},no target RoI are selected.
 
 If \code{healthy.roi.name}, \code{healthy.roi.sname}, and
 \code{healthy.roi.idx} are all set to \code{NULL}, no healthy RoI are selected.
@@ -279,7 +278,8 @@ If \code{healthy.roi.name}, \code{healthy.roi.sname}, and
 step <- 5
 patient <- toy.load.patient (modality = c("rtdose", "rtstruct"), roi.name = "eye",
                              dxyz = rep (step, 3), beam.nb = 3)
-indices <- rt.indices.from.roi (patient$rtdose[[1]],  patient$rtstruct[[1]], 
+indices <- rt.indices.from.roi (patient$rtdose[[1]],  patient$rtstruct[[1]],
+                                target.roi.sname = "ptv",
                                 healthy.roi.sname = "eye", presc.dose = 50,
                                 conformity.indices = c("PITV", "PDS", "CI.lomax2003", 
                                                        "CN", "NCI", "DSC","COIN"),

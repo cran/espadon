@@ -12,7 +12,8 @@
 #' for class definitions), in which 3D volume is restricted  or increased by the 
 #' requested margins.
 #' If the created volume exceeds the initial volume, new voxels are set to \code{NA}.
-#' @seealso \link[espadon]{nesting.cube}
+#' @seealso \link[espadon]{nesting.cube}, \link[espadon]{nesting.roi} and  
+#' \link[espadon]{nesting.bin}.
 #' @examples
 #' # loading of toy-patient objects (decrease dxyz for better result)
 #' step <- 4

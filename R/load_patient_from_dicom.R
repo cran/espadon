@@ -148,12 +148,13 @@ load.patient.from.dicom <- function (dcm.files, data = FALSE, dvh = FALSE,
       for (dvh.idx in 1:length(l$dicom.dvh)){
         ref.object <-  names(obj.list)[(sapply(obj.list,function(dl) dl$header$object.info$SOP.ID)==l$dicom.dvh[[dvh.idx]]$ref.object.info$SOP.ID) & 
                                          (sapply(lapply(obj.list, function(dl) dl$header$object.info$SOP.label), function(v) l$dicom.dvh[[dvh.idx]]$ref.object.info$SOP.label %in% v))]
-        if (length(ref.object)>0) l$dicom.dvh[[dvh.idx]]$ref.object.name <-ref.object
         
-        if (l$dicom.dvh[[dvh.idx]]$ref.object.name!=""){
-          ma <- match(l$dicom.dvh[[dvh.idx]]$info$number, obj.list[[l$dicom.dvh[[dvh.idx]]$ref.object.name]]$header$roi.info$number)
+        if (length(ref.object)>0) l$dicom.dvh[[dvh.idx]]$ref.object.alias <-ref.object
+        
+        if (l$dicom.dvh[[dvh.idx]]$ref.object.alias[1]!=""){
+          ma <- match(l$dicom.dvh[[dvh.idx]]$info$number, obj.list[[l$dicom.dvh[[dvh.idx]]$ref.object.alias[1]]]$header$roi.info$number)
           l$dicom.dvh[[dvh.idx]]$info$roi.name[!is.na(ma)] <- 
-            obj.list[[l$dicom.dvh[[dvh.idx]]$ref.object.name]]$header$roi.info$name[ma[!is.na(ma)]]
+            obj.list[[l$dicom.dvh[[dvh.idx]]$ref.object.alias[1]]]$header$roi.info$name[ma[!is.na(ma)]]
           # n <- names(l$dicom.dvh[[dvh.idx]]$data)
           # n[!is.na(ma)] <- l$dicom.dvh[[dvh.idx]]$info$roi.name[!is.na(ma)]
           # names(l$dicom.dvh[[dvh.idx]]$data) <- n
