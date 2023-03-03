@@ -48,6 +48,7 @@ following 6 elements:
 \itemize{
 \item \code{$patient}: set to \code{bin$patient}.
 \item \code{$patient.bd}: set to \code{bin$patient.bd}.
+\item \code{$patient.name}: set to \code{bin$patient.name}.
 \item \code{$patient.sex}: set to \code{bin$patient.sex}.
 \item \code{$file.basename}: set to "".
 \item \code{$file.dirname}: set to "".

@@ -16,7 +16,7 @@ get.value.from.xyz(
 \arguments{
 \item{xyz}{Vector of length 3, corresponding to the x, y, z
 coordinates (in mm) of a point in \code{xyz.ref.pseudo} frame of
-reference, or 3-column matrix of x, y, z coordinates of several points.}
+reference, or 3-column matrix  or dataframe of x, y, z coordinates of several points.}
 
 \item{vol}{"volume" class object.}
 

@@ -4,7 +4,12 @@
 \alias{load.obj.from.Rdcm}
 \title{Loading an \pkg{espadon} object from *.Rdcm file}
 \usage{
-load.obj.from.Rdcm(Rdcm.filename, data = TRUE, nb = NULL)
+load.obj.from.Rdcm(
+  Rdcm.filename,
+  data = TRUE,
+  nb = NULL,
+  upgrade.to.latest.version = FALSE
+)
 }
 \arguments{
 \item{Rdcm.filename}{Character string, representing the full name of a *.Rdcm
@@ -19,6 +24,10 @@ is rtstruct, are loaded into memory.}
 operating on rtstruct. If \code{nb = NULL}, all the RoI of rtstruct are
 loaded into memory. Otherwise only data of the RoI indices defined by the vector
 \code{nb} are loaded.}
+
+\item{upgrade.to.latest.version}{Boolean. If \code{TRUE}, the function attempts
+to upgrade to the latest version, parsing the DICOM data. It may take longer
+to load the data. Consider using the \link[espadon]{Rdcm.upgrade} function.}
 }
 \value{
 Returns an \pkg{espadon} object of class "dvh","histo","histo2D","mesh",

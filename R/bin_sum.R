@@ -67,6 +67,6 @@ bin.sum <- function (vol1, vol2 , alias = "", description = NULL) {
   Vb$min.pixel <- all(Vb$vol3D.data)
   Vb$max.pixel <- any(Vb$vol3D.data)
   
-  return(Vb)
-  
+  if (alias=="") return(Vb)
+  return(.set.ref.obj(Vb,list(vol2)))
 }

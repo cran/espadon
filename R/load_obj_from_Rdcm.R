@@ -12,7 +12,9 @@
 #' operating on rtstruct. If \code{nb = NULL}, all the RoI of rtstruct are
 #' loaded into memory. Otherwise only data of the RoI indices defined by the vector 
 #' \code{nb} are loaded.
-
+#' @param upgrade.to.latest.version Boolean. If \code{TRUE}, the function attempts 
+#' to upgrade to the latest version, parsing the DICOM data. It may take longer 
+#' to load the data. Consider using the \link[espadon]{Rdcm.upgrade} function.
 #' @return Returns an \pkg{espadon} object of class "dvh","histo","histo2D","mesh", 
 #' "rtplan","struct", "undef" or "volume" depending on the object modality. See 
 #' \link[espadon]{espadon.class} for class definitions.
@@ -44,7 +46,8 @@
 #' unlink (pat.dir, recursive = TRUE)  
                   
 #' @export
-load.obj.from.Rdcm <- function (Rdcm.filename, data = TRUE, nb = NULL ){
+load.obj.from.Rdcm <- function (Rdcm.filename, data = TRUE, nb = NULL,
+                                upgrade.to.latest.version = FALSE){
   if (length(Rdcm.filename)>1){
     message  ("only first file is used.")
     Rdcm.filename <- Rdcm.filename[1]
@@ -55,7 +58,16 @@ load.obj.from.Rdcm <- function (Rdcm.filename, data = TRUE, nb = NULL ){
   }
   
   if (grepl ("[.]Rdcm$", Rdcm.filename)){
-    Lobj <- load.Rdcm.raw.data (Rdcm.filename,  data=data)
+    Lobj <- load.Rdcm.raw.data (Rdcm.filename,  data=data, 
+                                upgrade.to.latest.version = upgrade.to.latest.version)
+    if (Lobj$update.needed){
+
+      if (upgrade.to.latest.version) {
+        warning(paste(Lobj$header$file.basename, "version has been upgraded, consider using Rdcm.upgrade() for faster loading."))
+      } else {
+        warning(paste(Lobj$header$file.basename, "version is not up to date, consider using Rdcm.upgrade()."))  
+      }
+    }
     return (.load.object (Lobj, data=data, nb=nb))
   }
   return (NULL)

@@ -11,7 +11,7 @@
 #' of variations in volume density.
 #' @param MC.col Character string, a valid palette with 4 colours corresponding 
 #' to 100%, 95%, 50% and median of MC data.
-#' @param ... Arguments xlab, ylab, xlim, ylim, main, type, col, lwd, lty and log
+#' @param ... Additional arguments xlab, ylab, xlim, ylim, main, type, col, lwd, lty and log
 #' managed by the \link[base]{plot} function.
 #' @return Returns a plot of the differential histogram included in \code{histo}, 
 #' with its median, and the quantile areas (0%-100%), (2.5%-97.5%) and (25%-75%) 

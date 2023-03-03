@@ -38,10 +38,23 @@ struct.in.new.ref <- function (struct, new.ref.pseudo, T.MAT, alias="") {
     warning ("struct$roi.data is NULL.")
     
   }
+  
+  
+  if (new.ref.pseudo==struct$ref.pseudo){
+    struct$object.alias <- alias
+    return (struct)
+  }
   M <- get.rigid.M (T.MAT, struct$ref.pseudo, new.ref.pseudo)
   if (is.null (M)) return (NULL)
-  
+  struct_ <- list(object.alias=struct$object.alias,object.info=struct$object.info)
+  class(struct_) <- "struct"
+  struct$file.basename <- ""
+  struct$file.dirname <- ""
+  struct$object.name <- alias
   struct$object.alias <- alias
+  struct$object.info <- NULL
+  struct$ref.object.alias <- NULL
+  struct$ref.object.info <- NULL
   struct$ref.pseudo <- new.ref.pseudo
   struct$frame.of.reference <- T.MAT$ref.info[T.MAT$ref.info$ref.pseudo==new.ref.pseudo, ]$ref
   
@@ -51,5 +64,8 @@ struct.in.new.ref <- function (struct, new.ref.pseudo, T.MAT, alias="") {
     struct$roi.info[ , 7:17] <- .struct.moreinfo(struct$roi.data,
                                                  struct$ref.from.contour,
                                                  struct$thickness)
-  return (struct)
+  
+  if (alias=="") return(struct)
+  return(.set.ref.obj(struct,list(struct_)))
+  
 }

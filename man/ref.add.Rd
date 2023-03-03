@@ -57,5 +57,6 @@ local.Tmat <- ref.add (src.ref = "ref1", orientation = orientation,
 str(local.Tmat)
 }
 \seealso{
-\link[espadon]{ref.cutplane.add}, \link[espadon]{ref.remove}.
+\link[espadon]{ref.cutplane.add}, \link[espadon]{ref.remove},
+\link[espadon]{ref.srctodest.add}.
 }

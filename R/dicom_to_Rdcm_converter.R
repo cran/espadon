@@ -10,8 +10,9 @@
 #' @param pat.dest.dir Character string, representing the full name of patient 
 #' directory, which will contain files converted \pkg{espadon}. 
 #' @param update Boolean. If set to \code{TRUE}, and if \code{pat.dest.dir} 
-#' contains previously converted files, these files will keep the same \pkg{espadon} 
-#' reference frame affectation.
+#' contains previously converted files, these files are updated,even if they are 
+#' duplicated. They retain the same \pkg{espadon} reference frame assignment.
+#' @param ignore.duplicates Boolean. If \code{TRUE}, the function ignores duplicated objects.
 #' @param tag.dictionary Dataframe, by default equal to 
 #' \link[espadon]{dicom.tag.dictionary}, 
 #' whose structure it must keep. This dataframe is used to parse DICOM files.
@@ -54,6 +55,7 @@
 
 
 dicom.to.Rdcm.converter <- function (dcm.files, pat.dest.dir, update = TRUE, 
+                                     ignore.duplicates = FALSE,
                                      tag.dictionary = dicom.tag.dictionary (),
                                      verbose = TRUE){
   
@@ -99,7 +101,7 @@ dicom.to.Rdcm.converter <- function (dcm.files, pat.dest.dir, update = TRUE,
                                  existing.obj = Rdcm.inventory (pat.dest.dir), 
                                  verbose = verbose, update = update, 
                                  save.flag = TRUE, save.dir = pat.dest.dir, 
-                                 only.header = FALSE,
+                                 only.header = FALSE, ignore.duplicates =  ignore.duplicates,
                                  tag.dictionary = tag.dictionary)
         
       

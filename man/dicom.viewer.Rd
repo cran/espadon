@@ -10,12 +10,14 @@ dicom.viewer(
   txt.length = 100,
   tag.dictionary = dicom.tag.dictionary(),
   height = 600,
-  width = 900
+  width = 900,
+  ...
 )
 }
 \arguments{
-\item{dcm}{String Character representing the list of the full names of a
-DICOM file or raw data vector of this DICOM file.}
+\item{dcm}{espadon object of class "volume", "rtplan", "struct" provided by
+DICOM files, or DICOM filename, or Rdcm filename, or raw vector  representing
+the binary extraction of the DICOM file.}
 
 \item{txt.sep}{String. Used if \code{as.txt = TRUE}. Separator of the tag value elements.}
 
@@ -26,6 +28,10 @@ of letters in the representation of the TAG value.}
 whose structure it must keep. This dataframe is used to parse DICOM files.}
 
 \item{height, width}{Height and width in pixel of the DICOM table.}
+
+\item{...}{Additional argument \code{dicom.browser} when previously calculated by
+\link[espadon]{dicom.browser}. Argument \code{nb} or \code{dicom.nb} representing the
+number of DICOM file, when \code{dcm} contains multiple DICOM files.}
 }
 \value{
 Returns the DICOM file description in a browser window.
@@ -37,5 +43,5 @@ the \code{dicom.viewer} function displays the data of a DICOM file.
 if (interactive ()) dicom.viewer (toy.dicom.raw ())
 }
 \seealso{
-\link[espadon]{xlsx.from.dcm}, \link[espadon]{dicom.parser}
+\link[espadon]{xlsx.from.dcm}, \link[espadon]{xlsx.from.Rdcm}, \link[espadon]{dicom.parser}
 }

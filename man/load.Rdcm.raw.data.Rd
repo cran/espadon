@@ -4,16 +4,25 @@
 \alias{load.Rdcm.raw.data}
 \title{Loading a *.Rdcm file}
 \usage{
-load.Rdcm.raw.data(Rdcm.filename, address = TRUE, data = TRUE)
+load.Rdcm.raw.data(
+  Rdcm.filename,
+  address = TRUE,
+  data = TRUE,
+  upgrade.to.latest.version = FALSE
+)
 }
 \arguments{
 \item{Rdcm.filename}{Character string, representing the full name of a *.Rdcm
 file created by \link[espadon]{dicom.to.Rdcm.converter}.}
 
-\item{address}{boolean. If TRUE, a dataframe with the address of the tags in
+\item{address}{Boolean. If TRUE, a dataframe with the address of the tags in
 the raw DICOM data is returned.}
 
-\item{data}{boolean. If TRUE, the DICOM information are returned as an R list.}
+\item{data}{Boolean. If TRUE, the DICOM information are returned as an R list.}
+
+\item{upgrade.to.latest.version}{Boolean. If \code{TRUE}, the function attempts
+to upgrade to the latest version, parsing the DICOM data. It may take longer
+to load the data. Consider using the \link[espadon]{Rdcm.upgrade} function.}
 }
 \value{
 Returns a list containing the information, converted by \pkg{espadon}, of a

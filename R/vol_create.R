@@ -56,6 +56,7 @@ vol.create <- function (n.ijk, dxyz, mid.pt = NULL, pt000 = NULL,
   
   back.vol <- list()
   back.vol$patient <- ""
+  back.vol$patient.name <- ""
   back.vol$patient.bd <- ""
   back.vol$patient.sex <- ""
   
@@ -63,7 +64,6 @@ vol.create <- function (n.ijk, dxyz, mid.pt = NULL, pt000 = NULL,
   back.vol$file.dirname <- ""
   back.vol$object.name <- alias
   back.vol$object.alias <- alias
-  
 
   back.vol$frame.of.reference <- frame.of.reference
   back.vol$ref.pseudo <- ref.pseudo

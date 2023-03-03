@@ -104,7 +104,7 @@ bin.from.roi <- function (vol, struct, roi.name = NULL, roi.sname = NULL, roi.id
     return (NULL)
   }
   if (length (vol$k.idx)>1){
-    if (!all (vol$k.idx[2:length (vol$k.idx)]-  vol$k.idx[1:(length (vol$k.idx)-1)]==1)) {
+    if (!all (diff(vol$k.idx)==1)) {
       warning ("planes must be contiguous.")
       return (NULL)
     }
@@ -128,6 +128,7 @@ bin.from.roi <- function (vol, struct, roi.name = NULL, roi.sname = NULL, roi.id
   }
   if (is.null(description)) description <- struct$roi.info$roi.pseudo[roi.idx]
   Vb <- vol.copy (vol, alias = alias, modality="binary", description=description, number=roi.idx)
+  
   Vb$min.pixel <- 0
   Vb$max.pixel <- 1
   Vb$vol3D.data <- array (FALSE, Vb$n.ijk)
@@ -190,7 +191,7 @@ bin.from.roi <- function (vol, struct, roi.name = NULL, roi.sname = NULL, roi.id
   # Vb$vol3D.data[is.na(Vb$vol3D.data)] <- FALSE
   Vb$min.pixel <- all(Vb$vol3D.data)
   Vb$max.pixel <- any(Vb$vol3D.data)
-  return (Vb)
-
   
+  if (alias=="") return (Vb)
+  return(.set.ref.obj(Vb,list(struct)))
 }

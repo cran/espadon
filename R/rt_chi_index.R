@@ -15,6 +15,9 @@
 #' is computed, and a local Chi index otherwise.
 #' @param local.th Positive number, in percent. Local threshold, only used if 
 #' \code{local = TRUE}. See Details.
+#' @param project.to.isocenter Boolean. If \code{TRUE}, and if \code{vol} and 
+#' \code{vol.ref} are of modality "rtimage", the size of the pixels is corrected 
+#' to correspond to that found if the sensor was at the isocenter.
 #' @param alias Character string, \code{$object.alias} of the created object.
 #' @param description Character string, describing the created object. If 
 #' \code{description = NULL} (default value), it will be set to Chi index setup.
@@ -58,8 +61,9 @@
 #' # by 3 pixels on the x axis
 #' D.meas <- vol.copy (D.ref, alias = "measured_dose")
 #' D.meas$vol3D.data[1:(D.meas$n.ijk[1] - 3) ,,] <- D.ref$vol3D.data[4:D.ref$n.ijk[1],,] 
-#' 
-#' abs_chi <- rt.chi.index (D.meas, D.ref, delta.r = 6)  
+#' D.max <- as.numeric(quantile(as.numeric(D.ref$vol3D.data), 
+#'                              probs = 99.99/100, na.rm = TRUE))
+#' abs_chi <- rt.chi.index (D.meas, D.ref, vol.max = D.max, delta.r = 6)  
 #' abs_chi$chi.info  
 #' 
 #' # Display chi index at isocenter
@@ -74,7 +78,8 @@
 #' @export
 rt.chi.index <- function (vol, vol.ref, abs = TRUE, vol.max = vol.ref$max.pixel, 
                           dose.th = 0.02, delta.r = 3, analysis.th = 0.05,
-                          local = FALSE, local.th = 0.3, alias = "", description = NULL) {
+                          local = FALSE, local.th = 0.3, project.to.isocenter = TRUE, 
+                          alias = "", description = NULL) {
   
   if (!is (vol, "volume")) {
     warning ("vol should be a volume class object.")
@@ -98,6 +103,11 @@ rt.chi.index <- function (vol, vol.ref, abs = TRUE, vol.max = vol.ref$max.pixel,
                   dose.th*100, "% ", delta.r,"mm", 
                   ifelse(local, paste0(" - local th ", 100*local.th,"%"),""))
   if (is.null(description)) description <- desc
+  
+  if (project.to.isocenter & vol$modality == "rtimage" & vol.ref$modality == "rtimage") {
+    vol <- .im.projection(vol)
+    vol.ref <- .im.projection(vol.ref)
+  }
   
   chiindex <- vol.copy(vol.ref,alias = "chi_index", modality ="chiindex",
                        description = description)
@@ -161,4 +171,22 @@ rt.chi.index <- function (vol, vol.ref, abs = TRUE, vol.max = vol.ref$max.pixel,
   
   return (chiindex)
   
+}
+
+.im.projection <- function(im){
+  
+  im <- vol.in.new.ref(im, "refm",T.MAT = ref.cutplane.add(im,ref.cutplane="refm"))
+  M <- matrix(c(im$orientation, im$xyz0 - im$beam.source), ncol=3, byrow =T)
+  K <- (im$xyz0-im$beam.isocenter)%*% solve(M)
+  kd <- K[1,3]
+  
+  
+  # im$xyz0 <- matrix(distance.plan.proj[,1:3], ncol=3, byrow =TRUE)
+  im$xyz0 <- (im$beam.source-im$xyz0)* kd +  im$xyz0
+  im$dxyz <- im$dxyz *(1-kd)
+  im$xyz.from.ijk <- .xyz.from.ijk.create (im$orientation, im$dxyz, im$xyz0[1, ])
+  # im$vol3D.data <- im$vol3D.data/((1-kd)^2)
+  # im$min.pixel <- min(im$vol3D.data, narm =TRUE)
+  # im$max.pixel <- max(im$vol3D.data, narm =TRUE)
+  im
 }

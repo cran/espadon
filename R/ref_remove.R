@@ -6,7 +6,7 @@
 #' reference is to be deleted.
 #' @return Returns a "t.mat" class object, which no longer contains transfer 
 #' matrices from or to the ref.pseudo \code{ref.name}.
-#' @seealso \link[espadon]{ref.add}
+#' \link[espadon]{ref.cutplane.add}.
 #' @examples
 #' # Adding of the reference frame "ref1_60", which is a 60 degree rotation of 
 #' # reference frame "ref1".
@@ -36,7 +36,9 @@ ref.remove <- function (ref.name, T.MAT) {
   
   
   reg.info <-T.MAT$reg.info 
-  reg.info$file <- T.MAT$reg.info$file[sapply(T.MAT$reg.info$file$t, function(str) !(ref.name %in%unlist(strsplit(str,"<-")))),]
+  if (nrow(T.MAT$reg.info$file)!=0)
+    reg.info$file <- T.MAT$reg.info$file[sapply(T.MAT$reg.info$file$t, 
+                                                function(str) !(ref.name %in%unlist(strsplit(str,"<-")))),]
   
   matrix.description <- unlist(lapply(ref.info$ref.pseudo,function(r) paste(paste(ref.info$ref.pseudo,r,sep="<-"),r,ref.info$ref.pseudo, sep=";")))
   matrix.description <- do.call(rbind.data.frame,strsplit(matrix.description,";"))

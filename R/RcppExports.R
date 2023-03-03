@@ -37,3 +37,7 @@
     .Call('_espadon_medianfilterC', PACKAGE = 'espadon', vol3D, n_ijk, analyse_idx_vect, ball_i, ball_j, ball_k)
 }
 
+.meshinfront <- function(pt_x, pt_y, pt_z, p2_x, p2_y, p2_z, u_x, u_y, u_z, n_A, n_B, n_C) {
+    .Call('_espadon_meshinfront', PACKAGE = 'espadon', pt_x, pt_y, pt_z, p2_x, p2_y, p2_z, u_x, u_y, u_z, n_A, n_B, n_C)
+}
+

@@ -106,7 +106,7 @@ save.to.Rdcm <- function (obj, object.name = obj$object.alias, dirname = obj$fil
           
           obj_$header <- obj
   )
-  h <- qserialize(obj_$header)
+  h <- qserialize(c(obj_$header,list(espadon.version=.espadon.version())))
   a <- numeric(0) #qserialize(obj_$address)
   d <- qserialize(obj_$data)
   zz <-  file(Rdcm.filename, "wb")

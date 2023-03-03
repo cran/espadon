@@ -70,12 +70,13 @@ bin.intersection <- function (vol1, vol2, alias = "", description = NULL) {
   if (is.null(description)) description <-  paste (vol1$object.alias, "&", vol2$object.alias)
   Vb <- vol.copy (vol1, alias = alias, modality = "binary",
                   description = description)
+ 
   
   Vb$vol3D.data <- vol1$vol3D.data & vol2$vol3D.data
   # Vb$vol3D.data[is.na(Vb$vol3D.data)] <- FALSE
   Vb$min.pixel <- all(Vb$vol3D.data)
   Vb$max.pixel <- any(Vb$vol3D.data)
   
-  return(Vb)
-  
+  if (alias =="") return(Vb)
+  return(.set.ref.obj(Vb,list(vol2)))
 }

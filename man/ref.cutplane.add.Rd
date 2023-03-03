@@ -6,7 +6,7 @@
 \usage{
 ref.cutplane.add(
   vol,
-  origin = vol$xyz0[1, ],
+  origin = c(0, 0, 0),
   ref.cutplane = paste0(vol$ref.pseudo, "m"),
   T.MAT = NULL
 )
@@ -51,5 +51,6 @@ MR.m <- vol.in.new.ref (MR, paste0 (MR$ref.pseudo, "m"), t.mat)
 MR.m$xyz.from.ijk
 }
 \seealso{
-\link[espadon]{ref.add}, \link[espadon]{ref.remove}.
+\link[espadon]{ref.add}, \link[espadon]{ref.srctodest.add},
+\link[espadon]{ref.remove}.
 }

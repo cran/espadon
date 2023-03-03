@@ -44,49 +44,45 @@
 vol.regrid <- function (vol, back.vol, T.MAT = NULL, interpolate = TRUE, alias = "", 
                         description=NULL, verbose = TRUE){
   
-  if (!is (vol, "volume")) {
-    warning ( "vol should be a volume class object.")
-    return (NULL)
-  }
-  
-  if (!is (back.vol, "volume")){
-    warning ("back.vol should be a volume class object.")
-    return (NULL)
-  }
-  if (!is.logical(interpolate)) {
-    warning ("interpolate should be TRUE or FALSE.")
-    return (NULL)
-  }
+  if (!is (vol, "volume")) stop ( "vol should be a volume class object.")
+  if (!is (back.vol, "volume")) stop ("back.vol should be a volume class object.")
+  if (!is.logical(interpolate)) stop ("interpolate should be TRUE or FALSE.")
   if (!is.null(T.MAT)){
-    if (!is (T.MAT, "t.mat")) {
-      warning ("T.MAT should be a t.mat class object or NULL.")
-      return (NULL)
-      }
+    if (!is (T.MAT, "t.mat")) stop ("T.MAT should be a t.mat class object or NULL.")
   }
 
-  
-  if (grid.equal (vol, back.vol)) return (vol.copy (vol, alias = alias, modality = vol$modality, description =description))
-  M.Tref <- get.rigid.M (T.MAT, back.vol$ref.pseudo, vol$ref.pseudo)
-  
-  if (is.null (M.Tref)) {
-    warning ("vol$ref.pseudo and back.vol$ref.pseudo are different.")
-    return (NULL)
-  }
-  if (verbose) pb <- progress_bar$new(format = " processing [:bar] :percent",
-                                      total = 2, clear = FALSE, width= 60)
+  send <- FALSE
   if (is.null(description)) description<- vol$description
-  new.vol <- vol.copy (back.vol, alias = alias, modality = vol$modality, description =description)
-  new.vol$patient <- vol$patient
-  new.vol$patient.bd <- vol$patient.bd
-  new.vol$patient.sex <- vol$patient.sex
-  new.vol$acq.date <- vol$acq.date
-  new.vol$study.date <- vol$study.date
-  new.vol$creation.date <- vol$creation.date
-  new.vol$study.time <- vol$study.time
-  new.vol$number <- vol$number
-  new.vol$unit <- vol$unit
   
-  new.vol$vol3D.data[] <- NA
+  if (grid.equal (vol, back.vol)) {
+    new.vol <- vol.copy (vol, alias = alias, modality = vol$modality, description =description)
+    send <- TRUE
+  } else {
+    M.Tref <- get.rigid.M (T.MAT, back.vol$ref.pseudo, vol$ref.pseudo)
+    if (is.null (M.Tref)) 
+      stop ("vol$ref.pseudo and back.vol$ref.pseudo are different. Specify T.MAT")
+
+    
+    new.vol <- vol.copy (back.vol, alias = alias, modality = vol$modality, 
+                         description =description)
+    new.vol$patient <- vol$patient
+    new.vol$patient.name <- vol$patient.name
+    new.vol$patient.bd <- vol$patient.bd
+    new.vol$patient.sex <- vol$patient.sex
+    new.vol$acq.date <- vol$acq.date
+    new.vol$study.date <- vol$study.date
+    new.vol$creation.date <- vol$creation.date
+    new.vol$study.time <- vol$study.time
+    new.vol$number <- vol$number
+    new.vol$unit <- vol$unit
+    
+    new.vol$vol3D.data[] <- NA
+  }
+  if (alias != "")  new.vol <- .set.ref.obj(new.vol, list(vol,back.vol), add=FALSE)
+  
+  if (send) return (new.vol)
+  if (verbose) pb <- progress_bar$new(format = " processing [:bar] :percent",
+                                      total = 2, width= 60)
   
   # if (is.na(vol$min.pixel) | is.na(vol$max.pixel)) return (new.vol)
   # if (abs (det(vol$xyz.from.ijk))<1e-6) {
@@ -171,5 +167,5 @@ vol.regrid <- function (vol, back.vol, T.MAT = NULL, interpolate = TRUE, alias =
     new.vol$max.pixel <- NA
   }
   return (new.vol)
-  
+
 }

@@ -8,7 +8,8 @@ dicom.set.tag.value(
   dicom.raw.data,
   tag,
   tag.value,
-  tag.dictionary = dicom.tag.dictionary()
+  tag.dictionary = dicom.tag.dictionary(),
+  ...
 )
 }
 \arguments{
@@ -21,6 +22,9 @@ changed. See note 1.}
 
 \item{tag.dictionary}{Dataframe, by default equal to \link[espadon]{dicom.tag.dictionary},
 whose structure it must keep. This dataframe is used to parse DICOM files.}
+
+\item{...}{Additional arguments \code{dicom.browser} when previously calculated by
+\link[espadon]{dicom.browser}  with argument \code{full.info = TRUE}.}
 }
 \value{
 Returns a raw vector, with new tag values.

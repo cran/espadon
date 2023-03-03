@@ -14,7 +14,8 @@
 #' from or to volume's cutting planes frame of reference. If the \code{T.MAT} is \code{NULL}, 
 #' then the returned object will contain only 4 matrices: "src.ref<-src.ref",
 #' "src.ref<-ref.cutplane", "ref.cutplane<-ref.cutplane", "ref.cutplane<-src.ref".
-#' @seealso \link[espadon]{ref.add}, \link[espadon]{ref.remove}.
+#' @seealso \link[espadon]{ref.add}, \link[espadon]{ref.srctodest.add}, 
+#' \link[espadon]{ref.remove}.
 #' @examples
 #' # loading of toy-patient objects
 #' patient <- toy.load.patient (modality = "mr", roi.name = "", dxyz = c (4, 4, 4))
@@ -32,7 +33,7 @@
 
 #' @export
 #' @importFrom methods is
-ref.cutplane.add <- function (vol, origin = vol$xyz0[1,],
+ref.cutplane.add <- function (vol, origin = c(0,0,0),
                               ref.cutplane = paste0 (vol$ref.pseudo, "m"),
                               T.MAT = NULL){
   
@@ -46,9 +47,10 @@ ref.cutplane.add <- function (vol, origin = vol$xyz0[1,],
                     origin = origin, 
                     new.ref.pseudo = ref.cutplane,
                     T.MAT = T.MAT))
-  
+  t.mat$ref.info[t.mat$ref.info$ref.pseudo==vol$ref.pseudo,"ref"] <- vol$frame.of.reference
   t.mat$reg.info$patient <- unique(rbind(t.mat$reg.info$patient,
                                          data.frame(patient=vol$patient,
+                                                    patient.name=vol$patient.name,
                                                     patient.bd=vol$patient.bd,
                                                     patient.sex=vol$patient.sex)
                                    ))

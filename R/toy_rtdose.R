@@ -1,7 +1,4 @@
 #' @importFrom stats pnorm 
-#' @export
-#' 
-#' 
 .toy.rtdose.from.roi <- function (D.max, DSA, beam.nb, vol, struct, roi.name = NULL, roi.sname = NULL, 
                          roi.idx = NULL, alias = "", description = "") {
   

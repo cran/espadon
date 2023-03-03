@@ -26,7 +26,7 @@
 #' n <- 3
 #' cluster.b <- bin.clustering (b)
 #' 
-#' col = c ("#00000000", rainbow (n))
+#' col <- c ("#00000000", rainbow (n))
 #' breaks <- seq (0, n, length.out = n+2)
 
 #' display.plane (CT, top = b, main = "Before clustering",

@@ -17,6 +17,9 @@
 #' is computed, and a local Gamma index otherwise.
 #' @param local.th Positive number, in percent. Local threshold, only used if 
 #' \code{local = TRUE}. See Details.
+#' @param project.to.isocenter Boolean. If \code{TRUE}, and if \code{vol} and 
+#' \code{vol.ref} are of modality "rtimage", the size of the pixels is corrected 
+#' to correspond to that found if the sensor was at the isocenter.
 #' @param alias Character string, \code{$object.alias} of the created object.
 #' @param description Character string, describing the created object. If 
 #' \code{description = NULL} (default value), it will be set to Gamma index setup.
@@ -58,8 +61,9 @@
 #' # by 3 pixels on the x axis
 #' D.meas <- vol.copy (D.ref, alias = "measured_dose")
 #' D.meas$vol3D.data[1:(D.meas$n.ijk[1] - 3) ,,] <- D.ref$vol3D.data[4:D.ref$n.ijk[1],,] 
-#' 
-#' gamma <- rt.gamma.index (D.meas, D.ref, delta.r = 6)  
+#' D.max <- as.numeric(quantile(as.numeric(D.ref$vol3D.data), 
+#'                              probs = 99.99/100, na.rm = TRUE))
+#' gamma <- rt.gamma.index (D.meas, D.ref, delta.r = 6, vol.max = D.max)  
 #' gamma$gamma.info  
 #' 
 #' # Display gamma index at isocenter
@@ -79,6 +83,7 @@ rt.gamma.index <- function (vol, vol.ref,
                             dose.th = 0.02, delta.r = 3, 
                             analysis.th = 0.05, 
                             local = FALSE, local.th = 0.3, 
+                            project.to.isocenter = TRUE,
                             alias = "", description = NULL){
   
   
@@ -96,10 +101,7 @@ rt.gamma.index <- function (vol, vol.ref,
     return (NULL)
   }
   
-  
-  
-  #######################
-  
+
   if(is.null(vol.ref$vol3D.data)){
     warning ("Check input data : empty vol.ref$vol3D.data.")
     return (NULL)
@@ -117,6 +119,11 @@ rt.gamma.index <- function (vol, vol.ref,
                   dose.th*100, "% ", delta.r,"mm", 
                   ifelse(local, paste0(" - local th ", 100*local.th,"%"),""))
   if (is.null(description)) description <- desc
+  
+  if (project.to.isocenter & vol$modality == "rtimage" & vol.ref$modality == "rtimage") {
+    vol <- .im.projection(vol)
+    vol.ref <- .im.projection(vol.ref)
+  }
   
   gammaindex <- vol.copy(vol.ref,alias = "gamma_index", modality ="gammaindex",
                          description = description)

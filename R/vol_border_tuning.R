@@ -1,9 +1,7 @@
-#' @export
-.vol.border.tuning <- function (vol, pre.nijk = c (0, 0, 0), post.nijk = pre.nijk,
-                                alias = vol$object.alias, description = vol$description) {
+.vol.border.tuning <- function (vol, pre.nijk = c (0, 0, 0), post.nijk = pre.nijk) {
   if (all(pre.nijk == c(0,0,0)) &  all(post.nijk == c(0,0,0))) return(vol)
   
-  new.vol <- vol.copy (vol = vol, alias = alias, description = description)
+  new.vol <- vol
   
   new.vol$n.ijk <- vol$n.ijk + pre.nijk + post.nijk
   pt000 <- c(-pre.nijk[1:2],vol$k.idx[1]-pre.nijk[3], 1) %*% t(vol$xyz.from.ijk)

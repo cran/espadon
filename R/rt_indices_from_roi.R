@@ -48,9 +48,11 @@
 #' is requested.
 #' @param D.xcc Vector of the volume in \mjeqn{cm^3}{ascii}, for which the dose 
 #' coverage is requested.
+#' @param V.xpc Vector of the percentage of the reference dose, received by the volume to be 
+#' calculated.
 #' @param V.xGy Vector of the minimum dose in Gy, received by the volume to be 
 #' calculated.
-#' 
+
 #' @param verbose Boolean. if \code{TRUE} (default) a progress bar is displayed.
 
 #' @details If \code{target.roi.name}, \code{target.roi.sname}, and 
@@ -80,6 +82,8 @@
 #' \code{presc.dose} Gy,
 #' \item the requested \code{V.xGy} (\mjeqn{cm^3}{ascii}): 
 #' volumes receiving at least x Gy.
+#' \item the requested \code{V.xpc} (\mjeqn{cm^3}{ascii})
+#' Volume receiving at least x% of the reference dose. 
 #' }
 #' 
 #' @return \mjeqn{-~conformity}{ascii} : dataframe containing, if requested,
@@ -331,8 +335,7 @@ rt.indices.from.roi <- function (vol, struct = NULL, T.MAT = NULL,
                                                          "HI.ICRU.5.95_ref", "HI.mayo2010", 
                                                          "HI.heufelder"),
                                  gradient.indices = c("GI.ratio.50", "mGI"),
-                                 D.xpc = NULL, D.xcc = NULL, V.xGy = NULL, 
-                                 
+                                 D.xpc = NULL, D.xcc = NULL, V.xpc = NULL, V.xGy = NULL, 
                                  verbose = TRUE){
 
   if (!is (vol, "volume")) stop ("vol should be a volume class object.")
@@ -380,7 +383,7 @@ rt.indices.from.roi <- function (vol, struct = NULL, T.MAT = NULL,
     
     margin <- 5
     if (verbose) pb <- progress_bar$new(format = " processing [:bar] :percent",
-                                        total = length(roi.idx), clear = FALSE, width= 60)
+                                        total = length(roi.idx), width= 60)
     vol.L <- list ()
     D.max <- (floor(vol$max.pixel/10) + 1)*10
     for (idx in 1:length(roi.idx)) {
@@ -388,7 +391,8 @@ rt.indices.from.roi <- function (vol, struct = NULL, T.MAT = NULL,
                         T.MAT = T.MAT, alias = struct$roi.info$name[roi.idx[idx]])
       b <- bin.from.roi(vr, struct, roi.idx = roi.idx[idx], T.MAT = T.MAT, 
                         alias = struct$roi.info$name[roi.idx[idx]])
-      vr <- vol.from.bin(vr,b, alias = struct$roi.info$name[roi.idx[idx]], description=b$description)
+      vr <- vol.from.bin(vr, b, alias = struct$roi.info$name[roi.idx[idx]], 
+                         description=b$description)
       # h <- histo.vol (vr, breaks = seq (0, D.max, by = 0.001),
       #                 alias = struct$roi.info$name[roi.idx[idx]])
       vol.L[[idx]] <- list(b=b, v=vr)#, h = h)
@@ -404,6 +408,7 @@ rt.indices.from.roi <- function (vol, struct = NULL, T.MAT = NULL,
   }
   if (is.null(presc.dose)) presc.dose <- NA
   if (is.null(healthy.tol.dose)) healthy.tol.dose <- NA
+  
   .indices.from.bin(vol,presc.dose, bin.L, vol.L, vol.names,
                     L.target.idx, L.healthy.idx,
                     dosimetry,
@@ -411,7 +416,7 @@ rt.indices.from.roi <- function (vol, struct = NULL, T.MAT = NULL,
                     conformity.indices,
                     homogeneity.indices,
                     gradient.indices,
-                    D.xpc, D.xcc, V.xGy, 
+                    D.xpc, D.xcc, V.xpc, V.xGy, 
                     healthy.weight, healthy.tol.dose
                     )
   
@@ -429,7 +434,7 @@ rt.indices.from.roi <- function (vol, struct = NULL, T.MAT = NULL,
                                conformity.indices,
                                homogeneity.indices,
                                gradient.indices,
-                               D.xpc, D.xcc, V.xGy, 
+                               D.xpc, D.xcc, V.xpc, V.xGy, 
                                healthy.weight, healthy.tol.dose){#, DVH){
   
   vol.over.val.df <- function (vol,val,coln =NULL) {
@@ -444,12 +449,21 @@ rt.indices.from.roi <- function (vol, struct = NULL, T.MAT = NULL,
   ###################################################################################
   #volume.indices
   
-  V.xGy.b <- data.frame(matrix(ncol= 0,nrow=length(vol.names)+1,dimnames= list(c("isodose",vol.names),NULL)))
-  if (!is.null (V.xGy))  {
-    VxGy.names <- paste("V_",V.xGy,"Gy", sep="")
-    V.xGy.b <- do.call(rbind,lapply(vol.L,function(V)  vol.over.val.df (V, V.xGy,VxGy.names)))
-    isodose.xGy <- vol.over.val.df (vol, V.xGy,VxGy.names)
-    V.xGy.b <- rbind (isodose =isodose.xGy,V.xGy.b)
+  V.xpcGy.b <- data.frame(matrix(ncol= 0,nrow=length(vol.names)+1,dimnames= list(c("isodose",vol.names),NULL)))
+  if (!is.null (V.xGy) | (!is.null (V.xpc) & !is.na(presc.dose)))  {
+    VxGypc.names <- vect <- c()
+    if (!is.null (V.xpc) & !is.na(presc.dose)) {
+      VxGypc.names <- c(VxGypc.names,paste("V_",V.xpc,"%", sep=""))
+      vect <- c(vect,V.xpc*presc.dose/100)
+      }
+    if (!is.null (V.xGy)) {
+      VxGypc.names <- c(VxGypc.names,paste("V_",V.xGy,"Gy", sep=""))
+      vect <- c(vect,V.xGy)
+      }
+    
+    V.xpcGy.b <- do.call(rbind,lapply(vol.L,function(V)  vol.over.val.df (V, vect, VxGypc.names)))
+    isodose.xGy <- vol.over.val.df (vol, vect,VxGypc.names)
+    V.xpcGy.b <- rbind (isodose =isodose.xGy,V.xpcGy.b)
     # dvh.interpol <-function(d , dvh){
     #   idx <- floor(d/dvh$step) + 1
     #   dvh$vol[idx] + (dvh$vol[idx+1]-dvh$vol[idx])*(d-dvh$breaks[idx])/dvh$step
@@ -485,17 +499,17 @@ rt.indices.from.roi <- function (vol, struct = NULL, T.MAT = NULL,
   }
   
   if (is.null(bin.L)) {
-    if (is.na(presc.dose[1]) & ncol(V.xGy.b)==0) return(NULL)
-    if (is.na(presc.dose[1])) return(list(volume.indices=V.xGy.b))
+    if (is.na(presc.dose[1]) & ncol(V.xpcGy.b)==0) return(NULL)
+    if (is.na(presc.dose[1])) return(list(volume.indices=V.xpcGy.b))
     volume.indices.b <- V.refdose
     colnames(volume.indices.b) <- paste0("V_",presc.dose,"Gy")
-    if (ncol(volume.indices.b)>0 & ncol(V.xGy.b)>0){
-      m <- match(colnames(volume.indices.b), colnames(V.xGy.b))
+    if (ncol(volume.indices.b)>0 & ncol(V.xpcGy.b)>0){
+      m <- match(colnames(volume.indices.b), colnames(V.xpcGy.b))
       m <- m[!is.na(m)]
-      if (length(m)>0) V.xGy.b <- V.xGy.b[-m]
+      if (length(m)>0) V.xpcGy.b <- V.xpcGy.b[-m]
     }
     
-    volume.indices.b <- cbind (volume.indices.b, V.xGy.b)
+    volume.indices.b <- cbind (volume.indices.b, V.xpcGy.b)
     rownames(volume.indices.b) <- "isodose"
     volume.indices.b<-.reduc.tab(volume.indices.b)
     return(list(volume = volume.indices.b))
@@ -768,6 +782,7 @@ rt.indices.from.roi <- function (vol, struct = NULL, T.MAT = NULL,
       }))
       rownames(conformity) <- NULL
       conformity <- .reduc.tab(conformity)
+      rownames(conformity) <- NULL
     }else {
       conformity <- NULL
     }
@@ -820,6 +835,7 @@ rt.indices.from.roi <- function (vol, struct = NULL, T.MAT = NULL,
       rownames(homogeneity) <- NULL
     }
     homogeneity <- .reduc.tab(homogeneity)
+    rownames(homogeneity) <- NULL
   }
   ################################################ 
 
@@ -848,6 +864,7 @@ rt.indices.from.roi <- function (vol, struct = NULL, T.MAT = NULL,
       })))
       rownames(gradient) <- NULL
       gradient <- .reduc.tab(gradient)
+      rownames(gradient) <- NULL
     } 
     }
     
@@ -929,13 +946,13 @@ rt.indices.from.roi <- function (vol, struct = NULL, T.MAT = NULL,
     colnames(volume.indices.b) <- cn
   }
   
-  if (ncol(volume.indices.b)>0 & ncol(V.xGy.b)>0){
-    m <- match(colnames(volume.indices.b), colnames(V.xGy.b))
+  if (ncol(volume.indices.b)>0 & ncol(V.xpcGy.b)>0){
+    m <- match(colnames(volume.indices.b), colnames(V.xpcGy.b))
     m <- m[!is.na(m)]
-    if (length(m)>0) V.xGy.b <- V.xGy.b[,-m]
+    if (length(m)>0) V.xpcGy.b <- V.xpcGy.b[,-m]
   }
   
-  volume.indices.b <- cbind (volume.indices.b, V.xGy.b)
+  volume.indices.b <- cbind (volume.indices.b, V.xpcGy.b)
   if (ncol(volume.indices.b)==0) {
     volume.indices.b <- NULL
   } else {volume.indices.b <- .reduc.tab(volume.indices.b)}

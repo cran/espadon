@@ -18,6 +18,7 @@
 #' @return Returns a "histo2D" class object. This is a list including:
 #' \itemize{
 #' \item \code{$patient}: set to \code{x.vol$patient}.
+#' \item \code{$patient.name}: set to \code{x.vol$patient.name}.
 #' \item \code{$patient.bd}: set to \code{x.vol$patient.bd}.
 #' \item \code{$patient.sex}: set to \code{x.vol$patient.sex}.
 #' \item \code{$file.basename}: set to "".
@@ -88,7 +89,7 @@ histo.2D  <- function (x.vol, y.vol, x.breaks = NULL, y.breaks = NULL,
       breaks  <- seq (first- 0.5*step, last+0.5*step,step)
     } else {
       if (length(breaks)<2)return (NULL)
-      stepu<-unique(breaks[2:length(breaks)]-breaks[1:(length(breaks)-1)])
+      stepu<-unique(diff(breaks))
       stepu <- stepu[!is.na(stepu)]
       if (length(stepu) == 0)return (NULL)
       step<-mean(stepu)
@@ -137,21 +138,19 @@ histo.2D  <- function (x.vol, y.vol, x.breaks = NULL, y.breaks = NULL,
   
   H <- list()
   H$patient <- x.vol$patient
+  H$patient.name <- x.vol$patient.name
   H$patient.bd <- x.vol$patient.bd
   H$patient.sex <- x.vol$patient.sex
   
   H$file.basename <- ""
   H$file.dirname <- ""
-  H$object.name <- ""
+  H$object.name <- alias
   H$object.alias <- alias
-  
   H$frame.of.reference <- x.vol$frame.of.reference
   H$ref.pseudo <- x.vol$ref.pseudo
   H$modality <- "histo2D"
   H$description <- description
   
-  # r$acq.date <- ""
-  # r$study.date <- ""
   H$creation.date <- format(Sys.Date(), "%Y%m%d")
   
   H$x.file.src <- x.vol$object.alias
@@ -187,5 +186,7 @@ histo.2D  <- function (x.vol, y.vol, x.breaks = NULL, y.breaks = NULL,
   H$total.counts <- sum(H$density.map,na.rm = TRUE)
   H$density.map <- H$density.map/H$total.counts
   class (H) <- "histo2D"
-  return(H)
+  if (alias=="") return(H)
+  return(.set.ref.obj(H,list(x.vol,y.vol)))
+  
 }

@@ -4,10 +4,17 @@
 \alias{load.patient.from.Rdcm}
 \title{Loading patient data from *.Rdcm files}
 \usage{
-load.patient.from.Rdcm(dirname, data = FALSE, dvh = FALSE)
+load.patient.from.Rdcm(
+  dirname,
+  data = FALSE,
+  dvh = FALSE,
+  upgrade.to.latest.version = FALSE,
+  ignore.duplicates = FALSE
+)
 }
 \arguments{
-\item{dirname}{Full paths of the directories of a single patient.}
+\item{dirname}{Full paths of the directories of a single patient, or vector
+of full.path of Rdcm.files.}
 
 \item{data}{Boolean. If \code{data = TRUE}, the voxels value of the "volume"
 class objects, or the coordinates of the RoI (region of interest)
@@ -15,6 +22,12 @@ of the \code{struct} class objects, are loaded into memory.}
 
 \item{dvh}{Boolean. if \code{dvh = TRUE} and if they exist, patient DVH are
 loaded, for convenience. They are not used as is in \pkg{espadon} package.}
+
+\item{upgrade.to.latest.version}{Boolean. If \code{TRUE}, the function attempts
+to upgrade to the latest version, parsing the DICOM data. It may take longer
+to load the data. Consider using the\link[espadon]{Rdcm.upgrade} function.}
+
+\item{ignore.duplicates}{Boolean. If \code{TRUE}, the function ignores duplicated objects.}
 }
 \value{
 Returns an \pkg{espadon} object of class "patient", describing the

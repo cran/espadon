@@ -3,7 +3,9 @@
 #' patient's directory, a dataframe describing objects.
 #' @param dirname Character string, representing the full name of patient 
 #' directory, including Rdcm files.
-#'
+#' @param upgrade.to.latest.version Boolean. If \code{TRUE}, the function attempts 
+#' to upgrade to the latest version, parsing the DICOM data. It may take longer 
+#' to load the data. Consider using the \link[espadon]{Rdcm.upgrade} function.
 #' @return Returns a dataframe, providing information of DICOM objects.
 #' @export
 #'
@@ -23,12 +25,14 @@
 #' # Cleaning  temporary directory
 #' unlink (pat.dir, recursive = TRUE)
 
-Rdcm.inventory <- function (dirname) {
+Rdcm.inventory <- function (dirname, upgrade.to.latest.version = FALSE) {
   
   lf <- list.files (dirname, pattern = "[.]Rdcm", full.names =  TRUE) 
   
   info <-lapply (lf,function(f) {
-    d <- tryCatch(load.Rdcm.raw.data (f, data=FALSE, address=FALSE)$header, error = function (e) NULL)
+    d <- tryCatch(load.Rdcm.raw.data (f, data=FALSE, address=FALSE,
+                                      upgrade.to.latest.version = upgrade.to.latest.version)$header, 
+                  error = function (e) NULL)
     if (is.null(d)) return(d)
     SOP_label <- unlist(strsplit(d$file.basename,"_"))
     SOP_label <- tryCatch(gsub("^do","",SOP_label [grepl("^do",SOP_label)]),error=function(e) "")
@@ -62,6 +66,7 @@ Rdcm.inventory <- function (dirname) {
     l[['study.description']] <- description[1]
     l[['serie.description']] <- description[2]
     l[['PID']] <- d$patient
+    l[['name']] <- d$patient.name
     l[['birthday']] <- d$patient.bd
     l[['sex']] <- d$patient.sex
     l[['outfilename']] <- d$file.basename
@@ -84,7 +89,7 @@ Rdcm.inventory <- function (dirname) {
                    "SOP.type",
                    "scanning.sequence", "study.description", "serie.description", 
                    "study.ID", "study.UID","serie.UID",
-                   "PID", "birthday","sex",
+                   "PID", "name", "birthday","sex",
                    "ref.label", 
                    "SOP.label.nb", "outfilename", "input.file.nb")]
   

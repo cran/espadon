@@ -16,6 +16,7 @@
 #' @return Returns a "histo" class object. This is a list including:
 #' \itemize{
 #' \item \code{$patient}: set to \code{vol$patient}.
+#' \item \code{$patient.name}: set to \code{vol$patient.name}.
 #' \item \code{$patient.bd}: set to \code{vol$patient.bd}.
 #' \item \code{$patient.sex}: set to \code{vol$patient.sex}.
 #' \item \code{$file.basename}: set to "".
@@ -76,12 +77,13 @@ histo.vol  <- function (vol, breaks = NULL, alias = "", description = NULL){
   r <- list ()
   
   r$patient <- vol$patient
+  r$patient.name <- vol$patient.name
   r$patient.bd <- vol$patient.bd
   r$patient.sex <- vol$patient.sex
   
   r$file.basename <- ""
   r$file.dirname <- ""
-  r$object.name <- ""
+  r$object.name <- alias
   r$object.alias <- alias
   
   r$frame.of.reference <- vol$frame.of.reference
@@ -99,8 +101,9 @@ histo.vol  <- function (vol, breaks = NULL, alias = "", description = NULL){
   r$mids=H$mids
   r$mids.unit=vol$unit
   r$counts=H$counts
-  r$dV_dx=H$counts /(H$breaks[2:length(H$breaks)]-H$breaks[1:(length(H$breaks)-1)]) * abs(prod (vol$dxyz))/1000
+  r$dV_dx=H$counts /diff(H$breaks) * abs(prod (vol$dxyz))/1000
   
   class(r) <- "histo"
-  return(r)
+  if (alias=="") return(r)
+  return(.set.ref.obj(r,list(vol)))
 }

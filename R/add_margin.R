@@ -66,9 +66,12 @@ add.margin <- function (vol, xyz.margin, alias="", description=NULL) {
   if (pt.min[1]<=pt.max[1] & pt.min[2]<=pt.max[2] & pt.min[3]<=pt.max[3]){
     if (is.null(description)) 
       description<- paste (vol$description,"restricted to xyz.margin", paste (xyz.margin, collapse="|"))
-    
-    return (vol.in.new.ref(nesting.cube(vol_, pt.min, pt.max, alias, description ),
-                           new.ref.pseudo=vol$ref.pseudo, t.mat))
+    new.vol <- nesting.cube(vol_, pt.min, pt.max, alias, description )
+    new.vol$object.alias <- vol$object.alias
+    new.vol$object.info <- vol$object.info
+    return(vol.in.new.ref(new.vol, new.ref.pseudo=vol$ref.pseudo, t.mat, 
+                              alias = alias, description=description))
+
   }
   return (NULL)
 }

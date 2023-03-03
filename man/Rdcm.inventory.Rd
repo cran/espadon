@@ -4,11 +4,15 @@
 \alias{Rdcm.inventory}
 \title{Inventory of \pkg{espadon} objects from Rdcm files}
 \usage{
-Rdcm.inventory(dirname)
+Rdcm.inventory(dirname, upgrade.to.latest.version = FALSE)
 }
 \arguments{
 \item{dirname}{Character string, representing the full name of patient
 directory, including Rdcm files.}
+
+\item{upgrade.to.latest.version}{Boolean. If \code{TRUE}, the function attempts
+to upgrade to the latest version, parsing the DICOM data. It may take longer
+to load the data. Consider using the \link[espadon]{Rdcm.upgrade} function.}
 }
 \value{
 Returns a dataframe, providing information of DICOM objects.

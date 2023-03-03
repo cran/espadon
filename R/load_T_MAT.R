@@ -1,11 +1,15 @@
 ####################################################################################
 #' Loading of information about transfer matrices between frames of reference of 
-#' patient objects.
+#' patient Rdcm objects.
 #' @description The \code{load.T.MAT} function lists all the frames of reference
 #' of the objects included in the patient directory. It concatenates all the 
 #' information of the reg matrices of a directory, creating, among  other things, 
 #' a list of 4x4 transfer matrices between frames of reference.
-#' @param dirname Directory containing a patient's DICOM objects.
+#' @param dirname Full paths of the directories of a single patient, or vector 
+#' of full.path of Rdcm.files.
+#' @param upgrade.to.latest.version Boolean. If \code{TRUE}, the function attempts 
+#' to upgrade to the latest version, parsing the DICOM data. It may take longer 
+#' to load the data. Consider using the \link[espadon]{Rdcm.upgrade} function.
 #' @return Returns a "t.mat" class object. It is a list that includes :
 #' \itemize{
 #' \item \code{$ref.info}: dataframe giving the correspondence between the frame of
@@ -40,19 +44,29 @@
 #' unlink (pat.dir, recursive = TRUE)
  
 #' @export
-load.T.MAT <- function (dirname) {
-  lf <- list.files (dirname, pattern ="[.]Rdcm", full.names = T)
+load.T.MAT <- function (dirname, upgrade.to.latest.version = FALSE) {
+  flag <- dir.exists(dirname)
+  Rdcm.dir <- dirname[flag]
+  dcm.filenames1 <-  list.files(Rdcm.dir,pattern = "[.]Rdcm",recursive = TRUE,full.names = TRUE)
+  dcm.filenames2 <- dirname[!flag]
+  dcm.filenames2 <- dcm.filenames2[grepl("[.]Rdcm$",dcm.filenames2)]
+  dcm.filenames2 <- dcm.filenames2[file.exists(dcm.filenames2)]
+  lf <- c(dcm.filenames1,dcm.filenames2)
+  
   if (length(lf)==0) return(NULL)
   reg.list <-lapply (lf, function (fn){
-    h <- load.Rdcm.raw.data (fn, data=FALSE, address=FALSE)$header
+    h <- load.Rdcm.raw.data (fn, data=FALSE, address=FALSE, 
+                             upgrade.to.latest.version = upgrade.to.latest.version)$header
     if (h$modality!="reg") return(list(ref.pseudo =  h$ref.pseudo,
                                        ref = h$frame.of.reference, 
                                        patient =h$patient,
+                                       patient.name =h$patient.name,
                                        patient.bd =h$patient.bd,
                                        patient.sex=h$patient.sex))
     return(list(ref.pseudo =  h$ref.pseudo,
                 ref = h$frame.of.reference, 
                 patient =h$patient,
+                patient.name =h$patient.name,
                 patient.bd =h$patient.bd,
                 patient.sex=h$patient.sex, reg.list=h))
   })

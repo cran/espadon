@@ -58,6 +58,7 @@ vol.sum<- function (vol1, vol2, alias = "", description = NULL) {
   if (is.null(description)) description <-  paste (vol1$object.alias, "+", vol2$object.alias)
   V <- vol.copy (vol1, alias = alias, description = description)
   
+ 
   V$vol3D.data <- vol1$vol3D.data + vol2$vol3D.data
   
   if (any(!is.na(V$vol3D.data))){
@@ -68,6 +69,6 @@ vol.sum<- function (vol1, vol2, alias = "", description = NULL) {
     V$max.pixel <- NA
   }
   
-  
-  return(V)
+  if (alias=="") return(V)
+  return(.set.ref.obj(V,list(vol2)))
 }

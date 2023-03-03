@@ -155,6 +155,28 @@ BEGIN_RCPP
     return rcpp_result_gen;
 END_RCPP
 }
+// meshinfront
+std::vector <bool> meshinfront(std::vector <double> pt_x, std::vector <double> pt_y, std::vector <double> pt_z, std::vector <double> p2_x, std::vector <double> p2_y, std::vector <double> p2_z, std::vector <double> u_x, std::vector <double> u_y, std::vector <double> u_z, std::vector <int> n_A, std::vector <int> n_B, std::vector <int> n_C);
+RcppExport SEXP _espadon_meshinfront(SEXP pt_xSEXP, SEXP pt_ySEXP, SEXP pt_zSEXP, SEXP p2_xSEXP, SEXP p2_ySEXP, SEXP p2_zSEXP, SEXP u_xSEXP, SEXP u_ySEXP, SEXP u_zSEXP, SEXP n_ASEXP, SEXP n_BSEXP, SEXP n_CSEXP) {
+BEGIN_RCPP
+    Rcpp::RObject rcpp_result_gen;
+    Rcpp::RNGScope rcpp_rngScope_gen;
+    Rcpp::traits::input_parameter< std::vector <double> >::type pt_x(pt_xSEXP);
+    Rcpp::traits::input_parameter< std::vector <double> >::type pt_y(pt_ySEXP);
+    Rcpp::traits::input_parameter< std::vector <double> >::type pt_z(pt_zSEXP);
+    Rcpp::traits::input_parameter< std::vector <double> >::type p2_x(p2_xSEXP);
+    Rcpp::traits::input_parameter< std::vector <double> >::type p2_y(p2_ySEXP);
+    Rcpp::traits::input_parameter< std::vector <double> >::type p2_z(p2_zSEXP);
+    Rcpp::traits::input_parameter< std::vector <double> >::type u_x(u_xSEXP);
+    Rcpp::traits::input_parameter< std::vector <double> >::type u_y(u_ySEXP);
+    Rcpp::traits::input_parameter< std::vector <double> >::type u_z(u_zSEXP);
+    Rcpp::traits::input_parameter< std::vector <int> >::type n_A(n_ASEXP);
+    Rcpp::traits::input_parameter< std::vector <int> >::type n_B(n_BSEXP);
+    Rcpp::traits::input_parameter< std::vector <int> >::type n_C(n_CSEXP);
+    rcpp_result_gen = Rcpp::wrap(meshinfront(pt_x, pt_y, pt_z, p2_x, p2_y, p2_z, u_x, u_y, u_z, n_A, n_B, n_C));
+    return rcpp_result_gen;
+END_RCPP
+}
 
 static const R_CallMethodDef CallEntries[] = {
     {"_espadon_dicombrowser", (DL_FUNC) &_espadon_dicombrowser, 7},
@@ -166,6 +188,7 @@ static const R_CallMethodDef CallEntries[] = {
     {"_espadon_labelbrowser", (DL_FUNC) &_espadon_labelbrowser, 2},
     {"_espadon_mean_voxC", (DL_FUNC) &_espadon_mean_voxC, 5},
     {"_espadon_medianfilterC", (DL_FUNC) &_espadon_medianfilterC, 6},
+    {"_espadon_meshinfront", (DL_FUNC) &_espadon_meshinfront, 12},
     {NULL, NULL, 0}
 };
 

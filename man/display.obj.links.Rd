@@ -49,6 +49,9 @@ object, and with a color and a shape depending on \code{square}, \code{group.by.
 
 When \code{interactive = TRUE}, it returns a dataframe of the selected objects,
 or NULL if no object is selected.
+
+Items are circled in green when the DICOM file has been approved.
+They are circled in red, when the DICOM series is incomplete (e.g. missing plan).
 }
 \description{
 The \code{display.obj.links} function displays a graph of

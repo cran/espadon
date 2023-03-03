@@ -3,7 +3,9 @@
 #' DICOM raw data. The created dataframe or list provides information about the 
 #' content of the DICOM TAGs included in the raw data.
 #'
-#' @param dicom.raw.data Raw vector, representing the binary extraction of the DICOM file.
+#' @param dcm espadon object of class "volume", "rtplan", "struct" provided by
+#'  DICOM files, or DICOM filename, or Rdcm filename, or raw vector  representing 
+#'  the binary extraction of the DICOM file.
 #' @param as.txt Boolean. If \code{as.txt = TRUE}, the function returns a 
 #' dataframe, a list otherwise.
 #' @param nested.list Boolean. Only used if \code{as.txt = FALSE}. If 
@@ -17,7 +19,10 @@
 #' of letters in the representation of the TAG value.
 #' @param tag.dictionary Dataframe, by default equal to \link[espadon]{dicom.tag.dictionary}, 
 #' whose structure it must keep. This dataframe is used to parse DICOM files.
-
+#' @param ... Additional argument \code{dicom.browser} when previously calculated by 
+#' \link[espadon]{dicom.browser}. Argument dicom.raw.data (deprecated) replaced by 
+#' \code{dcm} argument. Argument \code{nb} or \code{dicom.nb} representing the 
+#' number of DICOM file, when \code{dcm} contains multiple DICOM files.
 # @note If \code{as.txt = TRUE}, and if the TAG contains a non-ASCII value, 
 # then it will be represented by the concatenation of \code{txt.length} at most 
 # values, separated by \code{txt.sep}.
@@ -29,7 +34,8 @@
 #' @return If it returns a list, each of its elements, named by a TAG, is either 
 #' a vector or a string, depending of the TAG included in \code{dicom.raw.data}.
 
-#' @seealso \link[espadon]{dicom.raw.data.loader}, \link[espadon]{dicom.tag.parser} 
+#' @seealso \link[espadon]{dicom.raw.data.loader}, \link[espadon]{dicom.tag.parser},
+#' \link[espadon]{dicom.viewer},\link[espadon]{xlsx.from.dcm},\link[espadon]{xlsx.from.Rdcm}  
 
 
 #' @examples
@@ -45,19 +51,100 @@
 #' str (L)
 
 #' @export
-dicom.parser <- function (dicom.raw.data, as.txt=TRUE, nested.list = FALSE, try.parse = FALSE, txt.sep = "\\", 
-                          txt.length = 100, tag.dictionary = dicom.tag.dictionary ()){
-  if (!is.raw(dicom.raw.data)) {
-    warning ("dicom.raw.data should be raw data :).")
-    return (NULL)
-  }
-  dicom.df <- dicom.browser(dicom.raw.data, tag.dictionary=tag.dictionary)
-  if (is.null(dicom.df)) return (NULL)
-  L <- lapply(1:nrow(dicom.df), function (idx) dicom.tag.parser (dicom.df$start[idx],dicom.df$stop[idx],
-                                                         dicom.df$VR[idx], dicom.df$endian[idx],
-                                                         dicom.raw.data,try.parse=try.parse))
-  names(L) <- dicom.df$tag
+dicom.parser <- function (dcm, as.txt=TRUE, nested.list = FALSE, try.parse = FALSE, txt.sep = "\\", 
+                          txt.length = 100, tag.dictionary = dicom.tag.dictionary (), ...){
   
+  
+  passed <- names(as.list(match.call())[-1])
+  args <- list(...)
+  names.arg <- names(args)
+  if (!("dcm" %in% passed)){
+    idx.drd <- grep("^dicom.raw.data$",names.arg) 
+    if (length(idx.drd)==0) stop('argument "dcm" is missing, with no default')
+    dcm <- args[[idx.drd]]
+  }
+  
+  if (is.list(dcm)) {
+    dcm <- file.path(dcm$file.dirname,dcm$file.basename)
+    if (length(dcm)==0) stop("dcm is a list but not an espadon object.")
+  }
+  
+  idx.nb <- grep("nb$|dicom.nb$",names.arg) 
+  if (length(idx.nb)>0){nb <- args[[idx.nb]]} else {nb=1}
+  idx.dicom.df <- grep("^dicom.browser$",names.arg)
+  if (length(idx.dicom.df)>0) {dicom.df <- args[[idx.dicom.df]]} else {dicom.df <- NULL}
+  
+  L <- NULL
+  dicom.raw.data <- raw(0)
+  if (is.character(dcm)){
+    name <- basename(dcm[1])
+    if (grepl("[.]Rdcm$", name)){
+      lobj <- load.Rdcm.raw.data(dcm[1])
+      if (is.null(lobj$address)) stop("Rdcm file does not come from a DICOM file.")
+      if (length(lobj$address)<nb) stop("The Rdcm file does not contain as many DICOM files!")
+      dicom.df <- lobj$address[[nb]]
+      L <- lobj$data[[nb]]
+      if (try.parse==TRUE){
+        idx.UN <- which(dicom.df$VR=="UN")
+        if (length(idx.UN)>0)
+          L[idx.UN] <- lapply(idx.UN, function (idx){
+            if (is.na(dicom.df$start[idx]) | is.na(dicom.df$stop[idx])) return (NA)
+            id0 <- which(L[[idx]]==as.raw(0))[1]
+            if (is.na(id0)) return (rawToChar (L[[idx]]))
+            if (id0 == 1) return("")
+            return (rawToChar (L[[idx]][1:(id0-1)]))
+          })
+      }
+    } else {
+      if (nb>length(dcm)) stop("The object dcm does not contain as many DICOM files!")
+      dicom.raw.data <- dicom.raw.data.loader (dcm[nb]) 
+    }
+  } else { if(!is.raw(dcm)) stop("dcm is not raw data or an espadon object or a file name")
+    dicom.raw.data <- dcm
+  }
+  
+  if (is.null(L)){ #on traite les raw data
+    if (!is.null(dicom.df)){
+      nb.el <- dicom.df$stop[nrow(dicom.df)]
+      if (is.na(nb.el)) nb.el <- length(dicom.raw.data) #pas de vérif dans ce cas
+      if (nb.el != length(dicom.raw.data)) dicom.df <- NULL
+    }
+    if (is.null(dicom.df)) dicom.df <- dicom.browser(dicom.raw.data, tag.dictionary=tag.dictionary)
+    if (is.null(dicom.df)) stop ("dcm does not provide a DICOM file.")
+    L <- lapply(1:nrow(dicom.df), function (idx) dicom.tag.parser (dicom.df$start[idx],dicom.df$stop[idx],
+                                                                   dicom.df$VR[idx], dicom.df$endian[idx],
+                                                                   dicom.raw.data,try.parse=try.parse))
+    names(L) <- dicom.df$tag
+  }
+  # if (!is.raw(dicom.raw.data)) {
+  #   warning ("dicom.raw.data should be raw data :).")
+  #   return (NULL)
+  # }
+  # args <- list(...)
+  # dicom.df <- NULL
+  # 
+  # if (!is.null(args[['dicom.browser']])) {
+  #   dicom.df <- args[['dicom.browser']]
+  #   nb.el <- ifelse(is.na(dicom.df$stop[nrow(dicom.df)]), 
+  #                dicom.df$load.stop[nrow(dicom.df)], dicom.df$stop[nrow(dicom.df)])
+  #   
+  #   if (is.na(nb.el)) nb.el <- length(dicom.raw.data) #pas de vérif dans ce cas
+  #   if (nb.el != length(dicom.raw.data)) dicom.df <- NULL
+  # } 
+  # 
+  # if (is.null(dicom.df)) dicom.df <- dicom.browser(dicom.raw.data, tag.dictionary=tag.dictionary)
+  # if (is.null(dicom.df)) return (NULL)
+  # L <- lapply(1:nrow(dicom.df), function (idx) dicom.tag.parser (dicom.df$start[idx],dicom.df$stop[idx],
+  #                                                        dicom.df$VR[idx], dicom.df$endian[idx],
+  #                                                        dicom.raw.data,try.parse=try.parse))
+  # names(L) <- dicom.df$tag
+  
+  
+  .dicom.parser_(dicom.df,L, as.txt=as.txt, nested.list = nested.list, try.parse = try.parse, 
+                 txt.sep = txt.sep, txt.length = txt.length, tag.dictionary = tag.dictionary)
+}
+  .dicom.parser_<- function (dicom.df,L, as.txt=TRUE, nested.list = FALSE, try.parse = FALSE, txt.sep = "\\", 
+                             txt.length = 100, tag.dictionary = dicom.tag.dictionary ()){
   if (!as.txt & !nested.list) return(L)
   if (nested.list) {
     n <- names(L)

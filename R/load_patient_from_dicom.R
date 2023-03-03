@@ -8,6 +8,7 @@
 #' of the \code{struct} class objects, are loaded into memory.
 #' @param dvh Boolean. if \code{dvh = TRUE} and if they exist, patient DVH are 
 #' loaded, for convenience. They are not used as is in \pkg{espadon} package.
+#' @param ignore.duplicates Boolean. If \code{TRUE}, the function ignores duplicated objects.
 #' @param tag.dictionary Dataframe, by default equal to 
 #' \link[espadon]{dicom.tag.dictionary}, 
 #' whose structure it must keep. This dataframe is used to parse DICOM files.
@@ -45,6 +46,7 @@
 
 #' @export
 load.patient.from.dicom <- function (dcm.files, data = FALSE, dvh = FALSE, 
+                                     ignore.duplicates = FALSE,
                                      tag.dictionary = dicom.tag.dictionary (),
                                      verbose = TRUE){
   
@@ -62,7 +64,9 @@ load.patient.from.dicom <- function (dcm.files, data = FALSE, dvh = FALSE,
     warning ("no files to load.")
     return (NULL)
   } 
-  obj.list <- .load.dcm (dcm.filenames, data=data, tag.dictionary = tag.dictionary,
+  obj.list <- .load.dcm (dcm.filenames, data=data, 
+                         ignore.duplicates = ignore.duplicates,
+                         tag.dictionary = tag.dictionary,
                          verbose = verbose)
   
   if (is.null(obj.list)) return (NULL)
@@ -83,27 +87,32 @@ load.patient.from.dicom <- function (dcm.files, data = FALSE, dvh = FALSE,
     max.pix <- NA
     idx <- grep ("max[.]pixel", names(l$header))
     if (length(idx)>0)  max.pix <- l$header[[idx]]
-    c(l$header$patient,as.character(l$header$patient.bd),l$header$patient.sex, l$header$modality, l$header$object.name, l$header$ref.pseudo,
+    c(l$header$patient, l$header$patient.name, as.character(l$header$patient.bd),
+      l$header$patient.sex, l$header$modality, l$header$object.name, l$header$ref.pseudo,
       subobj.nb, l$header$description, nb,
       max.pix,
       l$header$object.alias, paste(l$header$file.basename,collapse=";"))
   }))
   
-  colnames(base.n) <- c ("PIN", "birth.date","sex", "modality", "obj", "ref.pseudo", "nb.of.subobject" ,"description","nb", "max","object.alias", "file.basename")
+  colnames(base.n) <- c ("PIN", "name", "birth.date","sex", "modality", "obj", 
+                         "ref.pseudo", "nb.of.subobject" ,"description","nb", 
+                         "max","object.alias", "file.basename")
   base.n <- base.n[order(base.n$PIN,base.n$ref.pseudo,base.n$modality),]
   base.n$max<- suppressWarnings(as.character(round(as.numeric(base.n$max),3)))
   base.n$nb<- suppressWarnings(as.numeric(base.n$nb))
   row.names(base.n) <- NULL
   
   l <- list()
-  l$patient <- unique (base.n[,c ("PIN", "birth.date", "sex")])
-  l$patient$birth.date <- l$patient$birth.date
+  l$patient <- unique (base.n[,c ("PIN", "name", "birth.date", "sex")])
   row.names(l$patient) <- NULL
+  if (nrow(l$patient) != 1) 
+    warning("Check the uniqueness of the patient : different PID, name, birthday or sex.", call.=FALSE)
+  
   l$pat.pseudo <- l$patient[1,1]
   
   # db <- base.n[base.n[,1]==patient[patient.idx],2:5 ]
   
-  l$description <- unique(base.n[,c (1, 4:8)])
+  l$description <- unique(base.n[,c (1, 5:9)])
   row.names (l$description) <- NULL
   l$description$nb <- sapply (l$description$obj, function (obj) paste(base.n$nb[which(base.n$obj==obj)], collapse = ";"))
   l$description$max <- sapply (l$description$obj, function (obj) paste(base.n$max[which(base.n$obj==obj)], collapse = ";"))
@@ -119,15 +128,17 @@ load.patient.from.dicom <- function (dcm.files, data = FALSE, dvh = FALSE,
     if (h$modality!="reg") return(list(ref.pseudo =  h$ref.pseudo,
                                        ref = h$frame.of.reference, 
                                        patient =h$patient,
+									   patient.name=h$patient.name,
                                        patient.bd =h$patient.bd,
                                        patient.sex=h$patient.sex))
     return(list(ref.pseudo =  h$ref.pseudo,
                 ref = h$frame.of.reference, reg.list=h,
                 patient =h$patient,
+				patient.name =h$patient.name,
                 patient.bd =h$patient.bd,
                 patient.sex=h$patient.sex))
   })
-  l$T.MAT <- .load.T.MAT.by.reglist (reg.list)
+  l$T.MAT <- suppressWarnings(.load.T.MAT.by.reglist (reg.list))
   modality <- sort (unique (base.n$modality[base.n$modality!="reg"]))
   obj <- lapply(modality, function (m) {
     alias <-  sort(base.n$object.alias[(base.n$modality==m)])

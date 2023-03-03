@@ -69,7 +69,9 @@ histo.from.bin  <- function (vol, sel.bin, breaks = NULL, alias = "",
     return (NULL)
   }
   
-  vol.sel <- vol.from.bin (vol, sel.bin)
+  vol.sel <- vol.from.bin (vol, sel.bin, alias="dum")
+  vol.sel$object.alias <- vol.sel$ref.object.alias
+  vol.sel$object.info <- vol.sel$ref.object.info
   return (histo.vol (vol.sel, breaks = breaks, alias=alias,
                       description = description))
 }

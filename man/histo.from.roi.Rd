@@ -15,6 +15,7 @@ histo.from.roi(
   MC = NULL,
   sd = c(1, 1, 1),
   offset = c(0, 0, 0),
+  over.sampling.factor = 1,
   alias = "",
   description = NULL
 )
@@ -54,6 +55,10 @@ directions x, y and z.}
 
 \item{offset}{Vector representing the translation of the RoI in the 3
 directions x, y and z.}
+
+\item{over.sampling.factor}{Strictly positive integer, or a vector of 3 strictly
+positive integers, default to 1. Defined to oversample grids of \code{vol}.
+Oversampling can be very time consuming.}
 
 \item{alias}{Character string, \code{$alias} of the created object}
 

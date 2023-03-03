@@ -102,8 +102,12 @@ nesting.bin <- function (vol, sel.bin, alias = "", description = NULL,
   new.vol <- .vol.border.tuning (new.vol, pre.nijk = -as.numeric(range.ijk[1,]), 
                                  post.nijk = -c(vol_$n.ijk[1:2]-1, vol_$k.idx[sel.bin$n.ijk[3]]) +  
                                    as.numeric(range.ijk[2,]))
+  new.vol <- vol.in.new.ref(new.vol,new.ref.pseudo=vol$ref.pseudo, t.mat,alias = alias, 
+                            description=description) 
   
-  return (vol.in.new.ref(new.vol,new.ref.pseudo=vol$ref.pseudo, t.mat,alias = alias, 
-                         description=description))
+  
+  
+  if (alias=="") return(new.vol)
+  return(.set.ref.obj(new.vol,list(vol,sel.bin), add=FALSE))
 }
   

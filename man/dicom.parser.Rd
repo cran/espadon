@@ -5,17 +5,20 @@
 \title{Conversion of DICOM raw data into a dataframe or a list of DICOM TAG information}
 \usage{
 dicom.parser(
-  dicom.raw.data,
+  dcm,
   as.txt = TRUE,
   nested.list = FALSE,
   try.parse = FALSE,
   txt.sep = "\\\\",
   txt.length = 100,
-  tag.dictionary = dicom.tag.dictionary()
+  tag.dictionary = dicom.tag.dictionary(),
+  ...
 )
 }
 \arguments{
-\item{dicom.raw.data}{Raw vector, representing the binary extraction of the DICOM file.}
+\item{dcm}{espadon object of class "volume", "rtplan", "struct" provided by
+DICOM files, or DICOM filename, or Rdcm filename, or raw vector  representing
+the binary extraction of the DICOM file.}
 
 \item{as.txt}{Boolean. If \code{as.txt = TRUE}, the function returns a
 dataframe, a list otherwise.}
@@ -33,6 +36,11 @@ of letters in the representation of the TAG value.}
 
 \item{tag.dictionary}{Dataframe, by default equal to \link[espadon]{dicom.tag.dictionary},
 whose structure it must keep. This dataframe is used to parse DICOM files.}
+
+\item{...}{Additional argument \code{dicom.browser} when previously calculated by
+\link[espadon]{dicom.browser}. Argument dicom.raw.data (deprecated) replaced by
+\code{dcm} argument. Argument \code{nb} or \code{dicom.nb} representing the
+number of DICOM file, when \code{dcm} contains multiple DICOM files.}
 }
 \value{
 Returns a list of elements or a dataframe, depending on  \code{as.list}.
@@ -62,5 +70,6 @@ L <- dicom.parser (toy.dicom.raw (), as.txt = TRUE)
 str (L)
 }
 \seealso{
-\link[espadon]{dicom.raw.data.loader}, \link[espadon]{dicom.tag.parser}
+\link[espadon]{dicom.raw.data.loader}, \link[espadon]{dicom.tag.parser},
+\link[espadon]{dicom.viewer},\link[espadon]{xlsx.from.dcm},\link[espadon]{xlsx.from.Rdcm}
 }

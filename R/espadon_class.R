@@ -51,6 +51,7 @@
 #' "struct", "t.mat","undef","volume" is a list containing at least:
 #' \itemize{
 #' \item \code{$patient}: patient's PIN.
+#' \item \code{$patient.name}: patient's name.
 #' \item \code{$patient.bd}: patient's birthday.
 #' \item \code{$patient.sex}: patient's sex
 #' \item \code{$file.basename}: vector of .Rdcm or .dcm file basenames of the 
@@ -63,6 +64,8 @@
 #' \item \code{$ref.pseudo}: pseudonym of the \code{$frame.of.reference}
 #' \item \code{$modality}: modality of the object (e.g. ct, mr, bin, rtplan..)
 #' \item \code{$description}: description of the object.
+#' \item \code{$acq.date }: date of the content (TAG (0008,0023) for ct and mr 
+#' and rtimage, TAG (300A,0006) for rtplan, TAG (3006,0008) for rtstruct) 
 #' \item \code{$creation.date }: creation date of the object.
 #'}
 #' @note If the object was generated from a DICOM file, the list also contains:

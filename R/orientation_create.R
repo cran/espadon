@@ -54,8 +54,10 @@ orientation.create  <- function(A = c (0, 0, 0), B= NULL, C = NULL,
     u <- u - k * normal
     n <- sqrt(as.numeric(u%*%u))
     if(round(n,6)==0) stop ("B-A and normal are collinear.")
+    u <- u / n
     v <-  vector.product(normal,u)
-   
+    n <- sqrt (as.numeric (v%*%v))
+    v <- v / n
   }
   
   return (c(u,v))

@@ -8,6 +8,7 @@ load.patient.from.dicom(
   dcm.files,
   data = FALSE,
   dvh = FALSE,
+  ignore.duplicates = FALSE,
   tag.dictionary = dicom.tag.dictionary(),
   verbose = TRUE
 )
@@ -22,6 +23,8 @@ of the \code{struct} class objects, are loaded into memory.}
 
 \item{dvh}{Boolean. if \code{dvh = TRUE} and if they exist, patient DVH are
 loaded, for convenience. They are not used as is in \pkg{espadon} package.}
+
+\item{ignore.duplicates}{Boolean. If \code{TRUE}, the function ignores duplicated objects.}
 
 \item{tag.dictionary}{Dataframe, by default equal to
 \link[espadon]{dicom.tag.dictionary},

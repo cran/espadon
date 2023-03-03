@@ -58,6 +58,7 @@ load.obj.from.dicom <- function (dcm.files, data = TRUE, ref.pseudo = "ref1",
   } 
   
   dicomlist <- .load.dcm(dcm.filenames, data=data, verbose = verbose, 
+                         ignore.duplicates = TRUE,
                          tag.dictionary = tag.dictionary)
   if (length(dicomlist)==0) return (NULL)
   if (length(dicomlist)>1) {

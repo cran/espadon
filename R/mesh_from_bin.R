@@ -22,6 +22,7 @@
 #' \itemize{
 #' \item \code{$patient}: set to \code{bin$patient}.
 #' \item \code{$patient.bd}: set to \code{bin$patient.bd}.
+#' \item \code{$patient.name}: set to \code{bin$patient.name}.
 #' \item \code{$patient.sex}: set to \code{bin$patient.sex}.
 #' \item \code{$file.basename}: set to "".
 #' \item \code{$file.dirname}: set to "".
@@ -92,14 +93,14 @@ mesh.from.bin <- function (bin, alias="", tol = 1,
   mesh_ <- list ()
   
   mesh_$patient <- bin$patient
+  mesh_$patient.name <- bin$patient.name
   mesh_$patient.bd <- bin$patient.bd
   mesh_$patient.sex <- bin$patient.sex
   
   mesh_$file.basename <- ""
   mesh_$file.dirname <- ""
-  mesh_$object.name <- ""
+  mesh_$object.name <- alias
   mesh_$object.alias <- alias
-  
   mesh_$frame.of.reference <- bin$frame.of.reference
   mesh_$ref.pseudo <- bin$ref.pseudo
   mesh_$modality <- "mesh"
@@ -108,6 +109,7 @@ mesh.from.bin <- function (bin, alias="", tol = 1,
 
   mesh_$nb.faces <- 0
   
+ 
   
   mesh <- contour3d (vol3D,
                      x= 1:bin$n.ijk[1] -1, y= 1:bin$n.ijk[2] -1, z= bin$k.idx,
@@ -138,8 +140,7 @@ mesh.from.bin <- function (bin, alias="", tol = 1,
   mesh_$mesh <- mesh
   mesh_$nb.faces <- dim(mesh$it)[2]
   class(mesh_) <- "mesh"
-  return (mesh_)
-
-  
+  if (alias=="") return (mesh_)
+  return(.set.ref.obj(mesh_,list(bin)))
   
 }

@@ -173,9 +173,16 @@ get.plane <- function(vol, origin = c (0, 0, 0),
   
   new.vol <- vol.regrid (v, back.vol, T.MAT=t.mat, interpolate = interpolate, alias = alias, verbose = FALSE)
   
+  new.vol$object.alias <- vol$object.alias
+  new.vol$object.info <- vol$object.info
+
+  
   new.vol <- vol.in.new.ref (new.vol, vol$ref.pseudo, T.MAT=t.mat, alias = alias)
   new.vol$local.gridx <- new.grid.i
   new.vol$local.gridy <- new.grid.j
+  
+  
+  
   return (new.vol)
   
 }

@@ -128,5 +128,6 @@ struct.clustering <- function (vol, struct, roi.name = NULL, roi.sname = NULL,
   b$cluster.info <- data.frame (label = zz.n, value = (1:length (zz.n)) - 1, 
                                 volume.cc = as.numeric (zz.t))
   
-  return (b)
+  if (alias == "") return (b)
+  return(.set.ref.obj(b,list(struct)))
 }

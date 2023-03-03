@@ -23,7 +23,8 @@
 #' "new.ref.pseudo<- new.ref.pseudo", "new.ref.pseudo<-src.ref".
 #' @return Returns a \code{NULL} if  \code{orientation} is not well defined.
 #' 
-#' @seealso \link[espadon]{ref.cutplane.add}, \link[espadon]{ref.remove}.
+#' @seealso \link[espadon]{ref.cutplane.add}, \link[espadon]{ref.remove}, 
+#' \link[espadon]{ref.srctodest.add}.
 #' @examples
 #' # Adding of the reference frame "ref1_60", which is a 60 degree rotation of 
 #' # reference frame "ref1".
@@ -80,9 +81,10 @@ ref.add <- function (src.ref, orientation = c (1, 0, 0, 0, 1, 0),
   if (is.null(T.MAT)) {
     ref.info <- data.frame( ref.pseudo=c(src.ref,new.ref.pseudo),ref=c("",""), stringsAsFactors = FALSE)
     r <-(list (ref.info = ref.info,
-               reg.info = list (patient = data.frame(patient=character(0),
-                                                     patient.bd=character(0),
-                                                     patient.sex=character(0)),
+               reg.info = list (patient = data.frame(patient = character(0),
+                                                     patient.name = character(0),
+                                                     patient.bd = character(0),
+                                                     patient.sex = character(0)),
                                 file = db.file),
                matrix.description = new.matrix.description, matrix.list = new.list.matrix))
     class (r) <- "t.mat"

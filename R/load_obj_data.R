@@ -27,7 +27,8 @@
 #' @importFrom methods is
 load.obj.data <- function (obj, tag.dictionary = dicom.tag.dictionary ()){
 
-  if (!(is (obj, "volume") | is (obj, "struct"))) stop ("obj must be of class 'struct' or 'volume'")
+  if (!(is (obj, "volume") | is (obj, "struct"))) return(obj)
+    #stop ("obj must be of class 'struct' or 'volume'")
   fp <- file.path (obj$file.dirname, obj$file.basename)
   ref.pseudo <- obj$ref.pseudo
   if (grepl("[.]Rdcm$",fp[1])) return(load.obj.from.Rdcm(fp[1]))

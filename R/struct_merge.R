@@ -62,7 +62,10 @@ struct.merge <- function (ref.struct, add.struct, roi.name = NULL,
   }
   
   if (is.null(ref.struct) & is.null(add.struct)) return(NULL)
-  
+  add.struct_ <- list(object.alias=add.struct$object.alias,object.info=add.struct$object.info)
+  class(add.struct_) <- "struct"
+  ref.struct_ <- list(object.alias=ref.struct$object.alias,object.info=ref.struct$object.info)
+  class(ref.struct_) <- "struct"
   if  (is.null(ref.struct)) {
     roi2 <- select.names (add.struct$roi.info$roi.pseudo, roi.name, roi.sname, roi.idx)
     if (is.null (roi2)) return(NULL)
@@ -77,10 +80,13 @@ struct.merge <- function (ref.struct, add.struct, roi.name = NULL,
     add.struct$object.alias <- alias
     add.struct$description <- description
     add.struct$object.info <- NULL
-    add.struct$ref.object.name <- NULL
+    add.struct$ref.object.alias <- NULL
     add.struct$ref.object.info <- NULL
     if (!is.null(add.struct$error)) add.struct$error<-NULL
-    return (add.struct)
+    add.struct$creation.date <- format(Sys.Date(), "%Y%m%d")
+    if (alias =="") return (add.struct)
+    return(.set.ref.obj(add.struct,list(add.struct_)))
+    
   }
   
   ref.struct$file.basename <- ""
@@ -89,14 +95,15 @@ struct.merge <- function (ref.struct, add.struct, roi.name = NULL,
   ref.struct$object.alias <- alias
   ref.struct$description <- description
   ref.struct$object.info <- NULL
-  ref.struct$ref.object.name <- NULL
+  ref.struct$ref.object.alias <- NULL
   ref.struct$ref.object.info <- NULL
   if (!is.null(ref.struct$error)) ref.struct$error<-NULL
   
+  
+  if (alias!="") ref.struct <- .set.ref.obj(ref.struct, list(ref.struct_, add.struct_))
+  
   roi2 <- select.names (add.struct$roi.info$roi.pseudo, roi.name, roi.sname, roi.idx)
   if (is.null (roi2)) return(ref.struct)
-
-  
 
   if (ref.struct$thickness != add.struct$thickness | 
       any (ref.struct$ref.from.contour != add.struct$ref.from.contour) |
@@ -135,4 +142,5 @@ struct.merge <- function (ref.struct, add.struct, roi.name = NULL,
   row.names(ref.struct$roi.obs) <- NULL
   ref.struct$nb.of.roi <- length (ref.struct$roi.data)
   return (ref.struct)
+    
 }

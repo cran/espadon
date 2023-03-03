@@ -26,6 +26,9 @@
 #' directions x, y and z.
 #' @param offset Vector representing the translation of the RoI in the 3 
 #' directions x, y and z.
+#' @param over.sampling.factor Strictly positive integer, or a vector of 3 strictly 
+#' positive integers, default to 1. Defined to oversample grids of \code{vol}.
+#' Oversampling can be very time consuming.
 #' @param alias Character string, \code{$alias} of the created object
 #' @param description Character string, describing the the created object. If 
 #' the \code{description = NULL} (default value), it will be set to 
@@ -79,8 +82,10 @@
 #' @importFrom stats rnorm sd
 #' @importFrom methods is
 histo.from.roi  <- function (vol, struct, roi.name = NULL, roi.sname = NULL, 
-                             roi.idx = NULL, T.MAT = NULL, breaks = NULL,
-                             MC = NULL, sd = c (1, 1, 1), offset = c (0, 0, 0),
+                             roi.idx = NULL, T.MAT = NULL,
+                             breaks = NULL,
+                             MC = NULL, sd = c (1, 1, 1), offset = c (0, 0, 0), 
+                             over.sampling.factor = 1,
                              alias = "", description = NULL) {
   if (!is (vol, "volume")) {
     warning ("vol should be a volume class object.")
@@ -97,16 +102,39 @@ histo.from.roi  <- function (vol, struct, roi.name = NULL, roi.sname = NULL,
     return (NULL)
   }
   
-  vol <- nesting.roi(vol, struct, roi.idx=roi.idx, T.MAT=T.MAT, vol.restrict = TRUE, xyz.margin = abs(offset)+5*abs(sd))
-  bin.vol <- bin.from.roi (vol, struct, roi.idx=roi.idx, T.MAT=T.MAT)
+  if (!((length(over.sampling.factor)==1 | length(over.sampling.factor)==3)) | 
+      !all(abs(as.integer(over.sampling.factor)) == over.sampling.factor) | 
+      any(over.sampling.factor < 0)){
+    warning ("over.sampling.factor should be an integer >0 or vector of length 3 of integers >0")
+    return (NULL)
+  }
+  
+  if (length(over.sampling.factor)==1) over.sampling.factor=rep(over.sampling.factor,3)
+  
+  vol.alias <- vol$object.alias
+  vol.info <- vol$object.info
+  vol <- nesting.roi(vol, struct, roi.idx=roi.idx, T.MAT=T.MAT, vol.restrict = TRUE, 
+                     xyz.margin = abs(offset)+5*abs(sd)+ abs(vol$dxyz))
+  
+  if (all(over.sampling.factor==c(1,1,1))) {
+    vol_o <- vol
+  } else {
+    vol_o <- vol.oversampling (vol, fact.ijk = over.sampling.factor)
+  }
+
+  vol_o$object.alias <- vol.alias
+  vol_o$object.info <- vol.info
+  bin.vol <- bin.from.roi (vol_o, struct, roi.idx=roi.idx, T.MAT=T.MAT)
   if (is.null(bin.vol)){
     warning ("no RoI in volume.")
     return (NULL)
   }
-  
+  bin.vol$object.alias <- struct$object.alias
+  bin.vol$object.info <- struct$object.info
   if (is.null(description)) 
     description <- paste(vol$object.alias, "histogram in ",struct$roi.info$roi.pseudo[roi.idx]) 
-  H <- histo.from.bin (vol, bin.vol, breaks=breaks, alias = alias,
+
+  H <- histo.from.bin (vol_o, bin.vol, breaks=breaks, alias = alias,
                        description = description)
   
   if (is.null (MC)) return (H)
@@ -128,8 +156,8 @@ histo.from.roi  <- function (vol, struct, roi.name = NULL, roi.sname = NULL,
                                               cont$pt <-  data.frame (t (t (cont$pt) + H$MC.dxyz [MC.idx, ]))
                                               return (cont)
                                             })
-    bin.vol <- bin.from.roi (vol, struct=contour_, roi.idx=roi.idx, T.MAT=T.MAT)
-    h<- histo.from.bin (vol, bin.vol, breaks=H$breaks)
+    bin.vol <- bin.from.roi (vol_o, struct=contour_, roi.idx=roi.idx, T.MAT=T.MAT)
+    h<- histo.from.bin (vol_o, bin.vol, breaks=H$breaks)
     H$MC.counts[MC.idx, ] <- h$counts
     H$MC.dV_dx[MC.idx, ] <- h$dV_dx
   }

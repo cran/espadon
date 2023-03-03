@@ -1,12 +1,17 @@
 #' Loading patient data from *.Rdcm files
 #' @description The \code{load.patient.from.Rdcm} function is used to load or 
 #' pre-load in memory all patient objects converted in *.Rdcm files.
-#' @param dirname Full paths of the directories of a single patient.
+#' @param dirname Full paths of the directories of a single patient, or vector 
+#' of full.path of Rdcm.files.
 #' @param data Boolean. If \code{data = TRUE}, the voxels value of the "volume" 
 #' class objects, or the coordinates of the RoI (region of interest)
 #' of the \code{struct} class objects, are loaded into memory.
 #' @param dvh Boolean. if \code{dvh = TRUE} and if they exist, patient DVH are 
 #' loaded, for convenience. They are not used as is in \pkg{espadon} package.
+#' @param upgrade.to.latest.version Boolean. If \code{TRUE}, the function attempts 
+#' to upgrade to the latest version, parsing the DICOM data. It may take longer 
+#' to load the data. Consider using the\link[espadon]{Rdcm.upgrade} function.
+#' @param ignore.duplicates Boolean. If \code{TRUE}, the function ignores duplicated objects.
 #' @return Returns an \pkg{espadon} object of class "patient", describing the 
 #' information contained in \code{dirname}. See \link[espadon]{espadon.class} for a 
 #' description of the "patient" class.
@@ -34,20 +39,78 @@
 #' unlink (pat.dir, recursive = TRUE)
 
 #' @export
-load.patient.from.Rdcm <- function (dirname, data = FALSE, dvh = FALSE){
+load.patient.from.Rdcm <- function (dirname, data = FALSE, dvh = FALSE,
+                                    upgrade.to.latest.version = FALSE,
+                                    ignore.duplicates = FALSE){
   
-  lf <- list.files (dirname, pattern = "[.]Rdcm", full.names =  TRUE) 
+  
+  if (length(dirname)==0) {
+    warning ("no files to load.")
+    return (NULL)
+  } 
+  flag <- dir.exists(dirname)
+  Rdcm.dir <- dirname[flag]
+  dcm.filenames1 <-  list.files(Rdcm.dir,pattern = "[.]Rdcm",recursive = TRUE,full.names = TRUE)
+  dcm.filenames2 <- dirname[!flag]
+  dcm.filenames2 <- dcm.filenames2[grepl("[.]Rdcm$",dcm.filenames2)]
+  dcm.filenames2 <- dcm.filenames2[file.exists(dcm.filenames2)]
+  lf <- c(dcm.filenames1,dcm.filenames2)
+  
   if (length(lf)==0) {
     warning ("no patient found \n")
     return(NULL)
   }
   
   dicomlist <-lapply (lf,function(f) {
-    d <- tryCatch(load.Rdcm.raw.data (f, data=data, address=FALSE), error = function (e) NULL)
+    d <- tryCatch(load.Rdcm.raw.data (f, data=data, address=FALSE,
+                                      upgrade.to.latest.version = upgrade.to.latest.version),
+                  error = function (e) NULL)
     return(d)
   })
   
+  ok <- sapply(dicomlist, function (l) {
+    if (is.null(l)) return(FALSE)
+    return (is.null(l$header$error)) 
+  })
   
+  sort.idx <- order(ok, decreasing = TRUE)
+  
+  lf <- lf[sort.idx]
+  ok <- ok[sort.idx] 
+  dicomlist <- dicomlist[sort.idx]
+  SOP <- sapply(dicomlist, function (l) {
+    SOP_ <- l$header$object.info$SOP.label
+    return(paste0(sort(SOP_), collapse = ";"))
+  })
+
+  exist.SOP <- SOP!=""
+  SOP.f <- rep(FALSE,length(SOP))
+  SOP.f[exist.SOP] <- duplicated(SOP[exist.SOP])
+  if (any(SOP.f)){
+    if (ignore.duplicates){
+      lf <- lf[!SOP.f]
+      dicomlist <-lapply (lf,function(f) {
+        d <- tryCatch(load.Rdcm.raw.data (f, data=data, address=FALSE,
+                                          upgrade.to.latest.version = upgrade.to.latest.version),
+                      error = function (e) NULL)
+        return(d)
+      })
+    } else {
+      warning("Some objects are duplicated. Consider ignore.duplicates = TRUE", call. = FALSE)
+    }
+  }
+  
+  update.list <- sapply(dicomlist, function(l) l$update.needed)
+  
+  if (any(update.list)){
+    if (upgrade.to.latest.version) {
+      warning("Patient file versions have been upgraded, consider using Rdcm.upgrade() for faster loading.")
+    } else {
+      warning("Patient file versions are not up to date, consider using Rdcm.upgrade().")
+    }
+  }
+    
+    
   dicomlist <- dicomlist [which(!sapply (dicomlist, is.null))]
   names(dicomlist) <- sapply(dicomlist, function(l) l$header$object.alias)
   
@@ -80,27 +143,32 @@ load.patient.from.Rdcm <- function (dirname, data = FALSE, dvh = FALSE){
     max.pix <- NA
     idx <- grep ("max[.]pixel", names(l$header))
     if (length(idx)>0)  max.pix <- l$header[[idx]]
-    c(l$header$patient,as.character(l$header$patient.bd),l$header$patient.sex, l$header$modality, l$header$object.name, l$header$ref.pseudo,
+    c(l$header$patient, l$header$patient.name, as.character(l$header$patient.bd),
+      l$header$patient.sex, l$header$modality, l$header$object.name, l$header$ref.pseudo,
       subobj.nb, l$header$description, nb,
       max.pix,
       l$header$object.alias, l$header$file.basename)
   }))
   
-  colnames(base.n) <- c ("PIN", "birth.date","sex", "modality", "obj", "ref.pseudo", "nb.of.subobject" ,"description", "nb", "max","object.alias", "file.basename")
+  colnames(base.n) <- c ("PIN", "name","birth.date","sex", "modality", "obj", 
+                         "ref.pseudo", "nb.of.subobject" ,"description", "nb", 
+                         "max","object.alias", "file.basename")
   base.n <- base.n[order(base.n$PIN,base.n$ref.pseudo,base.n$modality),]
   base.n$max<- suppressWarnings(as.character(round(as.numeric(base.n$max),3)))
   base.n$nb<- suppressWarnings(as.numeric(base.n$nb))
   row.names(base.n) <- NULL
   
   l <- list()
-  l$patient <- unique (base.n[,c ("PIN", "birth.date", "sex")])
-  l$patient$birth.date <- l$patient$birth.date
+  l$patient <- unique (base.n[,c ("PIN", "name", "birth.date", "sex")])
   row.names(l$patient) <- NULL
+  if (nrow(l$patient) != 1) 
+    warning("Check the uniqueness of the patient : different PID, name, birthday or sex.", call.=FALSE)
+  
   l$pat.pseudo <- l$patient[1,1]
   
   # db <- base.n[base.n[,1]==patient[patient.idx],2:5 ]
   
-  l$description <- unique(base.n[,c (1, 4:8)])
+  l$description <- unique(base.n[,c (1, 5:9)])
   row.names (l$description) <- NULL
   l$description$nb <- sapply (l$description$obj, function (obj) paste(base.n$nb[which(base.n$obj==obj)], collapse = ";"))
   l$description$max <- sapply (l$description$obj, function (obj) paste(base.n$max[which(base.n$obj==obj)], collapse = ";"))
@@ -109,7 +177,7 @@ load.patient.from.Rdcm <- function (dirname, data = FALSE, dvh = FALSE){
   
   l$description.by.reg <- list ()
   
-  l$T.MAT <- load.T.MAT (dirname)
+  l$T.MAT <- suppressWarnings(load.T.MAT (dirname))
   
   modality <- sort (unique (base.n$modality[base.n$modality!="reg"]))
   obj <- lapply(modality, function (m) {

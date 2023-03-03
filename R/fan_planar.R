@@ -55,6 +55,7 @@ fan.planar  <- function(vol, k = vol$k.idx[ceiling(length(vol$k.idx)/2)],
   
   fan_ <- list()
   fan_$patient <- ""
+  fan_$patient.name <- ""
   fan_$patient.bd <- ""
   fan_$patient.sex <- ""
   

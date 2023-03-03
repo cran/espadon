@@ -76,13 +76,13 @@ struct.from.bin <- function (vol, roi.name = vol$description, roi.nb = 1,
   struct <- list()
   
   struct$patient <-vol$patient
+  struct$patient.name <- vol$patient.name
   struct$patient.bd <- vol$patient.bd
   struct$patient.sex <- vol$patient.sex
   struct$file.basename <- ""
   struct$file.dirname <- ""
-  struct$object.name <- ""
+  struct$object.name <- alias
   struct$object.alias <- alias
-  struct$ref.object.name <- alias
   struct$frame.of.reference <-  vol$frame.of.reference
   struct$ref.pseudo <- vol$ref.pseudo
   struct$modality <- "rtstruct"
@@ -154,5 +154,6 @@ struct.from.bin <- function (vol, roi.name = vol$description, roi.nb = 1,
   
   db <- .struct.moreinfo (struct$roi.data, struct$ref.from.contour, struct$thickness)
   struct$roi.info  <- cbind (struct$roi.info, db)
-  return(struct)
+  if (alias=="") return(struct)
+  return(.set.ref.obj(struct,list(vol)))
 }

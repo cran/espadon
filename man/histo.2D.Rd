@@ -33,6 +33,7 @@ and the last cell of the histograms. They are not taken into account otherwise.}
 Returns a "histo2D" class object. This is a list including:
 \itemize{
 \item \code{$patient}: set to \code{x.vol$patient}.
+\item \code{$patient.name}: set to \code{x.vol$patient.name}.
 \item \code{$patient.bd}: set to \code{x.vol$patient.bd}.
 \item \code{$patient.sex}: set to \code{x.vol$patient.sex}.
 \item \code{$file.basename}: set to "".

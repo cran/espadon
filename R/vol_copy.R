@@ -32,6 +32,7 @@ vol.copy <- function (vol, alias = "", modality = NULL, description = NULL,
     warning ("vol should be a volume class object.")
     return (NULL)
   }
+  vol_ <- vol
   if (!is.null (modality)) vol$modality <- modality
   if (!is.null (description)) vol$description <- description
   
@@ -39,12 +40,13 @@ vol.copy <- function (vol, alias = "", modality = NULL, description = NULL,
   vol$file.dirname <- ""
   vol$object.name <- alias
   vol$object.alias <- alias
+  vol$ref.object.alias <- NULL
   vol$object.info <- NULL
-  vol$ref.object.name <- NULL
   vol$ref.object.info <- NULL
   vol$creation.date <- format(Sys.Date(), "%Y%m%d")
   if (!is.null (number)) vol$number <- number
- if (!is.null(vol$error)) vol$error<-NULL
-
-  return (vol)
+  if (!is.null(vol$error)) vol$error <- NULL
+  
+  if(alias =="") return (vol)
+  return(.set.ref.obj(vol,list(vol_),add=FALSE))
 }

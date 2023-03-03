@@ -40,6 +40,8 @@
 #' is requested.
 #' @param D.xcc Vector of the volume in \mjeqn{cm^3}{ascii}, for which the dose 
 #' coverage is requested.
+#' @param V.xpc Vector of the percentage of the reference dose, received by the volume to be 
+#' calculated.
 #' @param V.xGy Vector of the minimum dose in Gy, received by the volume to be 
 #' calculated.
 
@@ -107,7 +109,7 @@ rt.indices.from.bin <- function (vol,
                                                          "HI.ICRU.5.95_ref", "HI.mayo2010", 
                                                          "HI.heufelder"),
                                  gradient.indices = c("GI.ratio.50"),
-                                 D.xpc = NULL, D.xcc = NULL, V.xGy=NULL, 
+                                 D.xpc = NULL, D.xcc = NULL, V.xpc = NULL, V.xGy = NULL, 
                                  verbose = TRUE){
   
   if (!is (vol, "volume")) stop ("vol should be a volume class object.")
@@ -160,7 +162,7 @@ rt.indices.from.bin <- function (vol,
     if (length(L.healthy.idx)==0) L.healthy.idx <- NULL
     
     if (verbose) pb <- progress_bar$new(format = " processing [:bar] :percent",
-                                        total = length(bin.L), clear = FALSE, width= 60)
+                                        total = length(bin.L), width= 60)
     vol.L <- list()
     for (l.idx in 1:length(bin.L)) {
       l <- bin.L[[l.idx]]
@@ -181,7 +183,7 @@ rt.indices.from.bin <- function (vol,
                     conformity.indices,
                     homogeneity.indices,
                     gradient.indices,
-                    D.xpc, D.xcc, V.xGy, 
+                    D.xpc, D.xcc, V.xpc, V.xGy, 
                     healthy.weight, healthy.tol.dose
   )
   

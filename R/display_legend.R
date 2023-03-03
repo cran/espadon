@@ -50,11 +50,11 @@ display.legend <- function (struct = NULL, roi.name = NULL,
   
 
   par(mar=c(0,0,0,0))
-  plot(c(0,0),type="n", xlim=c(0,1), ylim=c(0,1),xaxt="n", yaxt="n", xlab="", ylab="")
-  rect(par("usr")[1], par("usr")[3], par("usr")[2], par("usr")[4], col =bg)
+  plot(c(0,0),type="n", xlim=c(0,1), ylim=c(0,1),xaxt="n", yaxt="n", xlab="", ylab="", bty="n")
+  rect(par("usr")[1], par("usr")[3], par("usr")[2], par("usr")[4], col =bg, border = NA)
   
   leg <- legend("topleft",legend =c.name , col =struct$roi.info$color[list.roi.idx],seg.len=1,
-                ncol=ncol ,lwd=lwd, bty="o", cex=cex, text.col=text.col,bg=bg)
+                ncol=ncol ,lwd=lwd, bty="n", cex=cex, text.col=text.col,bg=bg)
 
   on.exit (par(mar=mar))
   

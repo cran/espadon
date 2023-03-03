@@ -19,6 +19,7 @@ If the \code{description = NULL} (default value), it will be set to
 Returns a "dvh" class object. This is a list including:
 \itemize{
 \item \code{$patient}: set to \code{histo$patient}.
+\item \code{$patient.name}: set to \code{histo$patient.name}.
 \item \code{$patient.bd}: set to \code{histo$patient.bd}.
 \item \code{$patient.sex}: set to \code{histo$patient.sex}.
 \item \code{$file.basename}: set to "".

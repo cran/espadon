@@ -65,5 +65,6 @@ vol.from.bin <- function (vol, sel.bin, alias = "", description = NULL){
     V$max.pixel <- NA
   }
   
-  return(V)
+  if (alias=="") return(V)
+  return(.set.ref.obj(V, list(sel.bin)))
 }

@@ -70,7 +70,14 @@ vol.subsampling <- function(vol, fact.ijk= 2, interpolate = TRUE, alias = "", de
     back.vol$min.pixel <- NA
     back.vol$max.pixel <- NA
   }
-  vol.in.new.ref (back.vol,new.ref.pseudo=vol$ref.pseudo, T.MAT =  t.mat,
-                  alias = alias,
-                  description = description)   
+  
+  back.vol$object.alias <- vol$object.alias
+  back.vol$object.info <- vol$object.info
+  
+  new.vol <- vol.in.new.ref (back.vol,new.ref.pseudo=vol$ref.pseudo, T.MAT =  t.mat,
+                             alias = alias,
+                             description = description) 
+  
+  
+  return(new.vol)
 }

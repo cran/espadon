@@ -58,8 +58,9 @@ save.T.MAT <- function (T.MAT, dirname) {
     } else {
       reg <- list ()
       reg$patient <- T.MAT$reg.info$patient[1,1]
-      reg$patient.bd <- T.MAT$reg.info$patient[1,2]
-      reg$patient.sex <- T.MAT$reg.info$patient[1,3]
+      reg$patient.name <- T.MAT$reg.info$patient[1,2]
+      reg$patient.bd <- T.MAT$reg.info$patient[1,3]
+      reg$patient.sex <- T.MAT$reg.info$patient[1,4]
       reg$file.basename <- ""
       reg$file.dirname <- ""
       reg$object.name <- ""

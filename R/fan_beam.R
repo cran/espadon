@@ -52,6 +52,7 @@ fan.beam  <- function(alpha, dalpha,  orientation = c(0,0,1,1,0,0),
   rownames(ptn) <- NULL
   fan_ <- list()
   fan_$patient <- ""
+  fan_$patient.name <- ""
   fan_$patient.bd <- ""
   fan_$patient.sex <- ""
   

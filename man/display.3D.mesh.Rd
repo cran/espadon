@@ -16,7 +16,7 @@ function. See \link[espadon]{espadon.class} for class definitions.}
 \link[espadon]{load.T.MAT}. If \code{T.MAT} is \code{NULL}, \code{mesh} must be
 displayed in \code{display.ref = mesh$ref.pseudo}.}
 
-\item{...}{Arguments passed to \link[rgl]{shade3d} as \code{color}, \code{specular},
+\item{...}{Additional arguments passed to \link[rgl]{shade3d} as \code{color}, \code{specular},
 \code{alpha}...}
 }
 \value{

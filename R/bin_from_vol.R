@@ -41,7 +41,7 @@ bin.from.vol <- function (vol, min=-Inf, max=Inf, in.selection = TRUE,
   }
   
   if(is.null(vol$vol3D.data)){
-    warning ("empty vol$vol3D.data.")
+    warning ("Empty vol$vol3D.data.")
     return (NULL)
   }
   

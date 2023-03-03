@@ -25,7 +25,7 @@
 
 #' @export
 get.xyz.from.index <- function (idx, vol){
-  
+  if (length(idx)==0) return(NULL)
   idx_ <- .get.ijkt.from.index (idx, vol)
   pt <- matrix ((idx_ %*%  t(vol$xyz.from.ijk))[,1:3], ncol=3)
   colnames (pt) <- c("x","y","z")

@@ -387,7 +387,7 @@ display.plane <- function (bottom = NULL, top = NULL, struct = NULL,
           if (!(r.idx %in% list.roi.idx)) return (NULL)
           if ((length(struct$roi.data[[r.idx]]) ==1) &   
               (castlow.str (struct$roi.data[[r.idx]][[1]]$type) =="point")) return(struct$roi.data[[r.idx]])
-          roi.nesting <- suppressWarnings (nesting.roi (vol=bottom.p, struct=struct, roi.idx=r.idx, 
+          roi.nesting <- suppressWarnings (nesting.roi (obj=bottom.p, struct=struct, roi.idx=r.idx, 
                                       T.MAT=T.MAT, xyz.margin=c(1,1,1), vol.restrict=TRUE))
           if (is.null(roi.nesting)) return (NULL)
           bin <-bin.from.roi (vol=roi.nesting, struct=struct, roi.idx=r.idx, T.MAT=T.MAT)

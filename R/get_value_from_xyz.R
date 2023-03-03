@@ -3,7 +3,7 @@
 #' the x, y, z coordinate points in the chosen frame of reference.
 #' @param xyz Vector of length 3, corresponding to the x, y, z
 #' coordinates (in mm) of a point in \code{xyz.ref.pseudo} frame of
-#' reference, or 3-column matrix of x, y, z coordinates of several points.
+#' reference, or 3-column matrix  or dataframe of x, y, z coordinates of several points.
 #' @param vol "volume" class object.
 #' @param xyz.ref.pseudo \code{ref.pseudo} in which the \code{xyz}
 #' coordinate points are given. This \code{ref.pseudo} must exist in the \code{T.MAT} 
@@ -40,6 +40,16 @@
 #' @importFrom methods is
 get.value.from.xyz <- function (xyz, vol, xyz.ref.pseudo = NULL, T.MAT = NULL,
                                 interpolate = TRUE, verbose = FALSE){
+  
+  if (is.data.frame(xyz)) {
+    xyz <- as.matrix (xyz)
+  } else if (!is.matrix(xyz)){
+    if (length(xyz)!=3) stop("xyz must be a vector of length 3 or 3-column matrix.")
+    xyz <- matrix (xyz, ncol = 3) 
+  }
+
+  if (ncol(xyz)!=3) stop("xyz must be a vector of length 3 or 3-column matrix.")
+  
   if (!is (vol, "volume")) {
     warning ("vol should be a volume class object.")
     return (NULL)
@@ -52,7 +62,7 @@ get.value.from.xyz <- function (xyz, vol, xyz.ref.pseudo = NULL, T.MAT = NULL,
     warning ("vol$ref.pseudo and xyz.ref.pseudo are different.")
     return (NULL)
   }
-  pt_ <- cbind (matrix (xyz, ncol = 3),1)
+  pt_ <- cbind (xyz,1)
   ijk <-(pt_  %*% t(M.Tref) %*% t(solve(vol$xyz.from.ijk)))[,1:3]
   
   if(verbose){

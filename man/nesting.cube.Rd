@@ -4,10 +4,10 @@
 \alias{nesting.cube}
 \title{Restriction of a volume to a rectangular parallelepiped}
 \usage{
-nesting.cube(vol, pt.min, pt.max, alias = "", description = NULL)
+nesting.cube(obj, pt.min, pt.max, alias = "", description = NULL, ...)
 }
 \arguments{
-\item{vol}{"volume" class object.}
+\item{obj}{object of class volume or mesh.}
 
 \item{pt.min}{minimum x, y, z coordinates of the rectangular parallelepiped vertex.}
 
@@ -16,7 +16,9 @@ nesting.cube(vol, pt.min, pt.max, alias = "", description = NULL)
 \item{alias}{Character string, \code{$alias} of the created object.}
 
 \item{description}{Character string, describing the the created object. If
-the \code{description = NULL} (default value), it will be set to \code{vol$description}.}
+the \code{description = NULL} (default value), it will be set to \code{obj$description}.}
+
+\item{...}{Additional arguments \code{vol} (depracated), replaced by \code{obj}.}
 }
 \value{
 Returns a "volume" class object, in which 3D volume is restricted

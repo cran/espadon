@@ -10,7 +10,7 @@
 #' of variations in counts.
 #' @param MC.col Character string, a valid palette with 4 colours corresponding to 
 #' 100%, 95%, 50% and median of MC data.
-#' @param ... Arguments xlab, ylab, xlim, ylim, main, type, col, lwd, lty and log
+#' @param ... Additional arguments xlab, ylab, xlim, ylim, main, type, col, lwd, lty and log
 #' managed by the \link[base]{plot} function.
 #' @seealso \link[espadon]{display.dV_dx}.
 #' @return Returns a plot of the counts included in \code{histo}, with its median, 

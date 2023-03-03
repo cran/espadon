@@ -10,6 +10,7 @@
 #' @return Returns a "dvh" class object. This is a list including:
 #' \itemize{ 
 #' \item \code{$patient}: set to \code{histo$patient}.
+#' \item \code{$patient.name}: set to \code{histo$patient.name}.
 #' \item \code{$patient.bd}: set to \code{histo$patient.bd}.
 #' \item \code{$patient.sex}: set to \code{histo$patient.sex}.
 #' \item \code{$file.basename}: set to "".
@@ -64,19 +65,20 @@ histo.DVH  <- function (histo, alias = "",
     return (NULL)
   }
   
-  dbin <- (histo$breaks[2:length(histo$breaks)]-histo$breaks[1:(length(histo$breaks)-1)])
+  dbin <- diff(histo$breaks)
 
   dvh <- list ()
   
   dvh$patient <- histo$patient
+  dvh$patient.name <- histo$patient.name
   dvh$patient.bd <- histo$patient.bd
   dvh$patient.sex <- histo$patient.sex
   
   dvh$file.basename <- ""
   dvh$file.dirname <- ""
-  dvh$object.name <- ""
+  dvh$object.name <- alias
   dvh$object.alias <- alias
-  
+ 
   dvh$frame.of.reference <- histo$frame.of.reference
   dvh$ref.pseudo <- histo$ref.pseudo
   dvh$modality <- "dvh"
@@ -100,5 +102,6 @@ histo.DVH  <- function (histo, alias = "",
     dvh$MC.dxyz <- histo$MC.dxyz
   }
   class(dvh) <- "dvh"
-  return (dvh)
+  if (alias=="") return (dvh)
+  return(.set.ref.obj(dvh,list(histo)))
 }

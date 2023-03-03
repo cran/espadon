@@ -30,6 +30,7 @@
 
 vol.oversampling <- function(vol, fact.ijk = 2, alias = "", description = NULL){
   
+
   if (!is (vol, "volume")) stop ("vol should be a volume class object.")
   if (is.null(vol$vol3D.data)) stop ("empty vol$vol3D.data.")
   
@@ -52,9 +53,9 @@ vol.oversampling <- function(vol, fact.ijk = 2, alias = "", description = NULL){
   new.n.ijk[f] <- (new.n.ijk[f]-1)*fact.ijk[f] + 1
   back.vol <- vol.create(n.ijk = new.n.ijk, dxyz=new.dxyz, pt000 = vol_$xyz0[1,], ref.pseudo = "rcp")
   if (is.null(description))  description <- paste("oversampling", vol$description)
-  vol_ <- vol.regrid(vol_,back.vol, alias = vol$object.alias, 
-                     description = description)
-  
+  vol_ <- vol.regrid(vol_,back.vol, alias = "", description = description)
+  vol_$object.alias <- vol$object.alias
+  vol_$object.info <- vol$object.info
   vol.in.new.ref (vol_,new.ref.pseudo=vol$ref.pseudo, T.MAT =  t.mat,
                   alias = alias,
                   description = description)                  

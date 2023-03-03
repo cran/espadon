@@ -53,6 +53,7 @@ ref.srctodest.add <- function (src.ref, dest.ref, TM = diag (4), T.MAT = NULL){
   if (is.null(T.MAT)){
     r <-(list (ref.info = ref.info,
                reg.info = list (patient = data.frame(patient=character(0),
+                                                     patient.name=character(0),
                                                      patient.bd=character(0),
                                                      patient.sex=character(0)),
                                 file = db.file),

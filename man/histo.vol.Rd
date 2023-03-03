@@ -25,6 +25,7 @@ are not taken into account.}
 Returns a "histo" class object. This is a list including:
 \itemize{
 \item \code{$patient}: set to \code{vol$patient}.
+\item \code{$patient.name}: set to \code{vol$patient.name}.
 \item \code{$patient.bd}: set to \code{vol$patient.bd}.
 \item \code{$patient.sex}: set to \code{vol$patient.sex}.
 \item \code{$file.basename}: set to "".

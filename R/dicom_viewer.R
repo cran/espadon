@@ -1,7 +1,8 @@
 #' DICOM content viewer
 #' @description the \code{dicom.viewer} function displays the data of a DICOM file.
-#' @param dcm String Character representing the list of the full names of a 
-#' DICOM file or raw data vector of this DICOM file.  
+#' @param dcm espadon object of class "volume", "rtplan", "struct" provided by
+#'  DICOM files, or DICOM filename, or Rdcm filename, or raw vector  representing 
+#'  the binary extraction of the DICOM file.  
 #' @param txt.sep String. Used if \code{as.txt = TRUE}. Separator of the tag value elements.
 #' @param txt.length Positive integer. Used if \code{as.txt = TRUE}. Maximum number 
 #' of letters in the representation of the TAG value.
@@ -9,8 +10,11 @@
 #' whose structure it must keep. This dataframe is used to parse DICOM files.
 
 #' @param height,width Height and width in pixel of the DICOM table.
+#' @param ... Additional argument \code{dicom.browser} when previously calculated by 
+#' \link[espadon]{dicom.browser}. Argument \code{nb} or \code{dicom.nb} representing the 
+#' number of DICOM file, when \code{dcm} contains multiple DICOM files.
 #' @return Returns the DICOM file description in a browser window.
-#' @seealso \link[espadon]{xlsx.from.dcm}, \link[espadon]{dicom.parser} 
+#' @seealso \link[espadon]{xlsx.from.dcm}, \link[espadon]{xlsx.from.Rdcm}, \link[espadon]{dicom.parser} 
 #' @examples
 #' if (interactive ()) dicom.viewer (toy.dicom.raw ())
 
@@ -25,13 +29,13 @@
 
 dicom.viewer <- function(dcm, txt.sep = "\\", txt.length = 100, 
                          tag.dictionary = dicom.tag.dictionary (),
-                         height = 600, width = 900){
+                         height = 600, width = 900,...){
   fontsize <- 12  
   name <- ""
-  if (!is.raw(dcm) & !is.character(dcm[100])) return(NULL)
-  if (is.character(dcm)){ 
-    name <- basename(dcm[1])
-    dcm <- dicom.raw.data.loader (dcm[1]) }
+  # if (!is.raw(dcm) & !is.character(dcm[100])) return(NULL)
+  # if (is.character(dcm)){ 
+  #   name <- basename(dcm[1])
+  #   dcm <- dicom.raw.data.loader (dcm[1]) }
   
   df <- dicom.parser(dcm, try.parse = TRUE,  tag.dictionary = tag.dictionary,
                      txt.sep = txt.sep, txt.length=txt.length)

@@ -9,6 +9,7 @@ dicom.to.Rdcm.converter(
   dcm.files,
   pat.dest.dir,
   update = TRUE,
+  ignore.duplicates = FALSE,
   tag.dictionary = dicom.tag.dictionary(),
   verbose = TRUE
 )
@@ -21,8 +22,10 @@ the DICOM files of the same patient, or its directory.}
 directory, which will contain files converted \pkg{espadon}.}
 
 \item{update}{Boolean. If set to \code{TRUE}, and if \code{pat.dest.dir}
-contains previously converted files, these files will keep the same \pkg{espadon}
-reference frame affectation.}
+contains previously converted files, these files are updated,even if they are
+duplicated. They retain the same \pkg{espadon} reference frame assignment.}
+
+\item{ignore.duplicates}{Boolean. If \code{TRUE}, the function ignores duplicated objects.}
 
 \item{tag.dictionary}{Dataframe, by default equal to
 \link[espadon]{dicom.tag.dictionary},

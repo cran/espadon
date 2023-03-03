@@ -14,6 +14,7 @@ rt.chi.index(
   analysis.th = 0.05,
   local = FALSE,
   local.th = 0.3,
+  project.to.isocenter = TRUE,
   alias = "",
   description = NULL
 )
@@ -40,6 +41,10 @@ is computed, and a local Chi index otherwise.}
 
 \item{local.th}{Positive number, in percent. Local threshold, only used if
 \code{local = TRUE}. See Details.}
+
+\item{project.to.isocenter}{Boolean. If \code{TRUE}, and if \code{vol} and
+\code{vol.ref} are of modality "rtimage", the size of the pixels is corrected
+to correspond to that found if the sensor was at the isocenter.}
 
 \item{alias}{Character string, \code{$object.alias} of the created object.}
 
@@ -90,8 +95,9 @@ D.ref <- patient$rtdose[[1]]
 # by 3 pixels on the x axis
 D.meas <- vol.copy (D.ref, alias = "measured_dose")
 D.meas$vol3D.data[1:(D.meas$n.ijk[1] - 3) ,,] <- D.ref$vol3D.data[4:D.ref$n.ijk[1],,] 
-
-abs_chi <- rt.chi.index (D.meas, D.ref, delta.r = 6)  
+D.max <- as.numeric(quantile(as.numeric(D.ref$vol3D.data), 
+                             probs = 99.99/100, na.rm = TRUE))
+abs_chi <- rt.chi.index (D.meas, D.ref, vol.max = D.max, delta.r = 6)  
 abs_chi$chi.info  
 
 # Display chi index at isocenter

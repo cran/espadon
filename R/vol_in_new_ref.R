@@ -41,8 +41,7 @@ vol.in.new.ref <- function (vol, new.ref.pseudo, T.MAT, alias="",description=NUL
   }
   M <- get.rigid.M (T.MAT, vol$ref.pseudo, new.ref.pseudo)
   if (is.null (M)) return (NULL)
-  V <- vol.copy (vol, alias = alias,
-                 description = description)
+  V <- vol.copy (vol, alias = alias, description = description)
   V$ref.pseudo <- new.ref.pseudo
   V$frame.of.reference <- T.MAT$ref.info[T.MAT$ref.info$ref.pseudo==new.ref.pseudo, ]$ref
   V$xyz.from.ijk <- M %*% vol$xyz.from.ijk
@@ -51,8 +50,8 @@ vol.in.new.ref <- function (vol, new.ref.pseudo, T.MAT, alias="",description=NUL
   V$orientation <- c(V$xyz.from.ijk[1:3, 1]/vol$dxyz[1], V$xyz.from.ijk[1:3, 2]/vol$dxyz[2])
   
   if (!is.null(V$beam.source)){
-    V$beam.source <- matrix((as.matrix(cbind(V$beam.source,1)) %*% t(M))[,1:3], 
-                            byrow=TRUE, ncol=3)
+    V$beam.source <- round(matrix((as.matrix(cbind(V$beam.source,1)) %*% t(M))[,1:3], 
+                            byrow=TRUE, ncol=3),6)
     V$beam.orientation <- as.numeric((M %*% cbind (c(V$beam.orientation[1:3],0),
                                                    c(V$beam.orientation[4:6],0)))[1:3,])
   }

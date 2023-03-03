@@ -6,7 +6,7 @@
 #' @param T.MAT "t.mat" class object, created by \link[espadon]{load.patient.from.Rdcm} or
 #' \link[espadon]{load.T.MAT}. If \code{T.MAT} is \code{NULL}, \code{mesh} must be 
 #' displayed in \code{display.ref = mesh$ref.pseudo}.
-#' @param ... Arguments passed to \link[rgl]{shade3d} as \code{color}, \code{specular}, 
+#' @param ... Additional arguments passed to \link[rgl]{shade3d} as \code{color}, \code{specular}, 
 #' \code{alpha}...
 #' @return Returns a display of \code{mesh} in the current \pkg{RGL} window if it exists, 
 #' in a new window otherwise.

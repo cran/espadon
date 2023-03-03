@@ -4,28 +4,43 @@
 \alias{get.extreme.pt}
 \title{Coordinates of the extreme points}
 \usage{
-get.extreme.pt(vol, ref.pseudo = vol$ref.pseudo, T.MAT = NULL)
+get.extreme.pt(obj, ref.pseudo = obj$ref.pseudo, T.MAT = NULL, ...)
 }
 \arguments{
-\item{vol}{"volume" class object.}
+\item{obj}{object of class volume or struct or mesh.}
 
 \item{ref.pseudo}{Pseudonym of the frame of reference in which you want the
 coordinates.}
 
 \item{T.MAT}{"t.mat" class object, created by
 \link[espadon]{load.patient.from.Rdcm} or \link[espadon]{load.T.MAT}. If
-\code{T.MAT = NULL}, \code{ref.pseudo} must be equal to \code{vol$ref.pseudo}.}
+\code{T.MAT = NULL}, \code{ref.pseudo} must be equal to \code{obj$ref.pseudo}.}
+
+\item{...}{Additional arguments \code{min}, \code{max} if \code{obj} is of class 'volume'.
+Arguments \code{roi.name}, \code{roi.sname}, \code{roi.idx} if \code{obj} is
+of class 'struct'. Arguments \code{vol} (depracated), replaced by \code{obj}.}
 }
 \value{
-Returns a dataframe of min and max columns, and x, y and z rows,
-representing the coordinates of the 2 extreme voxels of the rectangular
-parallelepiped.
+Returns a dataframe of min and max columns, and x, y and z rows.
+
+\itemize{
+\item If \code{obj} is a member of the class volume: the returned dataframe
+represents the coordinates of the 2 extreme points of the rectangle parallelepiped
+including all the voxels such as \code{min <= obj$vol3D.data <= max},
+if the arguments \code{min} or \code{max} exist, or including all the voxels otherwise.
+\item If \code{obj} is a member of the class struct: the returned dataframe
+represents the coordinates of the 2 extreme points of the rectangular parallelepiped
+including all the selected RoI.
+\item if \code{obj} is a member of the class mesh: the returned dataframe
+represents the coordinates of the 2 extreme points of the rectangular parallelepiped
+including all the mesh.
+}
 }
 \description{
 The \code{get.extreme.pt} function returns the x, y, z coordinates
 of the 2 extreme voxels of the rectangular parallelepiped, containing
-the volume \code{vol}. These coordinates are given in the \code{ref.pseudo}
-frame of reference .
+the objet \code{obj} of class volume, struct or mesh. These coordinates are given in
+the \code{ref.pseudo} frame of reference.
 }
 \examples{
 # loading of toy-patient objects
@@ -34,4 +49,5 @@ CT <- patient$ct[[1]]
 
 # xyz extreme coordinate
 get.extreme.pt (CT)
+get.extreme.pt (CT, min = 0)
 }

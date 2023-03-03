@@ -44,12 +44,27 @@ mesh.in.new.ref <- function (mesh, new.ref.pseudo, T.MAT, alias="",description=N
     }}
   M <- get.rigid.M (T.MAT, mesh$ref.pseudo, new.ref.pseudo)
   if (is.null (M)) stop ("cannot display anything in selected frame of reference.")
+  mesh_ <- list(object.alias=mesh$object.alias,object.info=mesh$object.info)
+  class(mesh_) <- "mesh"
   
   mesh$ref.pseudo <- new.ref.pseudo
   mesh$frame.of.reference <- T.MAT$ref.info[T.MAT$ref.info$ref.pseudo==new.ref.pseudo, ]$ref
   if (!is.null(description)) mesh$description  <- description
+  mesh$file.basename <- ""
+  mesh$file.dirname <- ""
+  mesh$object.name <- alias
   mesh$object.alias <- alias
-  mesh$mesh$vb <- M %*% mesh$mesh$vb
+  mesh$object.info <- NULL
+  mesh$ref.object.alias <- NULL
+  mesh$ref.object.info <- NULL
   
-  return (mesh)
+  mesh$mesh$vb <- M %*% mesh$mesh$vb
+  if (!is.null(mesh$mesh$normals)) {
+    mesh$mesh$normals[4,] <- 0
+    mesh$mesh$normals <- M %*% mesh$mesh$normals
+    mesh$mesh$normals[4,] <- 1
+  }
+  # return (mesh)
+  if (alias=="") return(mesh)
+  return(.set.ref.obj(mesh,list(mesh_)))
 }

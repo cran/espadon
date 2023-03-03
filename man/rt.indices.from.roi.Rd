@@ -29,6 +29,7 @@ rt.indices.from.roi(
   gradient.indices = c("GI.ratio.50", "mGI"),
   D.xpc = NULL,
   D.xcc = NULL,
+  V.xpc = NULL,
   V.xGy = NULL,
   verbose = TRUE
 )
@@ -93,6 +94,9 @@ is requested.}
 \item{D.xcc}{Vector of the volume in \mjeqn{cm^3}{ascii}, for which the dose
 coverage is requested.}
 
+\item{V.xpc}{Vector of the percentage of the reference dose, received by the volume to be
+calculated.}
+
 \item{V.xGy}{Vector of the minimum dose in Gy, received by the volume to be
 calculated.}
 
@@ -122,6 +126,8 @@ healthy structures, and isodoses:
 \code{presc.dose} Gy,
 \item the requested \code{V.xGy} (\mjeqn{cm^3}{ascii}):
 volumes receiving at least x Gy.
+\item the requested \code{V.xpc} (\mjeqn{cm^3}{ascii})
+Volume receiving at least x\% of the reference dose.
 }
 
 \mjeqn{-~conformity}{ascii} : dataframe containing, if requested,

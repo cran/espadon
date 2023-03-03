@@ -31,7 +31,7 @@ of MC DVH variations.}
 \item{MC.col}{Character string, a valid palette with 4 colours corresponding
 to 100\%, 95\%, 50\% and median of MC data.}
 
-\item{...}{Arguments xlab, ylab, xlim, ylim, main, type, col, lwd, lty and log
+\item{...}{Additional arguments xlab, ylab, xlim, ylim, main, type, col, lwd, lty and log
 managed by the \link[base]{plot} function.}
 }
 \value{

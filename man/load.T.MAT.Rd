@@ -3,12 +3,17 @@
 \name{load.T.MAT}
 \alias{load.T.MAT}
 \title{Loading of information about transfer matrices between frames of reference of
-patient objects.}
+patient Rdcm objects.}
 \usage{
-load.T.MAT(dirname)
+load.T.MAT(dirname, upgrade.to.latest.version = FALSE)
 }
 \arguments{
-\item{dirname}{Directory containing a patient's DICOM objects.}
+\item{dirname}{Full paths of the directories of a single patient, or vector
+of full.path of Rdcm.files.}
+
+\item{upgrade.to.latest.version}{Boolean. If \code{TRUE}, the function attempts
+to upgrade to the latest version, parsing the DICOM data. It may take longer
+to load the data. Consider using the \link[espadon]{Rdcm.upgrade} function.}
 }
 \value{
 Returns a "t.mat" class object. It is a list that includes :

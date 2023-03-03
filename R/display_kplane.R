@@ -91,16 +91,7 @@ display.kplane <- function(vol, k = vol$k.idx [ceiling (length (vol$k.idx) / 2)]
   }
       
   k <- k[1]
-  if (!(k %in% vol$k.idx)) stop ("k plane does not exist.")
   
-  
-  
-  # i.idx <- which((c(1, 0, 0, 0) %*% t(vol$xyz.from.ijk))!=0)[1]
-  # j.idx <- which((c(0, 1, 0, 0) %*% t(vol$xyz.from.ijk))!=0)[1]
-  # k.idx <- which((c(0, 0, k, 1) %*% t(vol$xyz.from.ijk))!=0)[1]
-  
-  map <- aperm (as.matrix(vol$vol3D.data[,,which(k==vol$k.idx)], 
-                          dim =vol$n.ijk[1:2] ), perm=c (2, 1))
   
   rg.min <- pt00 - 0.5 * dxy[1:2] 
   rg.max <- pt00 + (vol$n.ijk[1:2]-0.5) * dxy[1:2] 
@@ -132,40 +123,49 @@ display.kplane <- function(vol, k = vol$k.idx [ceiling (length (vol$k.idx) / 2)]
     rect(par("usr")[1], par("usr")[3], par("usr")[2], par("usr")[4], col = bg)
     
   }
-  if (!is.na(vol$min.pixel) & !is.na(vol$max.pixel)) {
-    # abs.left <- rg.min[1] - dxy[1]/2.0
-    # ord.bottom <- rg.min[2] - dxy[2]/2.0
-    # abs.right <- rg.max[1] + dxy[1]/2.0
-    # ord.top <- rg.max[2] + dxy[2]/2.0
-    abs.left <- rg.min[1] 
-    ord.bottom <- rg.min[2] 
-    abs.right <- rg.max[1]
-    ord.top <- rg.max[2]
+  
+  if (!(k %in% vol$k.idx)){ 
+    text((par("usr")[1]+par("usr")[2])/2, (par("usr")[3]+par("usr")[4])/2, "missing plane",
+         col= "red", cex = 2)
+  } else {
+    map <- aperm (as.matrix(vol$vol3D.data[,,which(k==vol$k.idx)], 
+                            dim =vol$n.ijk[1:2] ), perm=c (2, 1))
     
-    imin <- as.numeric(vol$min.pixel) #r[1]
-    imax <- as.numeric(vol$max.pixel) #r[2]
-    
-    if (!is.null(breaks) & !any(is.na(breaks))) {
-      if (length(breaks)!= length (col) + 1) stop("length(breaks) must be equal to length(col) + 1.")
+    if (!is.na(vol$min.pixel) & !is.na(vol$max.pixel)) {
+      # abs.left <- rg.min[1] - dxy[1]/2.0
+      # ord.bottom <- rg.min[2] - dxy[2]/2.0
+      # abs.right <- rg.max[1] + dxy[1]/2.0
+      # ord.top <- rg.max[2] + dxy[2]/2.0
+      abs.left <- rg.min[1] 
+      ord.bottom <- rg.min[2] 
+      abs.right <- rg.max[1]
+      ord.top <- rg.max[2]
       
-    } else {
-      breaks <- .pixel.scale (imin,imax,length(col))
-    }
-    
-    
-    if(!any(is.na(breaks))){
-      if (!sat.transp) {
-        # map[which(map <= imin)] <- imin
-        # map[which(map >= imax)] <- imax
-        breaks[1] <- imin - 1
-        breaks[length (breaks)] <- imax + 1
+      imin <- as.numeric(vol$min.pixel) #r[1]
+      imax <- as.numeric(vol$max.pixel) #r[2]
+      
+      if (!is.null(breaks) & !any(is.na(breaks))) {
+        if (length(breaks)!= length (col) + 1) stop("length(breaks) must be equal to length(col) + 1.")
+        
+      } else {
+        breaks <- .pixel.scale (imin,imax,length(col))
       }
-      map.layer <- matrix (col[cut (as.numeric (map),breaks, include.lowest=TRUE)], nrow=nrow(map))
       
-      rasterImage (map.layer[nrow(map.layer):1,], xleft = abs.left, ybottom = ord.bottom,
-                   xright = abs.right, ytop = ord.top, interpolate = interpolate)
+      
+      if(!any(is.na(breaks))){
+        if (!sat.transp) {
+          # map[which(map <= imin)] <- imin
+          # map[which(map >= imax)] <- imax
+          breaks[1] <- imin - 1
+          breaks[length (breaks)] <- imax + 1
+        }
+        map.layer <- matrix (col[cut (as.numeric (map),breaks, include.lowest=TRUE)], nrow=nrow(map))
+        
+        rasterImage (map.layer[nrow(map.layer):1,], xleft = abs.left, ybottom = ord.bottom,
+                     xright = abs.right, ytop = ord.top, interpolate = interpolate)
+      }
+      
     }
-    
   }
   
 }

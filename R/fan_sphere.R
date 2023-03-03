@@ -34,9 +34,9 @@
 #' @references \strong{\[1\]} \insertRef{Deserno}{espadon}
 #' @export
 #' @examples
-#' regular.fan <- fan.sphere (angle = 10)
+#' regular.fan <- fan.sphere (angle = 30)
 #' head (regular.fan$xyz)
-#' random.fan <- fan.sphere (angle = 10, method = "random")
+#' random.fan <- fan.sphere (angle = 30, method = "random")
 #' head (random.fan$xyz)
 #' library (rgl)
 #' open3d ()
@@ -56,6 +56,7 @@ fan.sphere <- function (angle = 1, method = c("regular","random"),
   
   fan_ <- list()
   fan_$patient <- ""
+  fan_$patient.name <- ""
   fan_$patient.bd <- ""
   fan_$patient.sex <- ""
   

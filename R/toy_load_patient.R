@@ -51,7 +51,8 @@ toy.load.patient <- function (
   rt.date <- "20220610"
   
   mr.offset <- c(50,100,-70)
-  pat.pseudo = "PM"
+  pat.name <- "PMan"
+  pat.pseudo <- "PM"
   bd <- "19800522"
   sex <- c("M","O")
   if (!rtstruct.f) sex <- sex[1]
@@ -66,7 +67,7 @@ toy.load.patient <- function (
 
   
   pat <- list()
-  pat$patient <- data.frame(PIN = pat.pseudo, birth.date=bd, sex=sex)
+  pat$patient <- data.frame(PIN = pat.pseudo, name =pat.name,  birth.date=bd, sex=sex)
   pat$pat.pseudo <- pat$patient[1,1]
   pat$description <- data.frame(PIN=character(0), modality=character(0),
                                 obj=character(0), ref.pseudo = character(0),
@@ -76,30 +77,25 @@ toy.load.patient <- function (
   ########
   pat$T.MAT = list ()
   pat$T.MAT$ref.info <- list ()
-  pat$T.MAT$ref.info <- data.frame(ref.pseudo=character(0), ref=character(0),
-                                   patient=character(0),patient.bd=character(0),
-                                   patient.sex=character(0))
+  pat$T.MAT$ref.info <- data.frame(ref.pseudo=character(0), ref=character(0))
   
   if (any (!is.na(match(modality, c("ct", "rtdose")))))
     pat$T.MAT$ref.info <- rbind(pat$T.MAT$ref.info, 
                                 data.frame(ref.pseudo = "ref1", 
-                                           ref = "2.16.840.1.114357.58485835081.6250.1551498438.0.3",
-                                           patient = pat.pseudo, patient.bd=bd, patient.sex=sex[1]))
+                                           ref = "2.16.840.1.114357.58485835081.6250.1551498438.0.3"))
   if (any (!is.na(match(modality, c("rtstruct")))))
     pat$T.MAT$ref.info <- rbind(pat$T.MAT$ref.info, 
                                 data.frame(ref.pseudo = "ref1", 
-                                           ref = "2.16.840.1.114357.58485835081.6250.1551498438.0.3",
-                                           patient = pat.pseudo, patient.bd=bd, patient.sex=sex[2]))
+                                           ref = "2.16.840.1.114357.58485835081.6250.1551498438.0.3"))
   
   
   if (any (!is.na(match(modality, c("mr")))))
     pat$T.MAT$ref.info <- rbind(pat$T.MAT$ref.info, 
                                 data.frame(ref.pseudo = "ref2", 
-                                           ref = "2.16.840.1.114357.58094835081.62350.15267498438.0.1",
-                                           patient = pat.pseudo, patient.bd=bd, patient.sex=sex[1]))
-  
+                                           ref = "2.16.840.1.114357.58094835081.62350.15267498438.0.1"))
+  pat$T.MAT$ref.info <- unique(pat$T.MAT$ref.info[,1:2])
   pat$T.MAT$reg.info <- list()
-  pat$T.MAT$reg.info$patient <- data.frame(patient = pat.pseudo, patient.bd=bd, patient.sex=sex)
+  pat$T.MAT$reg.info$patient <- data.frame(patient = pat.pseudo, patient.name = pat.name, patient.bd=bd, patient.sex=sex)
   pat$T.MAT$reg.info$file <- data.frame(t = "ref1<-ref2", path="local")
   
   pat$T.MAT$matrix.description <- data.frame(t=character(0), src=character(0),
@@ -578,6 +574,7 @@ toy.load.patient <- function (
                   number = 1)
     
     pat$ct[[1]]$patient <- pat$pat.pseudo
+	pat$ct[[1]]$patient.name <- pat$patient$name[1]
     pat$ct[[1]]$patient.bd <- pat$patient$birth.date[1]
     pat$ct[[1]]$patient.sex <- pat$patient$sex[1]
     pat$ct[[1]]$object.name <- n
@@ -622,6 +619,7 @@ toy.load.patient <- function (
                                                         description =  "IMRT|PTV52")
         
       pat$rtdose[[1]]$patient <- pat$pat.pseudo
+	  pat$rtdose[[1]]$patient.name <- pat$patient$name[1]
       pat$rtdose[[1]]$patient.bd <- pat$patient$birth.date[1]
       pat$rtdose[[1]]$patient.sex <- pat$patient$sex[1]
       pat$rtdose[[1]]$object.name <- n
@@ -685,6 +683,7 @@ toy.load.patient <- function (
     pat$mr[[1]]$min.pixel <- b$min.pixel
     
     pat$mr[[1]]$patient <- pat$pat.pseudo
+	pat$mr[[1]]$patient.name <- pat$patient$name[1]
     pat$mr[[1]]$patient.bd <- pat$patient$birth.date[1]
     pat$mr[[1]]$patient.sex <- pat$patient$sex[1]
     pat$mr[[1]]$object.name <- n
@@ -702,6 +701,7 @@ toy.load.patient <- function (
     n <-paste0(rt.date,"_ref1_do",ref1.do.nb[3],"_rtstruct")
     pat$rtstruct[[paste0(n,1)]] <- S
     pat$rtstruct[[1]]$patient <- pat$pat.pseudo
+	pat$rtstruct[[1]]$patient.name <- pat$patient$name[1]
     pat$rtstruct[[1]]$patient.bd <- pat$patient$birth.date[1]
     pat$rtstruct[[1]]$patient.sex <- pat$patient$sex[2]
     pat$rtstruct[[1]]$object.name <- n
@@ -709,7 +709,7 @@ toy.load.patient <- function (
     if (rtdose.f) pat$rtdose[[1]]$ref.object.alias <- pat$rtstruct[[1]]$object.alias
     if (ct.f) pat$rtstruct[[1]]$ref.object.alias <- pat$ct[[1]]$object.alias
     pat$rtstruct[[1]]$description <- "TREATMENT|RS: Approved Structure Set"
-    pat$rtstruct[[1]]$ref.object.name <-  ct.n
+    pat$rtstruct[[1]]$ref.object.alias <-  ct.n
     pat$rtstruct[[1]]$approval.status <- "APPROVED"
     pat$rtstruct[[1]]$study.date = rt.date
     pat$rtstruct[[1]]$creation.date = rt.date

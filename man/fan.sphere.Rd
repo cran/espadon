@@ -58,9 +58,9 @@ are randomly equidistributed at the specified angle.
 }
 }
 \examples{
-regular.fan <- fan.sphere (angle = 10)
+regular.fan <- fan.sphere (angle = 30)
 head (regular.fan$xyz)
-random.fan <- fan.sphere (angle = 10, method = "random")
+random.fan <- fan.sphere (angle = 30, method = "random")
 head (random.fan$xyz)
 library (rgl)
 open3d ()

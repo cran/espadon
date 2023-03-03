@@ -15,6 +15,7 @@ reference is to be deleted.}
 \value{
 Returns a "t.mat" class object, which no longer contains transfer
 matrices from or to the ref.pseudo \code{ref.name}.
+\link[espadon]{ref.cutplane.add}.
 }
 \description{
 The \code{ref.remove} function removes the management of a frame
@@ -33,7 +34,4 @@ str(local.Tmat)
 # Removal of  "ref1_60"
 local.Tmat <- ref.remove (ref.name =  "ref1_60", T.MAT = local.Tmat)
 str(local.Tmat)
-}
-\seealso{
-\link[espadon]{ref.add}
 }

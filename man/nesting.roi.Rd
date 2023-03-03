@@ -5,7 +5,7 @@
 \title{Restrict volume to RoI}
 \usage{
 nesting.roi(
-  vol,
+  obj,
   struct,
   roi.name = NULL,
   roi.sname = NULL,
@@ -14,11 +14,12 @@ nesting.roi(
   vol.restrict = FALSE,
   T.MAT = NULL,
   alias = "",
-  description = NULL
+  description = NULL,
+  ...
 )
 }
 \arguments{
-\item{vol}{"volume" class object}
+\item{obj}{object of class volume or mesh.}
 
 \item{struct}{"struct" class object.}
 
@@ -43,12 +44,15 @@ exceed the initial volume.}
 \item{T.MAT}{"t.mat" class object, created by
 \link[espadon]{load.patient.from.dicom}, \link[espadon]{load.patient.from.Rdcm}
 or \link[espadon]{load.T.MAT}. If \code{T.MAT = NULL}, \code{struct$ref.pseudo}
-must be equal to \code{vol$ref.pseudo}.}
+must be equal to \code{obj$ref.pseudo}.}
 
 \item{alias}{Character string, \code{$alias} of the created object.}
 
 \item{description}{Character string, describing the the created object.
-If \code{description = NULL}, it will be that of the \code{vol}.}
+If \code{description = NULL}, it will be that of the \code{obj}, plus
+"restricted to" the selected RoI.}
+
+\item{...}{Additional arguments \code{vol} (depracated), replaced by \code{obj}.}
 }
 \value{
 Returns a "volume" class object, in which 3D volume is limited to the
