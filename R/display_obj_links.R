@@ -406,10 +406,9 @@ display.obj.links <- function (pat, obj.selected = NULL, exclusion = NULL,
       reg <- unlist(strsplit(pat$description.by.reg[[idx]]$object.alias,";"))
       ma <- match( obj.alias, reg)
       vect <- !is.na(ma) 
-      same.ref[vect,] <- matrix (rep(vect,sum(vect)), ncol = length(vect), byrow=T)
+      same.ref[vect,] <- matrix (rep(vect,sum(vect)), ncol = length(vect), byrow=T)*idx
     }
-    same.ref <- as.numeric(apply(same.ref,2,sum))
-    same.ref <- match(same.ref,unique(sort(same.ref, decreasing = TRUE)))
+    same.ref <- as.numeric(apply(unique(same.ref),2,sum))
     
     network <- graph_from_adjacency_matrix(M)
     network.same.obj <- graph_from_adjacency_matrix(M.same.obj)

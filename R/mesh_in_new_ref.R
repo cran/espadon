@@ -31,7 +31,7 @@
 #' @export
 #' @importFrom methods is
 
-mesh.in.new.ref <- function (mesh, new.ref.pseudo, T.MAT, alias="",description=NULL) {
+mesh.in.new.ref <- function (mesh, new.ref.pseudo, T.MAT = NULL, alias="",description=NULL) {
   
   if (!is (mesh, "mesh")){
     warning ("mesh should be a mesh class object.")
@@ -43,7 +43,7 @@ mesh.in.new.ref <- function (mesh, new.ref.pseudo, T.MAT, alias="",description=N
       return (NULL)
     }}
   M <- get.rigid.M (T.MAT, mesh$ref.pseudo, new.ref.pseudo)
-  if (is.null (M)) stop ("cannot display anything in selected frame of reference.")
+  if (is.null (M)) return (NULL)
   mesh_ <- list(object.alias=mesh$object.alias,object.info=mesh$object.info)
   class(mesh_) <- "mesh"
   

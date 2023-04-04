@@ -46,6 +46,7 @@ struct.in.new.ref <- function (struct, new.ref.pseudo, T.MAT, alias="") {
   }
   M <- get.rigid.M (T.MAT, struct$ref.pseudo, new.ref.pseudo)
   if (is.null (M)) return (NULL)
+  if (is.null (M)) stop ("no transfer matrix between ref.pseudo")
   struct_ <- list(object.alias=struct$object.alias,object.info=struct$object.info)
   class(struct_) <- "struct"
   struct$file.basename <- ""

@@ -10,7 +10,8 @@
   
   repeat {
     M <- cbind (L$x, L$y)
-    M <- rbind (M, M[1, ])
+    if (!all(M[1, ] == M[nrow(M), ])) M <- rbind (M, M[1, ])
+    
     l <- sapply (1:(nrow(M) - 1), function (i) sqrt ((M[i, 1] - M[i+1, 1])^2 + (M[i, 2] - M[i+1, 2])^2))
     L.tot <- c (0, cumsum (l))
     L.1 <- L.tot / max (L.tot)

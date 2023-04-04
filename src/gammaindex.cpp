@@ -78,49 +78,52 @@ std::vector <double> gammaindex (
             (new_j >= 0) && (new_i < n_ijk[0]) && (new_i >= 0)){
           new_volindex =  new_i + (new_j * n_ijk[0]) +  (new_k * le_map);
           
-          diff_D1 = vol3D[new_volindex] - vol3D_ref[volindex];
-          
-          
-          if (signD*diff_D1>=0) {
-            
-            // on interpole :
-            for (jdx2 = 0; jdx2 < around_idx; jdx2++){
-              //on regarde les voxels adjacents
-              new_k2 = new_k+ball_k[jdx2]; 
-              new_j2 = new_j+ball_j[jdx2]; 
-              new_i2 = new_i+ball_i[jdx2];
+          if (!ISNAN(vol3D[new_volindex])){
+           
+            diff_D1 = vol3D[new_volindex] - vol3D_ref[volindex];
+            if (signD*diff_D1>=0) {
               
-              if ((new_k2 < n_ijk[2]) && (new_k2 >= 0) && (new_j2 < n_ijk[1]) &&
-                  (new_j2 >= 0) && (new_i2 < n_ijk[0]) && (new_i2 >= 0)){
+              // on interpole :
+              for (jdx2 = 0; jdx2 < around_idx; jdx2++){
+                //on regarde les voxels adjacents
+                new_k2 = new_k+ball_k[jdx2]; 
+                new_j2 = new_j+ball_j[jdx2]; 
+                new_i2 = new_i+ball_i[jdx2];
                 
-                new_volindex2 =  new_i2 + (new_j2 * n_ijk[0]) +  (new_k2 * le_map); 
-                d2 = sqrt(pow(rel_dxyz[0] *( new_i2-i),2) + pow(rel_dxyz[1] * (new_j2-j),2) +
-                  pow(rel_dxyz[2] * (new_k2-k),2)); // distance au point ref ... formule OK car que dans le référentiel machine
-                
-                diff_D2 = vol3D[new_volindex2] - vol3D_ref[volindex];
-                
-                if ((signD*diff_D2<0) &&  (d2<distance[jdx])) {
-                  slope = ((diff_D2-diff_D1)/th)/(d2 -distance[jdx]);
-                  a = (1+pow(slope,2));
-                  b = (diff_D1/th) - (slope*distance[jdx]);  
-                  dmin = -b * slope / a;
-                  dum =sqrt(pow(b,2)/(1+pow(slope,2)));
-                  if((dum < gamma[index]) && (dmin <= distance[jdx]) && (dmin> d2)) {
-                    gamma[index] =dum; curr_distance = distance[jdx]; find_gamma = true;
+                if ((new_k2 < n_ijk[2]) && (new_k2 >= 0) && (new_j2 < n_ijk[1]) &&
+                    (new_j2 >= 0) && (new_i2 < n_ijk[0]) && (new_i2 >= 0)){
+                  
+                  new_volindex2 =  new_i2 + (new_j2 * n_ijk[0]) +  (new_k2 * le_map); 
+                  
+                  if (!ISNAN(vol3D[new_volindex2])){
+                    d2 = sqrt(pow(rel_dxyz[0] *( new_i2-i),2) + pow(rel_dxyz[1] * (new_j2-j),2) +
+                      pow(rel_dxyz[2] * (new_k2-k),2)); // distance au point ref ... formule OK car que dans le référentiel machine
+                    
+                    diff_D2 = vol3D[new_volindex2] - vol3D_ref[volindex];
+                    
+                    if ((signD*diff_D2<0) &&  (d2<distance[jdx])) {
+                      slope = ((diff_D2-diff_D1)/th)/(d2 -distance[jdx]);
+                      a = (1+pow(slope,2));
+                      b = (diff_D1/th) - (slope*distance[jdx]);  
+                      dmin = -b * slope / a;
+                      dum =sqrt(pow(b,2)/(1+pow(slope,2)));
+                      if((dum < gamma[index]) && (dmin <= distance[jdx]) && (dmin> d2)) {
+                        gamma[index] =dum; curr_distance = distance[jdx]; find_gamma = true;
+                      }
+                    }
                   }
                 }
               }
+              
+            } else if (!find_gamma){
+              dum = sqrt(pow(diff_D1 /th,2) + pow(distance[jdx],2));
+              if (dum <=gamma[index]){
+                gamma[index]  = dum;
+                curr_distance = distance[jdx];
+              } else if (distance [jdx] > gamma[index]) break;
+              
             }
-            
-          }else if (!find_gamma){
-            dum = sqrt(pow(diff_D1 /th,2) + pow(distance[jdx],2));
-            if (dum <=gamma[index]){
-              gamma[index]  = dum;
-              curr_distance = distance[jdx];
-            } else if (distance [jdx] > gamma[index]) break;
-            
           }
-          
         }
       }
     }

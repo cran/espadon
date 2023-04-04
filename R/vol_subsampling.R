@@ -74,6 +74,15 @@ vol.subsampling <- function(vol, fact.ijk= 2, interpolate = TRUE, alias = "", de
   back.vol$object.alias <- vol$object.alias
   back.vol$object.info <- vol$object.info
   
+  if (vol$modality == "binary") back.vol$vol3D.data <- back.vol$vol3D.data >= 0.5
+  if (any(!is.na(back.vol$vol3D.data))) {
+    back.vol$min.pixel <- min(back.vol$vol3D.data, na.rm = TRUE)
+    back.vol$max.pixel <- max(back.vol$vol3D.data, na.rm = TRUE)
+  } else {
+    back.vol$min.pixel <- NA
+    back.vol$max.pixel <- NA
+  }
+  
   new.vol <- vol.in.new.ref (back.vol,new.ref.pseudo=vol$ref.pseudo, T.MAT =  t.mat,
                              alias = alias,
                              description = description) 

@@ -9,6 +9,7 @@ study.deployment(
   deploy.dir,
   design.matrix = matrix(TRUE, nrow = length(dir(pats.dir)), ncol = 1, dimnames =
     list(basename(dir(pats.dir)), "expert_1")),
+  pid.prefix = "",
   white.list = c("instance", "reference"),
   black.list = c("frame of reference", "class"),
   tag.dictionary = dicom.tag.dictionary()
@@ -22,6 +23,10 @@ stored, each containing the DICOM files to be duplicated.}
 duplicated.}
 
 \item{design.matrix}{Boolean matrix. See Details.}
+
+\item{pid.prefix}{string vector of length 1 or string vector of length
+\code{ncol(design.matrix)}, representing the prefix added to the new
+unique identifier of the deployed patient (tag (0010,0020)).}
 
 \item{white.list}{Names vector, representing a part of the DICOM tag name
 UI value representation, other than those defined by the DICOM
@@ -42,7 +47,7 @@ directories defined by the \code{design.matrix} column names. Each expert
 directory contains as many patient directories as defined by the
 \code{design.matrix} row names. All patients will be independent of each other.
 The new created patients have the pats.dir as name, and expert name as first
-name, and an independent patient ID.
+name, and an independent patient ID, with prefix \code{pid.prefix}.
 }
 \description{
 The \code{study.deployment} function duplicates DICOM data from
@@ -75,7 +80,8 @@ design.matrix <- matrix(TRUE, nrow = length (dir (pats.dir)), ncol=3,
                         dimnames = list (basename (dir (pats.dir)),
                                          c("Dr Quinn","Dr Who","Dr House")))
 design.matrix
-study.deployment (pats.dir, deploy.dir, design.matrix)
+study.deployment (pats.dir, deploy.dir, design.matrix, 
+                 pid.prefix = c("zz_", "yy_", "xx_"))
 
 # check result
 list.files(deploy.dir, recursive = TRUE)

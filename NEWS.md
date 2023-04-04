@@ -1,3 +1,33 @@
+# SIGNIFICANT USER-VISIBLE CHANGES IN espadon 1.3.2
+
+## BUG FIXES:
+
+* gamma.index() : the 1 voxel shift has been corrected
+
+* rtplan loading : correction of the calculation of the returned value 
+$beam.orientation for functions that can load an object of class rtplan, like 
+load.data.from.patient(),load.patient.from.Rdcm(), load.obj.from.dicom(), 
+load.obj.from.Rdcm() and load.obj.data().
+
+* struct loading : All functions that can load an object of class struct, like 
+load.data.from.patient(),load.patient.from.Rdcm(), load.obj.from.dicom(), 
+load.obj.from.Rdcm() and load.obj.data() now calculate better the thickness 
+between planes of the contours when the link with the reference imaging object 
+has not been done. When this link is made, the thickness is now equal to the 
+interplan of the reference object. This change impacts the calculation of volumes 
+from contours, of DVH, and rt.indices.from.roi.
+
+* vol.oversampling() and vol.subsampling() handles now the modality 'binary' 
+
+* display.obj.links() : correction of the color management of the different
+frames of reference.
+
+## ENHANCEMENTS
+
+* study.deployment() have now pid.prefix to add a prefix to the patient ID 
+generated in the deployed DICOM files (tag(0010,0020)).
+
+
 # SIGNIFICANT USER-VISIBLE CHANGES IN espadon 1.3.1
 
 ## NEW FEATURES:

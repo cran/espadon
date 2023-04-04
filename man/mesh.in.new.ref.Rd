@@ -4,7 +4,13 @@
 \alias{mesh.in.new.ref}
 \title{Change of frame of reference of a mesh}
 \usage{
-mesh.in.new.ref(mesh, new.ref.pseudo, T.MAT, alias = "", description = NULL)
+mesh.in.new.ref(
+  mesh,
+  new.ref.pseudo,
+  T.MAT = NULL,
+  alias = "",
+  description = NULL
+)
 }
 \arguments{
 \item{mesh}{"volume" class object.}

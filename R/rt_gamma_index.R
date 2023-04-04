@@ -250,7 +250,7 @@ rt.gamma.index <- function (vol, vol.ref,
 
   gammaindex$vol3D.data[inspect.idx] <- .gammaindex(vol3D = as.vector(vol_o$vol3D.data),
                                                     vol3D_ref = as.vector(vol.ref_o$vol3D.data), 
-                                                    inspect_idx = inspect.idx_o,
+                                                    inspect_idx = inspect.idx_o - 1,
                                                     n_ijk = vol.ref_o$n.ijk, 
                                                     rel_dxyz= vol.ref_o$dxyz/delta.r,
                                                     ball_i= as.vector(ball.ijk[,1]),

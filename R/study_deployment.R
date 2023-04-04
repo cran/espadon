@@ -8,6 +8,9 @@
 #' @param deploy.dir Name of the directory where all patient files will be 
 #' duplicated.
 #' @param design.matrix Boolean matrix. See Details.
+#' @param pid.prefix string vector of length 1 or string vector of length 
+#' \code{ncol(design.matrix)}, representing the prefix added to the new 
+#' unique identifier of the deployed patient (tag (0010,0020)).
 #' @param white.list Names vector, representing a part of the DICOM tag name
 #' UI value representation, other than those defined by the DICOM 
 #' standard, which will be modified. By default, the UID name containing 'instance' 
@@ -30,7 +33,7 @@
 #' directory contains as many patient directories as defined by the 
 #' \code{design.matrix} row names. All patients will be independent of each other.
 #' The new created patients have the pats.dir as name, and expert name as first 
-#' name, and an independent patient ID.
+#' name, and an independent patient ID, with prefix \code{pid.prefix}.
 #' @examples
 #' # First, save toy.dicom.raw () raw data to a temporary file/pats.dir/toy_PM 
 #' # for testing.
@@ -49,7 +52,8 @@
 #'                         dimnames = list (basename (dir (pats.dir)),
 #'                                          c("Dr Quinn","Dr Who","Dr House")))
 #' design.matrix
-#' study.deployment (pats.dir, deploy.dir, design.matrix)
+#' study.deployment (pats.dir, deploy.dir, design.matrix, 
+#'                  pid.prefix = c("zz_", "yy_", "xx_"))
 #' 
 #' # check result
 #' list.files(deploy.dir, recursive = TRUE)
@@ -63,6 +67,7 @@
 study.deployment <- function (pats.dir, deploy.dir, 
                               design.matrix = matrix(TRUE,nrow = length (dir(pats.dir)), ncol=1,
                                                      dimnames = list(basename (dir (pats.dir)),"expert_1")),
+                              pid.prefix = "",
                               white.list = c("instance","reference"), 
                               black.list = c("frame of reference","class"), 
                               tag.dictionary = dicom.tag.dictionary()) {
@@ -79,6 +84,7 @@ study.deployment <- function (pats.dir, deploy.dir,
   pat.list <- row.names (design.matrix)
   expert.list <- colnames (design.matrix) 
   
+
   if (any(!m)){ 
     pat.list <- pat.list[!m]
     design.matrix <-  as.matrix(do.call(rbind.data.frame,lapply(rownames(design.matrix)[!m], function(r) design.matrix[r,])))
@@ -96,6 +102,11 @@ study.deployment <- function (pats.dir, deploy.dir,
   pat.ID.matrix[] <- ""
   pat.ID.matrix[f] <-pat.ID
   
+  if ((ncol(design.matrix)!= length (pid.prefix)) & length (pid.prefix)!=1) 
+    stop ("pid.prefix length must be a vector of length 1 or a vector of length ncol(design.matrix)")
+  
+  if (length (pid.prefix)==1) pid.prefix <- rep(pid.prefix, ncol(design.matrix))
+    
   pat.pseudo.matrix <- matrix(as.character(sapply(row.names(design.matrix), function(rn) 
     paste(rn,colnames(design.matrix), sep = "^"))), ncol = ncol(design.matrix), byrow = TRUE)
   pat.pseudo.matrix[!f] <- ""
@@ -174,7 +185,7 @@ study.deployment <- function (pats.dir, deploy.dir,
             e <- expert.list[el.idx]
             e.p.dir <- file.path (deploy.dir, e, p)
             if (nchar(pat.pseudo) != 0) {
-              value.vect <- c (pat.pseudo, pat.ID, 
+              value.vect <- c (pat.pseudo, paste0(pid.prefix[el.idx], gsub("^999","",pat.ID)), 
                                gsub("patID",pat.ID,mapping.UID.df$New[m.UID]))
               
               dr <- dicom.set.tag.value (dicom.raw.data, tag=tag.vect, 

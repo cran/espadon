@@ -56,6 +56,16 @@ vol.oversampling <- function(vol, fact.ijk = 2, alias = "", description = NULL){
   vol_ <- vol.regrid(vol_,back.vol, alias = "", description = description)
   vol_$object.alias <- vol$object.alias
   vol_$object.info <- vol$object.info
+  
+  if (vol$modality == "binary") vol_$vol3D.data <- vol_$vol3D.data >= 0.5
+  if (any(!is.na(vol_$vol3D.data))) {
+    vol_$min.pixel <- min(vol_$vol3D.data, na.rm = TRUE)
+    vol_$max.pixel <- max(vol_$vol3D.data, na.rm = TRUE)
+  } else {
+    vol_$min.pixel <- NA
+    vol_$max.pixel <- NA
+  }
+  
   vol.in.new.ref (vol_,new.ref.pseudo=vol$ref.pseudo, T.MAT =  t.mat,
                   alias = alias,
                   description = description)                  

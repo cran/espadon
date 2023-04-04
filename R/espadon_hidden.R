@@ -13,7 +13,7 @@
 
 #####################################################################################
 .espadon.version <- function(){
-  return ("1.3.1")
+  return ("1.3.2")
 }
 
 #####################################################################################
@@ -1214,7 +1214,7 @@
       
       L <- lapply(1:nrow(info),function(j){
         beam.source <- beam.source0
-        beam.orientation <- matrix(c(1,0,0,0,0,-1,0,0), ncol=2)
+        beam.orientation <- matrix(c(1,0,0,0, 0,-1,0,0, 0,0,-1,0), ncol=3)
         beam.direction <-c(0,0,-1,0) 
         beam.isocenter <- c(0,0,0,1)  
         if (!is.null(info$snout.position)) if(info$snout.position[j]!="NA") 
@@ -1237,7 +1237,7 @@
         M <- solve(M)
         beam.source <-(beam.source %*%  t(M)) [,1:3]
         beam.source[abs(beam.source) < 1e-10] <- 0
-        beam.orientation <- as.numeric((M  %*% beam.orientation)[1:3,])
+        beam.orientation <- as.numeric((M  %*% beam.orientation)[1:3,1:2])
         beam.orientation[abs(beam.orientation) < 1e-10] <- 0
         beam.direction <-(beam.direction %*%  t(M)) [,1:3]
         beam.direction[abs(beam.direction) < 1e-10] <- 0
@@ -2677,11 +2677,19 @@
     }
     
     #rectification thickness
-    nb.plane<- as.numeric(sapply( L$roi.data,function(l) length(l)))
-    z <- unique(sort(sapply(L$roi.data[[which.max(nb.plane)]], function(l_) median(l_$pt[,3]))))
-    if (length(z)>1) {
-      L$thickness <- unique(diff(z))
-      L$thickness <- tryCatch(round(median(L$thickness [L$thickness >1e-2]),3), error = function (e) 0)
+    if (L$thickness==0){
+      nb.plane<- as.numeric(sapply( L$roi.data,function(l) length(l)))
+      
+      z.diff <- lapply(L$roi.data[which(nb.plane>=2)],function(l) {
+        z <- sort(unique(sapply(l,function(l_) median(l_$pt[,3]))))
+        if(length(z)<2) return(NULL)
+        unique(sort(diff (z)))
+      })
+      z.diff <- z.diff[!sapply(z.diff,is.null)]
+      if (length(z.diff)>0) {
+        L$thickness <- unlist(z.diff)
+        L$thickness <- tryCatch(round(median(L$thickness [L$thickness >1e-2]),3), error = function (e) 0)
+      }
     }
     
     # on vérifie si les contours sont des contours inscrits ou non.
