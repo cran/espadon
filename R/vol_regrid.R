@@ -101,7 +101,13 @@ vol.regrid <- function (vol, back.vol, T.MAT = NULL, interpolate = TRUE, alias =
   idx.c <- which(apply(abs(vol$xyz.from.ijk[1:3,1:3]),2,sum)==0) 
   idx.r <-  which(apply(abs(vol$xyz.from.ijk[1:3,1:3]),1,sum)==0)
   
-  
+  cube.idx <- vol$cube.idx
+  cube.idx[1,c(1,4,5,8)] <- cube.idx[1,c(1,4,5,8)] - 0.5
+  cube.idx[1,c(2,3,6,7)] <- cube.idx[1,c(2,3,6,7)] + 0.5
+  cube.idx[2,c(1,2,5,6)] <- cube.idx[2,c(1,2,5,6)] - 0.5
+  cube.idx[2,c(3,4,7,8)] <- cube.idx[2,c(3,4,7,8)] + 0.5
+  cube.idx[3,1:4] <- cube.idx[3,1:4] - 0.5
+  cube.idx[3,5:8] <- cube.idx[3,5:8] + 0.5
   if (length(idx.c)>0) {
     if(abs(vol$xyz.from.ijk[idx.r,4]-M.xyz.from.new[idx.r,4])>1e-6) return(new.vol)
     u <- vol$xyz.from.ijk 
@@ -110,12 +116,12 @@ vol.regrid <- function (vol, back.vol, T.MAT = NULL, interpolate = TRUE, alias =
     
     M.xyz.from.new[which(apply(abs(M.xyz.from.new[1:3,1:3]),2,sum)==0) ,
                    which(apply(abs(M.xyz.from.new[1:3,1:3]),1,sum)==0)]<- 1
-    new.cube.idx <- solve(M.xyz.from.new )%*% vol$xyz.from.ijk %*% vol$cube.idx
+    new.cube.idx <- solve(M.xyz.from.new )%*% vol$xyz.from.ijk %*% cube.idx
     new.cube.idx[abs(new.cube.idx) < 1.0e-6] <- 0
 
   } else {
     M.old.from.new <- solve (vol$xyz.from.ijk) %*% M.Tref %*% new.vol$xyz.from.ijk
-    new.cube.idx <- solve (M.old.from.new) %*% vol$cube.idx
+    new.cube.idx <- solve (M.old.from.new) %*% cube.idx
     new.cube.idx[abs(new.cube.idx) < 1.0e-6] <- 0
   }
   

@@ -4,7 +4,13 @@
 \alias{vol.oversampling}
 \title{Oversampling a volume}
 \usage{
-vol.oversampling(vol, fact.ijk = 2, alias = "", description = NULL)
+vol.oversampling(
+  vol,
+  fact.ijk = 2,
+  alias = "",
+  interpolate = TRUE,
+  description = NULL
+)
 }
 \arguments{
 \item{vol}{"volume" class object.}
@@ -12,6 +18,10 @@ vol.oversampling(vol, fact.ijk = 2, alias = "", description = NULL)
 \item{fact.ijk}{Strictly positive integer, or a vector of 3 strictly positive integers.}
 
 \item{alias}{Character string, \code{$alias} of the created object.}
+
+\item{interpolate}{Boolean, default to \code{TRUE}. If \code{interpolate = TRUE}, a
+trilinear interpolation of the value of the voxels, relative to the values of
+adjacent voxels, is performed.}
 
 \item{description}{Character string, describing the the created object.
 If \code{description = NULL}, it will be \code{paste ("oversampling" ,vol$description)}.}
@@ -32,7 +42,7 @@ vol$max.pixel <- prod(vol$n.ijk)
 vol$min.pixel <- 1
 mid <- as.numeric (apply (get.extreme.pt (vol), 1, mean))
  
-vol_os <- vol.oversampling (vol, fact.ijk= 2)
+vol_os <- vol.oversampling (vol, fact.ijk= c(2,2,1))
 mid_os <- as.numeric (apply (get.extreme.pt (vol_os), 1, mean))
 
 display.plane(vol,interpolate = FALSE, view.coord = mid[3], 

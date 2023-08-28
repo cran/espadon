@@ -3,6 +3,9 @@
 #' object.
 #' @param vol "volume" class object.
 #' @param fact.ijk Strictly positive integer, or a vector of 3 strictly positive integers.
+#' @param interpolate Boolean, default to \code{TRUE}. If \code{interpolate = TRUE}, a 
+#' trilinear interpolation of the value of the voxels, relative to the values of 
+#' adjacent voxels, is performed.
 #' @param alias Character string, \code{$alias} of the created object.
 #' @param description Character string, describing the the created object. 
 #' If \code{description = NULL}, it will be \code{paste ("oversampling" ,vol$description)}.
@@ -17,7 +20,7 @@
 #' vol$min.pixel <- 1
 #' mid <- as.numeric (apply (get.extreme.pt (vol), 1, mean))
 #'  
-#' vol_os <- vol.oversampling (vol, fact.ijk= 2)
+#' vol_os <- vol.oversampling (vol, fact.ijk= c(2,2,1))
 #' mid_os <- as.numeric (apply (get.extreme.pt (vol_os), 1, mean))
 #' 
 #' display.plane(vol,interpolate = FALSE, view.coord = mid[3], 
@@ -28,19 +31,23 @@
 #' points (mid_os[1], mid_os[2], pch=16, col="red")
 #' @export  
 
-vol.oversampling <- function(vol, fact.ijk = 2, alias = "", description = NULL){
+vol.oversampling <- function(vol, fact.ijk = 2, alias = "",interpolate = TRUE, description = NULL){
   
 
   if (!is (vol, "volume")) stop ("vol should be a volume class object.")
   if (is.null(vol$vol3D.data)) stop ("empty vol$vol3D.data.")
+ 
   
   if (!((length(fact.ijk)==1 | length(fact.ijk)==3)) | 
       !all(abs(as.integer(fact.ijk)) == fact.ijk) | 
-      any(fact.ijk < 0)){
+      any(fact.ijk <= 0)){
     stop ("fact.ijk must be a strictly positive integer or a vector of 3 strictly positive integers")
   }
-  
+ 
+    
   if (length(fact.ijk)==1) fact.ijk <- rep (fact.ijk, 3)
+  if (all(fact.ijk==c(1,1,1))) return (vol)
+  
   
   t.mat <- ref.cutplane.add(vol, ref.cutplane = "rcp" )
   vol_ <- vol.in.new.ref(vol, new.ref.pseudo="rcp", T.MAT =  t.mat)
@@ -48,12 +55,16 @@ vol.oversampling <- function(vol, fact.ijk = 2, alias = "", description = NULL){
   true.n.ijk <- c(vol$n.ijk[1:2], vol$k.idx[vol$n.ijk[3]]-vol$k.idx[1]+1)
   new.n.ijk <- true.n.ijk
   
-  f <- new.n.ijk>1
+  # f <- new.n.ijk>1
+  f <- rep(TRUE,3)
   new.dxyz[f] <-  new.dxyz[f]/fact.ijk[f]
-  new.n.ijk[f] <- (new.n.ijk[f]-1)*fact.ijk[f] + 1
-  back.vol <- vol.create(n.ijk = new.n.ijk, dxyz=new.dxyz, pt000 = vol_$xyz0[1,], ref.pseudo = "rcp")
+  new.n.ijk[f] <- new.n.ijk[f] * fact.ijk[f] #(new.n.ijk[f]-1)*fact.ijk[f] + 1
+  #back.vol <- vol.create(n.ijk = new.n.ijk, dxyz=new.dxyz, pt000 = vol_$xyz0[1,], ref.pseudo = "rcp")
+  back.vol <- vol.create(n.ijk = new.n.ijk, dxyz=new.dxyz, 
+                         pt000 = vol_$xyz0[1,]+(new.dxyz-vol_$dxyz)/2, ref.pseudo = "rcp")
+  
   if (is.null(description))  description <- paste("oversampling", vol$description)
-  vol_ <- vol.regrid(vol_,back.vol, alias = "", description = description)
+  vol_ <- vol.regrid(vol_,back.vol, alias = "", interpolate=interpolate, description = description)
   vol_$object.alias <- vol$object.alias
   vol_$object.info <- vol$object.info
   

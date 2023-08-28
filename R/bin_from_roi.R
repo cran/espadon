@@ -70,6 +70,7 @@
 #' }
 #' @export
 #' @importFrom methods is
+## @importFrom sp point.in.polygon
 bin.from.roi <- function (vol, struct, roi.name = NULL, roi.sname = NULL, roi.idx = NULL,
                           T.MAT = NULL,  within = TRUE, alias = "", description = NULL){
  
@@ -99,6 +100,14 @@ bin.from.roi <- function (vol, struct, roi.name = NULL, roi.sname = NULL, roi.id
     warning ("no plane in roi.")
     return (NULL)
   }
+  
+  type <- castlow.str(sapply(struct$roi.data[[roi.idx]],function(l) l$type))
+  if (!all(type =="closedplanar" | type =="point")){
+    warning ("roi is not closed_planar or point")
+    return (NULL)
+  }
+    
+  
   if(is.null(vol$vol3D.data)){
     warning ("empty vol$vol3D.data.")
     return (NULL)
@@ -177,7 +186,7 @@ bin.from.roi <- function (vol, struct, roi.name = NULL, roi.sname = NULL, roi.id
       } else {
         plan.z.flag <- coords[,3]==z
       }
-      keep <- point.in.polygon (coords[plan.z.flag, 1], coords[plan.z.flag, 2],
+      keep <- .pt.in.polygon (coords[plan.z.flag, 1], coords[plan.z.flag, 2],
                                 l.data[[j]]$pt[,1],
                                 l.data[[j]]$pt[,2]) > 0.5
       # plot(l.data[[j]]$pt$x, l.data[[j]]$pt$y, type="l", lwd=2, xlim=range(coords[plan.z.flag,1]), ylim=range(coords[plan.z.flag,2]))

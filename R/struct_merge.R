@@ -72,7 +72,12 @@ struct.merge <- function (ref.struct, add.struct, roi.name = NULL,
     
     add.struct$roi.data <- add.struct$roi.data[roi2]
     add.struct$roi.info <-  add.struct$roi.info[roi2, ]
-    
+    add.struct$roi.obs <-  add.struct$roi.obs[roi2, ]
+    if (suffix!=""){ 
+      add.struct$roi.info$name <- paste(add.struct$roi.info$name, suffix, sep="-")
+      add.struct$roi.obs$label <- paste(add.struct$roi.obs$name, suffix, sep="-")
+      add.struct$roi.info$roi.pseudo <- paste(add.struct$roi.info$roi.pseudo, suffix, sep="-")
+    }
     add.struct$nb.of.roi <- length (add.struct$roi.data)
     add.struct$file.basename <- ""
     add.struct$file.dirname <- ""
@@ -84,6 +89,8 @@ struct.merge <- function (ref.struct, add.struct, roi.name = NULL,
     add.struct$ref.object.info <- NULL
     if (!is.null(add.struct$error)) add.struct$error<-NULL
     add.struct$creation.date <- format(Sys.Date(), "%Y%m%d")
+    row.names(add.struct$roi.info) <- NULL
+    row.names(add.struct$roi.obs) <- NULL
     if (alias =="") return (add.struct)
     return(.set.ref.obj(add.struct,list(add.struct_)))
     
@@ -113,20 +120,25 @@ struct.merge <- function (ref.struct, add.struct, roi.name = NULL,
   }
   
   roi1 <- select.names (ref.struct$roi.info$roi.pseudo)
+  max.number <- max(as.numeric(ref.struct$roi.info$number))
   to.add <- add.struct$roi.info[roi2, ]
   to.add.m <- add.struct$roi.obs[roi2, ]
   
+  to.add$number <- as.character(as.numeric(to.add$number) + max.number)
+  to.add.m$roi.nb <- to.add$number
   if (suffix!=""){ 
     to.add$name <- paste(to.add$name, suffix, sep="-")
+    to.add.m$label <- paste(to.add.m$label, suffix, sep="-")
     to.add$roi.pseudo <- paste(to.add$roi.pseudo, suffix, sep="-")
   }
-  if (any (ref.struct$roi.info$RoI.pseudo[roi1] %in% to.add$roi.pseudo) |
+  if (any (ref.struct$roi.info$roi.pseudo[roi1] %in% to.add$roi.pseudo) |
       any (ref.struct$roi.info$name[roi1] %in% to.add$name))
     stop ("some RoI in ref.struct and add.struct share same name or roi.pseudo. Change suffix")
   
 
   ref.struct$roi.info <- rbind (ref.struct$roi.info, to.add)
   ref.struct$roi.obs <- rbind (ref.struct$roi.obs, to.add.m)
+  ref.struct$roi.obs$nb <- as.character((0:nrow( ref.struct$roi.obs))[-1])
   row.names(ref.struct$roi.info) <- NULL
   row.names(ref.struct$roi.obs) <- NULL
   

@@ -112,6 +112,18 @@ BEGIN_RCPP
     return rcpp_result_gen;
 END_RCPP
 }
+// isoclineC
+std::vector <int> isoclineC(std::vector <int> it1, std::vector <int> it2);
+RcppExport SEXP _espadon_isoclineC(SEXP it1SEXP, SEXP it2SEXP) {
+BEGIN_RCPP
+    Rcpp::RObject rcpp_result_gen;
+    Rcpp::RNGScope rcpp_rngScope_gen;
+    Rcpp::traits::input_parameter< std::vector <int> >::type it1(it1SEXP);
+    Rcpp::traits::input_parameter< std::vector <int> >::type it2(it2SEXP);
+    rcpp_result_gen = Rcpp::wrap(isoclineC(it1, it2));
+    return rcpp_result_gen;
+END_RCPP
+}
 // labelbrowser
 std::vector <unsigned int> labelbrowser(std::vector <bool> vol3D, std::vector  <unsigned int> n_ijk);
 RcppExport SEXP _espadon_labelbrowser(SEXP vol3DSEXP, SEXP n_ijkSEXP) {
@@ -121,6 +133,22 @@ BEGIN_RCPP
     Rcpp::traits::input_parameter< std::vector <bool> >::type vol3D(vol3DSEXP);
     Rcpp::traits::input_parameter< std::vector  <unsigned int> >::type n_ijk(n_ijkSEXP);
     rcpp_result_gen = Rcpp::wrap(labelbrowser(vol3D, n_ijk));
+    return rcpp_result_gen;
+END_RCPP
+}
+// mdcC
+std::vector <double> mdcC(std::vector <double> vol3Dref, std::vector <int> n_ijk, std::vector <double> dxyz, std::vector <int> Testi, std::vector <int> Testj, std::vector <int> Testk);
+RcppExport SEXP _espadon_mdcC(SEXP vol3DrefSEXP, SEXP n_ijkSEXP, SEXP dxyzSEXP, SEXP TestiSEXP, SEXP TestjSEXP, SEXP TestkSEXP) {
+BEGIN_RCPP
+    Rcpp::RObject rcpp_result_gen;
+    Rcpp::RNGScope rcpp_rngScope_gen;
+    Rcpp::traits::input_parameter< std::vector <double> >::type vol3Dref(vol3DrefSEXP);
+    Rcpp::traits::input_parameter< std::vector <int> >::type n_ijk(n_ijkSEXP);
+    Rcpp::traits::input_parameter< std::vector <double> >::type dxyz(dxyzSEXP);
+    Rcpp::traits::input_parameter< std::vector <int> >::type Testi(TestiSEXP);
+    Rcpp::traits::input_parameter< std::vector <int> >::type Testj(TestjSEXP);
+    Rcpp::traits::input_parameter< std::vector <int> >::type Testk(TestkSEXP);
+    rcpp_result_gen = Rcpp::wrap(mdcC(vol3Dref, n_ijk, dxyz, Testi, Testj, Testk));
     return rcpp_result_gen;
 END_RCPP
 }
@@ -177,6 +205,20 @@ BEGIN_RCPP
     return rcpp_result_gen;
 END_RCPP
 }
+// ptinpolygonC
+std::vector <int> ptinpolygonC(std::vector <double> point_x, std::vector <double> point_y, std::vector <double> pol_x, std::vector <double> pol_y);
+RcppExport SEXP _espadon_ptinpolygonC(SEXP point_xSEXP, SEXP point_ySEXP, SEXP pol_xSEXP, SEXP pol_ySEXP) {
+BEGIN_RCPP
+    Rcpp::RObject rcpp_result_gen;
+    Rcpp::RNGScope rcpp_rngScope_gen;
+    Rcpp::traits::input_parameter< std::vector <double> >::type point_x(point_xSEXP);
+    Rcpp::traits::input_parameter< std::vector <double> >::type point_y(point_ySEXP);
+    Rcpp::traits::input_parameter< std::vector <double> >::type pol_x(pol_xSEXP);
+    Rcpp::traits::input_parameter< std::vector <double> >::type pol_y(pol_ySEXP);
+    rcpp_result_gen = Rcpp::wrap(ptinpolygonC(point_x, point_y, pol_x, pol_y));
+    return rcpp_result_gen;
+END_RCPP
+}
 
 static const R_CallMethodDef CallEntries[] = {
     {"_espadon_dicombrowser", (DL_FUNC) &_espadon_dicombrowser, 7},
@@ -185,10 +227,13 @@ static const R_CallMethodDef CallEntries[] = {
     {"_espadon_gammaindex", (DL_FUNC) &_espadon_gammaindex, 14},
     {"_espadon_getijktfromindexC", (DL_FUNC) &_espadon_getijktfromindexC, 3},
     {"_espadon_getvaluefromijkC", (DL_FUNC) &_espadon_getvaluefromijkC, 8},
+    {"_espadon_isoclineC", (DL_FUNC) &_espadon_isoclineC, 2},
     {"_espadon_labelbrowser", (DL_FUNC) &_espadon_labelbrowser, 2},
+    {"_espadon_mdcC", (DL_FUNC) &_espadon_mdcC, 6},
     {"_espadon_mean_voxC", (DL_FUNC) &_espadon_mean_voxC, 5},
     {"_espadon_medianfilterC", (DL_FUNC) &_espadon_medianfilterC, 6},
     {"_espadon_meshinfront", (DL_FUNC) &_espadon_meshinfront, 12},
+    {"_espadon_ptinpolygonC", (DL_FUNC) &_espadon_ptinpolygonC, 4},
     {NULL, NULL, 0}
 };
 

@@ -67,8 +67,12 @@ ref.srctodest.add <- function (src.ref, dest.ref, TM = diag (4), T.MAT = NULL){
   if (!(dest.ref %in% T.MAT$ref.info$ref.pseudo)) stop ("dest.ref should be in T.MAT.")  
   
   
-  if (!is.null (T.MAT$matrix.list[[paste0 (dest.ref, "<-", src.ref)]])) 
-    stop (paste ("The link between", src.ref, "and", dest.ref, "already exists."))
+  if (!is.null (T.MAT$matrix.list[[paste0 (dest.ref, "<-", src.ref)]])) {
+    warning (paste ("The link between", src.ref, "and", dest.ref, "already exists, it remains unchanged.",
+                    "The link can be removed by deleting", src.ref, "or", dest.ref, 
+                    "in the T.MAT object, using the ref.remove function."))
+    return (T.MAT)
+  }
   
   
   ref.info <- T.MAT$ref.info

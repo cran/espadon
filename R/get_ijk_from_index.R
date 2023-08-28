@@ -26,7 +26,7 @@
 
 #' @export
 get.ijk.from.index <- function (idx, vol){
-  
+  if (length(idx)==0) return(NULL)
   return(.get.ijkt.from.index (idx, vol)[,1:3])
   
 }

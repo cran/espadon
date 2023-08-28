@@ -25,8 +25,16 @@
     .Call('_espadon_getvaluefromijkC', PACKAGE = 'espadon', vol3D, interpolate, i, j, k, k_idx, k_loc, n_ijk)
 }
 
+.isoclineC <- function(it1, it2) {
+    .Call('_espadon_isoclineC', PACKAGE = 'espadon', it1, it2)
+}
+
 .labelbrowser <- function(vol3D, n_ijk) {
     .Call('_espadon_labelbrowser', PACKAGE = 'espadon', vol3D, n_ijk)
+}
+
+.mdcC <- function(vol3Dref, n_ijk, dxyz, Testi, Testj, Testk) {
+    .Call('_espadon_mdcC', PACKAGE = 'espadon', vol3Dref, n_ijk, dxyz, Testi, Testj, Testk)
 }
 
 .mean_voxC <- function(vol3D, index, index_list, value_list, value_att_list) {
@@ -39,5 +47,9 @@
 
 .meshinfront <- function(pt_x, pt_y, pt_z, p2_x, p2_y, p2_z, u_x, u_y, u_z, n_A, n_B, n_C) {
     .Call('_espadon_meshinfront', PACKAGE = 'espadon', pt_x, pt_y, pt_z, p2_x, p2_y, p2_z, u_x, u_y, u_z, n_A, n_B, n_C)
+}
+
+.ptinpolygonC <- function(point_x, point_y, pol_x, pol_y) {
+    .Call('_espadon_ptinpolygonC', PACKAGE = 'espadon', point_x, point_y, pol_x, pol_y)
 }
 

@@ -42,6 +42,8 @@ vol.subsampling <- function(vol, fact.ijk= 2, interpolate = TRUE, alias = "", de
     stop ("fact.ijk must be a strictly positive integer or a vector of 3 strictly positive integers")
   }
   if (length(fact.ijk)==1) fact.ijk <- rep(fact.ijk,3)
+  if (all(fact.ijk==c(1,1,1))) return (vol)
+  
   t.mat <- ref.cutplane.add(vol, ref.cutplane = "rcp" )
   vol_ <- vol.in.new.ref(vol, new.ref.pseudo="rcp", T.MAT =  t.mat)
   new.dxyz <- vol_$dxyz

@@ -7,7 +7,7 @@
 mesh.from.bin(
   bin,
   alias = "",
-  tol = 1,
+  tol = min(bin$dxyz)/2,
   smooth.iteration = 10,
   smooth.type = c("taubin", "laplace", "HClaplace", "fujiLaplace", "angWeight",
     "surfPreserveLaplace"),
@@ -23,7 +23,8 @@ mesh.from.bin(
 \item{alias}{Character string, \code{$alias} of the mesh defining
 the \code{$alias} of the created object.}
 
-\item{tol}{Tolerance in mm, applied for mesh simplification. See \link[Rvcg]{vcgClean}.}
+\item{tol}{Tolerance in mm, applied for mesh simplification. See \link[Rvcg]{vcgClean}.
+The default value, equal to half the smallest voxel edge, limits meshing errors.}
 
 \item{smooth.iteration}{Number of iterations applied in the smoothing algorithm.
 See \link[Rvcg]{vcgSmooth}.}

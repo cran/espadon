@@ -13,7 +13,7 @@
 
 #####################################################################################
 .espadon.version <- function(){
-  return ("1.3.2")
+  return ("1.4.1")
 }
 
 #####################################################################################
@@ -444,9 +444,11 @@
     header$approval.status <-  tryCatch (data[[grep("^[(]300E,0002[)]$",name)]],error = function (e) "")
     
     header$number <- as.numeric(tryCatch (data[[grep("^[(]0020,0013[)]$",name)]],error = function (e) 1))
-    header$object.alias <- paste(object.info$outfilename, header$number, sep="")
+    
+    nb <- ifelse (is.null(header$number), rtimg.idx, header$number)
+    header$object.alias <- paste(object.info$outfilename, nb, sep="")
     if (Rdcm.mode) {
-      header$file.basename <- paste(object.info$outfilename, header$number, ".Rdcm", sep="")
+      header$file.basename <- paste(object.info$outfilename, nb, ".Rdcm", sep="")
     } else {
       header$file.basename <- sort(basename(filename))
       header$file.dirname <- unique(dirname(filename))
@@ -820,13 +822,15 @@
     header$approval.status <-  tryCatch (data[[grep("^[(]300E,0002[)]$",name)]],error = function (e) "")
     
     header$number <- as.numeric(tryCatch (data[[grep("^[(]0020,0013[)]$",name)]],error = function (e) 1))
+    nb <- ifelse (is.na(header$number), struct.idx, header$number)
     if (Rdcm.mode) {
-      header$file.basename <- paste(object.info$outfilename, header$number, ".Rdcm", sep="")
+        header$file.basename <- paste(object.info$outfilename, nb, ".Rdcm", sep="")
+        
     } else {
       header$file.basename <- sort(basename(filename))
       header$file.dirname <- unique(dirname(filename))
     }
-    header$object.alias <- paste(object.info$outfilename, header$number, sep="")
+    header$object.alias <- paste(object.info$outfilename, nb, sep="")
     
     
     header$nb.of.roi <- sum(grepl("^[(]3006,0020[)] item",name) & grepl("[(]3006,0026[)]$",name), na.rm=TRUE)
@@ -849,7 +853,7 @@
       idx.roi <- as.numeric(sapply(names(L_), function(l) unlist (strsplit (l,"[ ]|item"))[3]))
       
       flag.idx <- grep("[(]3006,0022[)]$", names (L_))
-      if (length (flag.idx)>0) header$roi.info$number[idx.roi[flag.idx]] <- as.character(unlist(L_[flag.idx]))
+      if (length (flag.idx)>0) header$roi.info$number[idx.roi[flag.idx]] <- trimws(as.character(unlist(L_[flag.idx])))
       
       flag.idx <- grep("[(]3006,0026[)]$", names (L_))
       if (length (flag.idx)) header$roi.info$name[idx.roi[flag.idx]] <- as.character(unlist(L_[flag.idx]))
@@ -2534,7 +2538,7 @@
 }
 #######################################################################################
 #' @importFrom stats median
-#' @importFrom sp point.in.polygon
+## @importFrom sp point.in.polygon
 .load.rtstruct <- function (Lobj, roi.nb = NULL, raw.data.list=NULL) {
   
   # Lobj <- load.Rdcm.raw.data (filename, data=TRUE)
@@ -2595,7 +2599,7 @@
     
   }
   
-  
+  L$roi.info$number <- trimws(L$roi.info$number)
   
   rm(dicomlist)
   if (is.null(Lobj$data))  return (L)
@@ -2670,34 +2674,38 @@
                                       byrow=FALSE, ncol=3, dimnames = list(NULL,c ("x","y","z"))),
                               stringsAsFactors = FALSE)
         
-        if (castlow.str (lpt$type) == "closedplanar")lpt$pt <- rbind(lpt$pt,lpt$pt[1,])
+        if (castlow.str (lpt$type) == "closedplanar") lpt$pt <- rbind(lpt$pt,lpt$pt[1,])
         
         return(lpt)
       })
     }
     
     #rectification thickness
-    if (L$thickness==0){
+  # (L$thickness==0)
       nb.plane<- as.numeric(sapply( L$roi.data,function(l) length(l)))
-      
+   
       z.diff <- lapply(L$roi.data[which(nb.plane>=2)],function(l) {
         z <- sort(unique(sapply(l,function(l_) median(l_$pt[,3]))))
         if(length(z)<2) return(NULL)
         unique(sort(diff (z)))
       })
       z.diff <- z.diff[!sapply(z.diff,is.null)]
+      
       if (length(z.diff)>0) {
-        L$thickness <- unlist(z.diff)
-        L$thickness <- tryCatch(round(median(L$thickness [L$thickness >1e-2]),3), error = function (e) 0)
+        thickness <- unlist(z.diff)
+        thickness <- tryCatch(round(median(thickness [thickness >1e-2]),3), error = function (e) 0)
       }
-    }
     
+    if ((abs(L$thickness - thickness)> 1e-6) & (L$thickness!=0))
+      warning(paste(L$object.alias, "has a thickness different from that of its reference object", 
+                    L$ref.object.alias, "of", L$thickness - thickness, "mm"), call. = FALSE)
+    L$thickness <- thickness
     # on vérifie si les contours sont des contours inscrits ou non.
     for (i in roi.used) {
       roi.all.z<- sapply(L$roi.data[[i]], function(li)  li$pt[1,3])
       if (length(roi.all.z)>0) {     
         kz <- rep(0,length(roi.all.z))
-        if (L$thickness>0) kz <- round((roi.all.z -roi.all.z[1])/L$thickness)
+        if (L$thickness!=0) kz <- round((roi.all.z -roi.all.z[1])/L$thickness)
         
         for (k.value in unique(kz)){
           same.k.roi <- which (kz ==k.value)
@@ -2707,8 +2715,9 @@
               roi.index.k <-same.k.roi[same.k.roi!=j]
               # if (length(roi.index.z)!=0) {
               r <- unique (sapply (roi.index.k, function (k) {
+                if ( castlow.str (L$roi.data[[i]][[k]]$type) != "closedplanar") return(NA)
                 ptk <- L$roi.data[[i]][[k]]$pt
-                keep <- point.in.polygon (ptj[ ,1], ptj[ ,2],
+                keep <- .pt.in.polygon (ptj[ ,1], ptj[ ,2],
                                               ptk[ ,1], ptk[ ,2]) > 0.5
                 return (ifelse (any(keep), k,NA))}))
               r <- r[!is.na (r)]
@@ -2954,32 +2963,42 @@
 
 ###############################################################################################
 
+# .display.select.struct.by.z <- function (struct, list.roi.idx, z, dz){
+#   new.struct <- lapply(struct$roi.info$roi.pseudo,function (r) return(NULL))
+#   names(new.struct) <- struct$roi.info$roi.pseudo
+#   for (roi.idx in list.roi.idx){
+#     if (length(struct$roi.data[[roi.idx]])!=0){
+#       cont.z <- round(sapply (struct$roi.data[[roi.idx]], function(co) co$pt$z[1]),3)
+#       concerned.z <- unique(cont.z)
+#       near.z <- concerned.z[which.min(abs(concerned.z-z))]
+#       
+#       if (near.z >= z-dz/2 && near.z < z+dz/2) {
+#         c.idx <- which(cont.z==near.z[1])
+#         new.struct[[roi.idx]] <-  lapply(1:length(c.idx), function (r) return(NULL))
+#         for (i in 1:length(c.idx)){
+#           new.struct[[roi.idx]][[i]] <- struct$roi.data[[roi.idx]][[c.idx[i]]]
+#           colnames (new.struct[[roi.idx]][[i]]$pt) <- c ("x", "y", "z")
+#         }
+#         
+#       }
+#     }
+#   }
+#   return(new.struct)
+# }
+###############################################################################################
+
 .display.select.struct.by.z <- function (struct, list.roi.idx, z, dz){
   new.struct <- lapply(struct$roi.info$roi.pseudo,function (r) return(NULL))
   names(new.struct) <- struct$roi.info$roi.pseudo
   for (roi.idx in list.roi.idx){
     if (length(struct$roi.data[[roi.idx]])!=0){
       cont.z <- round(sapply (struct$roi.data[[roi.idx]], function(co) co$pt$z[1]),3)
-      concerned.z <- unique(cont.z)
-      near.z <- concerned.z[which.min(abs(concerned.z-z))]
-      
-      if (near.z >= z-dz/2 && near.z < z+dz/2) {
-        c.idx <- which(cont.z==near.z[1])
-        new.struct[[roi.idx]] <-  lapply(1:length(c.idx), function (r) return(NULL))
-        for (i in 1:length(c.idx)){
-          new.struct[[roi.idx]][[i]] <- struct$roi.data[[roi.idx]][[c.idx[i]]]
-          colnames (new.struct[[roi.idx]][[i]]$pt) <- c ("x", "y", "z")
-        }
-        
-      }
-      # c.idx  <- which (sapply(cont.z, function(zc){zc >= z-dz/2 && zc < z+dz/2}))
-      # if (length(c.idx)>0){
-      #   new.struct[[roi.idx]] <-  lapply(1:length(c.idx), function (r) return(NULL))
-      #   for (i in 1:length(c.idx)){
-      #     new.struct[[roi.idx]][[i]] <- struct$roi.data[[roi.idx]][[c.idx[i]]]
-      #     colnames (new.struct[[roi.idx]][[i]]$pt) <- c ("abs", "ord", "map")
-      #   }
-      # }
+      type <- castlow.str(sapply (struct$roi.data[[roi.idx]], function(co) co$type))
+      planar <- sapply (struct$roi.data[[roi.idx]], function(co) length(unique(co$pt$z))==1)
+      f1 <- (cont.z >= z-dz/2 & cont.z < z+dz/2) & (type=="closedplanar" | type=="openplanar") & planar
+      f2 <- cont.z==z & type =="point"
+      c.idx <- sort(c(which(f1) ,  which(f2)))
+      new.struct[[roi.idx]] <-  lapply(c.idx, function (i) struct$roi.data[[roi.idx]][[i]])
     }
   }
   return(new.struct)
@@ -3362,3 +3381,37 @@
   db_
 }
 
+.pt.in.polygon <- function (point.x,point.y, pol.x, pol.y){
+
+  pol_le <- length(pol.x)
+  if (length(pol.y) != pol_le) stop("vectors pol.x and pol.y must have the same length")
+  if (length(point.y) != length(point.x)) stop("vectors point.x and point.y must have the same length")
+  
+  if (length(point.x) ==0 )  return (numeric(0))
+  if (length(pol.x) ==0 | length(pol.y) == 0)  stop("polygon coordinates not defined")
+  
+  result  <- rep(0, length(point.x))
+  
+  result  <- rep(0, length(point.x))
+  
+  if (pol_le == 1) {
+    result [point.x==pol.x & point.y==pol.y] <- 3
+    return(result)
+  }
+    
+  if ((pol.x[1]==pol.x[pol_le] & pol.y[1]==pol.y[pol_le])){ 
+    pol.x <- pol.x[-pol_le]
+    pol.y <- pol.y[-pol_le]
+  }
+  first <- order(pol.y,pol.x)[1]:length(pol.x)
+  pol.x <- c(pol.x[first], pol.x[-first], pol.x[first[1]])
+  pol.y <- c(pol.y[first], pol.y[-first], pol.y[first[1]])
+  
+  
+  rgx <- range(pol.x)
+  rgy <- range(pol.y)
+  f <- point.x>=rgx[1] & point.x<=rgx[2] & point.y>=rgy[1] & point.y<=rgy[2]
+  if (any(f)) result[f] = .ptinpolygonC(point.x[f],point.y[f], pol.x, pol.y)
+  return(result)
+
+}

@@ -3,13 +3,13 @@
 #' a unique RoI, defined by the contours of binary volume.
 #' @param vol "volume" class object, of binary modality.
 #' @param roi.name Character string, representing the name of created RoI.
+#' @param roi.nb Positive integer, representing the number of created RoI.
+#' @param roi.color Color of the created RoI, in hex code format ("#RRGGBB").
 #' @param roi.type Type of RoI, from among "", "EXTERNAL", "PTV", "CTV", "GTV", 
 #' "TREATED_VOLUME", "IRRAD_VOLUME", "OAR", "BOLUS", "AVOIDANCE", "ORGAN", "MARKER", 
 #' "REGISTRATION", "ISOCENTER", "CONTRAST_AGENT", "CAVITY", "BRACHY_CHANNEL", 
 #' "BRACHY_ACCESSORY", "BRACHY_SRC_APP", "BRACHY_CHNL_SHLD", "SUPPORT", "FIXATION", 
 #' "DOSE_REGION","CONTROL" and "DOSE_MEASUREMENT"
-#' @param roi.nb Positive integer, representing the number of created RoI.
-#' @param roi.color Color of the created RoI, in hex code format ("#RRGGBB").
 #' @param external.only Boolean. If \code{TRUE}, only external contours are kept.
 #' @param alias Character string, \code{$alias} of the created object.
 #' @param description Character string, describing the created object.
@@ -28,7 +28,7 @@
 #' S.sphere <- struct.from.bin (b.sphere, roi.name = "sphere", external.only = TRUE)
 #' str (S.sphere$roi.info)                 
 
-#' @importFrom sp point.in.polygon
+## @importFrom sp point.in.polygon
 #' @importFrom methods is
 #' @export
 struct.from.bin <- function (vol, roi.name = vol$description, roi.nb = 1,
@@ -136,7 +136,7 @@ struct.from.bin <- function (vol, roi.name = vol$description, roi.nb = 1,
           # if (length(roi.index.z)!=0) {
           r <- unique (sapply (roi.index.k, function (k) {
             ptk <- struct$roi.data[[1]][[k]]$pt
-            keep <- point.in.polygon (ptj[ ,1], ptj[ ,2],
+            keep <- .pt.in.polygon (ptj[ ,1], ptj[ ,2],
                                       ptk[ ,1], ptk[ ,2]) > 0.5
             return (ifelse (any(keep), k,NA))}))
           r <- r[!is.na (r)]

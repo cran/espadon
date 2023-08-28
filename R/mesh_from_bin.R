@@ -5,6 +5,7 @@
 #' @param alias Character string, \code{$alias} of the mesh defining 
 #' the \code{$alias} of the created object.
 #' @param tol Tolerance in mm, applied for mesh simplification. See \link[Rvcg]{vcgClean}. 
+#' The default value, equal to half the smallest voxel edge, limits meshing errors.
 #' @param smooth.iteration Number of iterations applied in the smoothing algorithm. 
 #' See \link[Rvcg]{vcgSmooth}. 
 #' @param smooth.type character: select smoothing algorithm. Available are "taubin", 
@@ -64,7 +65,7 @@
 #' @importFrom rgl tmesh3d
 #' @importFrom methods is
 #' @export
-mesh.from.bin <- function (bin, alias="", tol = 1, 
+mesh.from.bin <- function (bin, alias="", tol = min(bin$dxyz)/2, 
                            smooth.iteration = 10, 
                            smooth.type = c("taubin", "laplace", "HClaplace", 
                                            "fujiLaplace", "angWeight",

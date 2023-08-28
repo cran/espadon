@@ -155,14 +155,14 @@ display.plane <- function (bottom = NULL, top = NULL, struct = NULL,
   
   if (!is.null (struct)) list.roi.idx <- select.names (struct$roi.info$roi.pseudo, roi.name, roi.sname, roi.idx)
   
-  if (!is.null (list.roi.idx)) {
-    list.roi.idx <- list.roi.idx[sapply(struct$roi.data[list.roi.idx], function(l) {
-      v <- castlow.str(unique(sapply(l, function(l_) l_$type)))
-      if (length(v)==0) return(FALSE)
-      if (any(is.na(match(v,c("closedplanar","point"))))) return(FALSE)
-      return(TRUE)
-    })]
-  }
+  # if (!is.null (list.roi.idx)) {
+  #   list.roi.idx <- list.roi.idx[sapply(struct$roi.data[list.roi.idx], function(l) {
+  #     v <- castlow.str(unique(sapply(l, function(l_) l_$type)))
+  #     if (length(v)==0) return(FALSE)
+  #     if (any(is.na(match(v,c("closedplanar","point"))))) return(FALSE)
+  #     return(TRUE)
+  #   })]
+  # }
   
   warn.ref <- FALSE
   warn.ref.struct <- FALSE
@@ -400,7 +400,7 @@ display.plane <- function (bottom = NULL, top = NULL, struct = NULL,
           for (nb in 1:length(new.struct[[j]])){
             type <- castlow.str (new.struct[[j]][[nb]]$type)
             test.pt <-FALSE 
-            if (type=="closedplanar"){
+            if (type=="closedplanar" | type=="openplanar"){
               test.pt <- TRUE
               lines (new.struct[[j]][[nb]]$pt$x, new.struct[[j]][[nb]]$pt$y, col= struct$roi.info$color[j], lwd=struct.lwd)
               legendlty[[label.index]]<-1

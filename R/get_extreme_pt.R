@@ -92,8 +92,14 @@ get.extreme.pt <- function (obj,ref.pseudo = obj$ref.pseudo, T.MAT = NULL, ...) 
     row.names(obj_$roi.obs) <- NULL
     obj_$roi.data <- obj$roi.data[list.roi.idx]
     obj_ <- struct.in.new.ref(obj_, new.ref.pseudo = ref.pseudo, T.MAT= T.MAT)
-    ext <- data.frame(min = as.numeric(apply(obj_$roi.info[,c("min.x","min.y","min.z")],2,min)),
-                      max = as.numeric(apply(obj_$roi.info[,c("max.x","max.y","max.z")],2,max)))
+    min.vect <- sapply(c("min.x","min.y","min.z"), function(col) {
+      idx <- which.min(obj_$roi.info[,col])
+      ifelse(length(idx)==0,NA,obj_$roi.info[idx,col])})
+    max.vect <- sapply(c("max.x","max.y","max.z"), function(col) {
+      idx <- which.max(obj_$roi.info[,col])
+      ifelse(length(idx)==0,NA,obj_$roi.info[idx,col])})
+    ext <- data.frame(min = as.numeric(min.vect),
+                      max = as.numeric(max.vect))
     
     
   } else {
