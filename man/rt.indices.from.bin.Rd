@@ -51,7 +51,7 @@ for the target RoI.}
 RoI.}
 
 \item{dosimetry}{Vector indicating the requested dose indicators from among
-'D.min', 'D.max', 'D.mean' and 'STD.' If \code{D.xpc} is different from
+'D.min', 'D.max', 'D.mean' and 'STD'. If \code{D.xpc} is different from
 \code{NULL}, it will be added.}
 
 \item{volume.indices}{Vector indicating the requested volume indices from among

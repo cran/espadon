@@ -117,12 +117,12 @@ nesting.roi <- function (obj, struct, roi.name = NULL, roi.sname = NULL,
       warning ("different ref.pseudo.")
       return (NULL)
     }
-    pt.min <- c (min (S_$roi.info$min.x[roi.idx]) - xyz.margin[1],
-                 min (S_$roi.info$min.y[roi.idx]) - xyz.margin[2],
-                 min (S_$roi.info$min.z[roi.idx]) - xyz.margin[3])
-    pt.max <- c (max (S_$roi.info$max.x[roi.idx]) + xyz.margin[1],
-                 max (S_$roi.info$max.y[roi.idx]) + xyz.margin[2],
-                 max (S_$roi.info$max.z[roi.idx]) + xyz.margin[3])
+    pt.min <- c (min (S_$roi.info$min.x[roi.idx], na.rm=TRUE) - xyz.margin[1],
+                 min (S_$roi.info$min.y[roi.idx], na.rm=TRUE) - xyz.margin[2],
+                 min (S_$roi.info$min.z[roi.idx], na.rm=TRUE) - xyz.margin[3])
+    pt.max <- c (max (S_$roi.info$max.x[roi.idx], na.rm=TRUE) + xyz.margin[1],
+                 max (S_$roi.info$max.y[roi.idx], na.rm=TRUE) + xyz.margin[2],
+                 max (S_$roi.info$max.z[roi.idx], na.rm=TRUE) + xyz.margin[3])
     
     if (vol.restrict){
       vol.pt <- vol_$xyz.from.ijk %*% vol_$cube.idx[ , c (1,7)]

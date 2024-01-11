@@ -58,6 +58,7 @@ load.Rdcm.raw.data <- function (Rdcm.filename, address= TRUE, data=TRUE,
   )
   ################################
   update.needed <- any(unlist(correction))
+  # old.version <- espadon.version <.espadon.version()
   
   if (from.dcm & (address | data | (upgrade.to.latest.version & update.needed)))
     a <-  qdeserialize (readBin(zz,what="raw", n=l[2]))
@@ -66,9 +67,9 @@ load.Rdcm.raw.data <- function (Rdcm.filename, address= TRUE, data=TRUE,
     d <-  qdeserialize (readBin(zz,what="raw", n=l[3]))
   close (zz)
   
+  if (update.needed){
   
-  
-  if ((!from.dcm | !upgrade.to.latest.version) & update.needed){
+  # if ((!from.dcm | !upgrade.to.latest.version) & update.needed){
     if (correction$version0) {
       n <- names(h)
       idx <- which(n=="ref.object.name")
@@ -96,6 +97,7 @@ load.Rdcm.raw.data <- function (Rdcm.filename, address= TRUE, data=TRUE,
       idx <-grep("^patient$",n)
       h <- c(h[1:idx], patient.name="", h[(idx+1):length(n)])
     }
+    
   }
   
   if (from.dcm & update.needed & upgrade.to.latest.version) {
@@ -125,13 +127,24 @@ load.Rdcm.raw.data <- function (Rdcm.filename, address= TRUE, data=TRUE,
     colnames(df)<-colnames.df
     
     name <- names(d[[1]])
-    df[1,] <- sapply(tag, function (t) {
+
+    df[1,] <- sapply(tag, function(t) {
       value<-sapply(grep(t,name),function(i) d[[1]][[i]])
-      if (length(value)==0) return ("")
-      value <- value [!is.na(value)]
-      if (length(value)==0) return ("")
-      return (value[1])
+      if (length(value) == 0)
+        return("")
+      value <- value[!is.na(value)]
+      if (length(value) == 0)
+        return("")
+      value <- sapply(value, function(v) {
+        dum <-charToRaw(v)
+        dum[dum > 125 | dum < 32] <- charToRaw(" ")
+        return(rawToChar(dum))})
+      value <- value[trimws(value) != ""]
+      if (length(value) == 0)
+        return("")
+      return(sort(value)[1])
     })
+    
     df$outfilename <- h$object.name
     df$ref.label <- gsub("^ref","",h$ref.pseudo)
     data.l <- lapply(1:length(d),function(i) list(address=a[[i]], data=d[[i]], 
@@ -141,8 +154,15 @@ load.Rdcm.raw.data <- function (Rdcm.filename, address= TRUE, data=TRUE,
                                  only.header=TRUE, Rdcm.mode=TRUE)
     L[[1]]$header$object.alias <- h$object.alias
     L[[1]]$header$ref.pseudo <- h$ref.pseudo
+    L[[1]]$header$frame.of.reference <- h$frame.of.reference
+    if (!is.null(L[[1]]$header$roi.info)) L[[1]]$header$roi.info$roi.pseudo <- h$roi.info$roi.pseudo
+    
+    L[[1]]$header <- c(L[[1]]$header, h[is.na(match(names(h),names(L[[1]]$header)))])
+    
     h<- L[[1]]$header
     espadon.version <- .espadon.version()
+    
+    
   }
   
   

@@ -59,7 +59,7 @@ bin.opening <- function (vol, radius=10, alias = "", description = NULL) {
     return (vol)
   }
   
-  if (vol$missing.k.idx) message ("missing k.idx, unpredictable result.")
+  if (!is.null(vol$missing.k.idx)) {if (vol$missing.k.idx) message ("missing k.idx, unpredictable result.")}
   
   if (is.null(description)) description <-  paste (vol$object.alias, "opening r =", radius)
   

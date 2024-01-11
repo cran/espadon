@@ -16,9 +16,9 @@ coordinates.}
 \link[espadon]{load.patient.from.Rdcm} or \link[espadon]{load.T.MAT}. If
 \code{T.MAT = NULL}, \code{ref.pseudo} must be equal to \code{obj$ref.pseudo}.}
 
-\item{...}{Additional arguments \code{min}, \code{max} if \code{obj} is of class 'volume'.
-Arguments \code{roi.name}, \code{roi.sname}, \code{roi.idx} if \code{obj} is
-of class 'struct'. Arguments \code{vol} (depracated), replaced by \code{obj}.}
+\item{...}{Additional arguments \code{min}, \code{max} (of voxel) if \code{obj}
+is of class 'volume'. Arguments \code{roi.name}, \code{roi.sname}, \code{roi.idx}
+if \code{obj} is of class 'struct'. Arguments \code{vol} (depracated), replaced by \code{obj}.}
 }
 \value{
 Returns a dataframe of min and max columns, and x, y and z rows.

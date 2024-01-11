@@ -82,3 +82,17 @@
   }
   return (list (x=L$x[splits], y=L$y[splits], err.splits=err.splits))
 }
+
+################################################################################
+.contour.sort <- function(pol, clockwise = TRUE){
+  if (length(pol)==0) return(pol)
+  le <- nrow(pol)
+  pol <- as.data.frame(pol)
+  first <- order(pol[1:(le-1),2],pol[1:(le-1),1])[1]
+  pol <- rbind(pol[first:(le-1),], pol[-(first:le),], pol[first[1],])
+  
+  if (.polyg.is.clockwise(pol)!= clockwise) pol <- pol[le:1, ]
+  rownames(pol) <- NULL
+  return(pol)
+}
+

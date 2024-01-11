@@ -2,7 +2,7 @@
 #' @importFrom rgl open3d points3d wire3d
 #' @importFrom grDevices colorRampPalette
 #' @importFrom Rvcg vcgClost vcgRaySearch
-.mesh.distances <- function (mesh.test, mesh.ref, plot=TRUE, 
+dist.mesh <- function (mesh.test, mesh.ref, plot=TRUE, 
                              col.in = "blue", col.out = "green", pt.size = 10, in.front=FALSE) {
   
 

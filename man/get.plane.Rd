@@ -55,9 +55,9 @@ class object.
 \itemize{
 \item the x-axis has \code{plane.orientation[1:3]} as unit vector.
 \item the y-axis has \code{plane.orientation[4:6]} as unit vector.
-\item If \code{xgrid} is not {NULL}, \code{origin + x.grid * plane.orientation[1:3]}
+\item If \code{xgrid} is not \code{NULL}, \code{origin + x.grid * plane.orientation[1:3]}
 are the coordinates of the points on the x axis.
-\item If \code{ygrid} is not {NULL}, \code{origin + y.grid * plane.orientation[4:6]}
+\item If \code{ygrid} is not \code{NULL}, \code{origin + y.grid * plane.orientation[4:6]}
 are the coordinates of the points on the y axis.
 \item If \code{xgrid} or \code{ygrid} are NULL, they are determined to represent
 as closely as possible the initial volume in the required cut.

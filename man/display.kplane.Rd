@@ -16,12 +16,13 @@ display.kplane(
   main = NULL,
   abs.lab = "i",
   ord.lab = "j",
-  abs.flip = FALSE,
-  ord.flip = FALSE,
+  flip = FALSE,
+  flop = FALSE,
   bg = "#000000",
   abs.rng = NULL,
   ord.rng = NULL,
-  interpolate = FALSE
+  interpolate = FALSE,
+  ...
 )
 }
 \arguments{
@@ -59,10 +60,10 @@ the title just indicates the value of \code{k}.}
 
 \item{ord.lab}{Label of the image ordinate. By default \code{ord.lab = 'j'}.}
 
-\item{abs.flip}{Boolean defaults to \code{FALSE} flipping the horizontal axis
+\item{flip}{Boolean defaults to \code{FALSE} flipping the horizontal axis
 of the background image.}
 
-\item{ord.flip}{Boolean defaults to \code{FALSE} flipping the vertical axis
+\item{flop}{Boolean defaults to \code{FALSE} flipping the vertical axis
 of the background image.}
 
 \item{bg}{Background color of the image. By default, this color is black.}
@@ -75,6 +76,8 @@ background image ordinate to display.}
 
 \item{interpolate}{Boolean, indicating whether to apply linear interpolation
 to the image.}
+
+\item{...}{others argument of plot function like xaxt, yaxt...}
 }
 \value{
 Returns a display of the  \mjeqn{k^{th}}{ascii} image plane of \code{vol}.

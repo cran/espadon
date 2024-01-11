@@ -61,7 +61,7 @@ bin.dilation <- function (vol, radius=10, alias = "", description = NULL) {
     warning ("radius must be larger than max(vol$dxyz).")
     return (vol)
   }
-  if (vol$missing.k.idx) message ("missing k.idx, unpredictable result.")
+  if (!is.null(vol$missing.k.idx)) {if (vol$missing.k.idx) message ("missing k.idx, unpredictable result.")}
   
   if (is.null(description)) description <-  paste (vol$object.alias, "dilation r =", radius)
   

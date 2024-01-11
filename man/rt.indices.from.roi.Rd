@@ -70,7 +70,7 @@ for the target RoI.}
 healthy RoI.}
 
 \item{dosimetry}{Vector indicating the requested dose indicators from among
-'D.min', 'D.max', 'D.mean' and 'STD.' If \code{D.xpc} is different from
+'D.min', 'D.max', 'D.mean' and 'STD'. If \code{D.xpc} is different from
 \code{NULL}, it will be added.}
 
 \item{volume.indices}{Vector indicating the requested volume indices from among
@@ -103,7 +103,7 @@ calculated.}
 \item{verbose}{Boolean. if \code{TRUE} (default) a progress bar is displayed.}
 }
 \value{
-Return  a list containing (if requested)
+Returns  a list containing (if requested)
 
 \mjeqn{-~dosimetry}{ascii} : dataframe containing, for all target and
 healthy structures:

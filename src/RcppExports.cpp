@@ -206,8 +206,8 @@ BEGIN_RCPP
 END_RCPP
 }
 // ptinpolygonC
-std::vector <int> ptinpolygonC(std::vector <double> point_x, std::vector <double> point_y, std::vector <double> pol_x, std::vector <double> pol_y);
-RcppExport SEXP _espadon_ptinpolygonC(SEXP point_xSEXP, SEXP point_ySEXP, SEXP pol_xSEXP, SEXP pol_ySEXP) {
+std::vector <int> ptinpolygonC(std::vector <double> point_x, std::vector <double> point_y, std::vector <double> pol_x, std::vector <double> pol_y, double eps);
+RcppExport SEXP _espadon_ptinpolygonC(SEXP point_xSEXP, SEXP point_ySEXP, SEXP pol_xSEXP, SEXP pol_ySEXP, SEXP epsSEXP) {
 BEGIN_RCPP
     Rcpp::RObject rcpp_result_gen;
     Rcpp::RNGScope rcpp_rngScope_gen;
@@ -215,7 +215,8 @@ BEGIN_RCPP
     Rcpp::traits::input_parameter< std::vector <double> >::type point_y(point_ySEXP);
     Rcpp::traits::input_parameter< std::vector <double> >::type pol_x(pol_xSEXP);
     Rcpp::traits::input_parameter< std::vector <double> >::type pol_y(pol_ySEXP);
-    rcpp_result_gen = Rcpp::wrap(ptinpolygonC(point_x, point_y, pol_x, pol_y));
+    Rcpp::traits::input_parameter< double >::type eps(epsSEXP);
+    rcpp_result_gen = Rcpp::wrap(ptinpolygonC(point_x, point_y, pol_x, pol_y, eps));
     return rcpp_result_gen;
 END_RCPP
 }
@@ -233,7 +234,7 @@ static const R_CallMethodDef CallEntries[] = {
     {"_espadon_mean_voxC", (DL_FUNC) &_espadon_mean_voxC, 5},
     {"_espadon_medianfilterC", (DL_FUNC) &_espadon_medianfilterC, 6},
     {"_espadon_meshinfront", (DL_FUNC) &_espadon_meshinfront, 12},
-    {"_espadon_ptinpolygonC", (DL_FUNC) &_espadon_ptinpolygonC, 4},
+    {"_espadon_ptinpolygonC", (DL_FUNC) &_espadon_ptinpolygonC, 5},
     {NULL, NULL, 0}
 };
 

@@ -78,7 +78,7 @@ object from a volume object of "binary" modality.
 }
 \note{
 To compute the mesh, all NA voxels of the binary volume \code{bin} are
-set to FALSE. If all voxels are equal to FALSE, the function returns the code {NULL}.
+set to FALSE. If all voxels are equal to FALSE, the function returns the code \code{NULL}.
 }
 \examples{
 # loading of toy-patient objects (decrease dxyz for better result)

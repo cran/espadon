@@ -57,12 +57,18 @@ Rdcm.inventory <- function (dirname, upgrade.to.latest.version = FALSE) {
                  study.ID  = d$object.info$study.ID, 
                  study.UID = d$object.info$study.UID, 
                  serie.UID = d$object.info$serie.UID, 
-                 scanning.sequence = d$object.info$scanning.sequence)
+                 scanning.sequence = d$object.info$scanning.sequence,
+                 study.description = d$object.info$study.description,
+                 serie.description = d$object.info$serie.description
+				 )
       l1[sapply(l1, is.null)] <- ""
     # }
     
     l <- do.call(c,list (l,l1 ))
-    description <- unlist(strsplit (d$description, "[|]"))
+    description <- sapply(unlist(strsplit (d$description, "[|]")), function(v) {
+      dum <-charToRaw(v)
+      dum[dum > 125 | dum < 32] <- charToRaw(" ")
+      return(rawToChar(dum))})
     l[['study.description']] <- description[1]
     l[['serie.description']] <- description[2]
     l[['PID']] <- d$patient

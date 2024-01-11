@@ -14,7 +14,7 @@ load.obj.data(obj, tag.dictionary = dicom.tag.dictionary())
 This dataframe is used to parse DICOM files in case obj was extracted from DICOM files.}
 }
 \value{
-Returns the \pkg{espadon} object with data \code{$vol3D.data} or {$roi.data}
+Returns the \pkg{espadon} object with data \code{$vol3D.data} or \code{$roi.data}
 }
 \description{
 The \code{load.obj.data} function loads all the data of an \pkg{espadon}

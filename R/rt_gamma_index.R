@@ -9,13 +9,13 @@
 #' Oversampling can be very time consuming.
 #' @param vol.max Positive number, by default equal to the maximum value of the reference volume.
 #' See Details.
-#' @param dose.th Positive number, in percent, used to determine the dose difference criterion. See Details.
+#' @param dose.th Number between 0 and 1, used to determine the dose difference criterion. See Details.
 #' @param delta.r Positive number, in mm. Distance difference criterion.
-#' @param analysis.th Positive number, in percent. Only the voxels whose value is 
+#' @param analysis.th Number between 0 and 1. Only the voxels whose value is 
 #' greater than or equal \code{analyse.th*vol.max} are processed.
 #' @param local Boolean. If \code{local = FALSE} (default), a global Gamma index 
 #' is computed, and a local Gamma index otherwise.
-#' @param local.th Positive number, in percent. Local threshold, only used if 
+#' @param local.th Number between 0 and 1. Local threshold, only used if 
 #' \code{local = TRUE}. See Details.
 #' @param project.to.isocenter Boolean. If \code{TRUE}, and if \code{vol} and 
 #' \code{vol.ref} are of modality "rtimage", the size of the pixels is corrected 
@@ -125,12 +125,12 @@ rt.gamma.index <- function (vol, vol.ref,
     vol.ref <- .im.projection(vol.ref)
   }
   
-  gammaindex <- vol.copy(vol.ref,alias = "gamma_index", modality ="gammaindex",
+  gammaindex <- vol.copy(vol.ref, alias = alias, modality ="gammaindex",
                          description = description)
   gammaindex$vol3D.data[] <- NA
   gammaindex$max.pixel  <-  gammaindex$min.pixel  <- NA
   
-  
+  vol.max <- vol.max[1]
   a.th <- analysis.th * vol.max
   f.analyse <- !is.na(vol.ref$vol3D.data) & !is.na(vol$vol3D.data) & vol.ref$vol3D.data >= a.th
   
@@ -271,9 +271,9 @@ rt.gamma.index <- function (vol, vol.ref,
                                                 ">1.5 (%)",">1.2 (%)"),
                                        value = round(c(nb.pt, le, 
                                                        100*le/nb.pt,
-                                                       sum(gammaindex$vol3D.data[inspect.idx]<1)*100/le,
-                                                       gammaindex$max.pixel,mean(gammaindex$vol3D.data[inspect.idx]),
-                                                       sum(gammaindex$vol3D.data[inspect.idx]>1.5)*100/le,
-                                                       sum(gammaindex$vol3D.data[inspect.idx]>1.2)*100/le),2))
+                                                       sum(gammaindex$vol3D.data[inspect.idx]<1, na.rm = T)*100/le,
+                                                       gammaindex$max.pixel,mean(gammaindex$vol3D.data[inspect.idx], na.rm = T),
+                                                       sum(gammaindex$vol3D.data[inspect.idx]>1.5, na.rm = T)*100/le,
+                                                       sum(gammaindex$vol3D.data[inspect.idx]>1.2, na.rm = T)*100/le),2))
   return(gammaindex)
 }

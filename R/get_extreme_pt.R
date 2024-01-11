@@ -9,9 +9,9 @@
 #' @param T.MAT "t.mat" class object, created by 
 #' \link[espadon]{load.patient.from.Rdcm} or \link[espadon]{load.T.MAT}. If 
 #' \code{T.MAT = NULL}, \code{ref.pseudo} must be equal to \code{obj$ref.pseudo}.
-#' @param ... Additional arguments \code{min}, \code{max} if \code{obj} is of class 'volume'. 
-#' Arguments \code{roi.name}, \code{roi.sname}, \code{roi.idx} if \code{obj} is 
-#' of class 'struct'. Arguments \code{vol} (depracated), replaced by \code{obj}.
+#' @param ... Additional arguments \code{min}, \code{max} (of voxel) if \code{obj} 
+#' is of class 'volume'. Arguments \code{roi.name}, \code{roi.sname}, \code{roi.idx} 
+#' if \code{obj} is of class 'struct'. Arguments \code{vol} (depracated), replaced by \code{obj}.
 #' @return Returns a dataframe of min and max columns, and x, y and z rows. 
 #' 
 #' \itemize{
@@ -68,7 +68,7 @@ get.extreme.pt <- function (obj,ref.pseudo = obj$ref.pseudo, T.MAT = NULL, ...) 
       min=-Inf
       max=Inf
       if(!is.null(args[['min']])) min <- args[['min']]
-      if(!is.null(args[['max']])) min <- args[['max']]  
+      if(!is.null(args[['max']])) max <- args[['max']]  
       obj_ <- vol.in.new.ref(obj, new.ref.pseudo = ref.pseudo, T.MAT= T.MAT)
       pt <- get.xyz.from.index(which(obj_$vol3D.data >= min & obj_$vol3D.data <= max), obj_)
       if (is.null(pt))return (NULL)

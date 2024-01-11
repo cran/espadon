@@ -6,7 +6,7 @@
 #' \link[espadon]{dicom.tag.dictionary}, whose structure it must keep. 
 #' This dataframe is used to parse DICOM files in case obj was extracted from DICOM files.
 
-#' @return Returns the \pkg{espadon} object with data \code{$vol3D.data} or {$roi.data}
+#' @return Returns the \pkg{espadon} object with data \code{$vol3D.data} or \code{$roi.data}
 #' @seealso \link[espadon]{load.obj.from.dicom} and \link[espadon]{load.obj.from.Rdcm}
 
 #' @examples

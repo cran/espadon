@@ -110,7 +110,7 @@ struct.from.bin <- function (vol, roi.name = vol$description, roi.nb = 1,
                                  roi.pseudo=tolower (gsub("[[:space:],_]", "", 
                                                           iconv (roi.name,  to="ASCII//TRANSLIT"))))
   
-  struct$roi.obs <- data.frame (nb = roi.nb[1], roi.nb=roi.nb[1], label=roi.name, 
+  struct$roi.obs <- data.frame (nb = roi.nb[1], roi.nb=roi.nb[1], label = "", 
                                      code.value = "", code.scheme="",code.scheme.v="",
                                      code.meaning = "", type=roi.type, interpreter="")
                                      

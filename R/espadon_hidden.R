@@ -13,7 +13,7 @@
 
 #####################################################################################
 .espadon.version <- function(){
-  return ("1.4.1")
+  return ("1.5.1")
 }
 
 #####################################################################################
@@ -115,14 +115,24 @@
     
     if (!is.null(L)) {
       n.L <- names (L$data)
-      df[f.idx,1:length(tag)] <- sapply(tag, function (t) {
-        value<-sapply(grep(t,n.L),function(i) L$data[[i]])
-        if (length(value)==0) return ("")
-        value <- value [!is.na(value)]
-        if (length(value)==0) return ("")
-        value <- value [ trimws(value)!=""]
-        if (length(value)==0) return ("")
-        return (sort(value)[1])
+      sort.f <- rep(FALSE,length(tag))
+      sort.f[2:5] <- TRUE
+      df[f.idx, 1:length(tag)] <- sapply(1:length(tag), function(idx) {
+        value <- sapply(grep(tag[idx], n.L), function(i) L$data[[i]])
+        if (length(value) == 0)
+          return("")
+        value <- value[!is.na(value)]
+        if (length(value) == 0)
+          return("")
+        value <- sapply(value, function(v) {
+          dum <-charToRaw(v)
+          dum[dum > 125 | dum < 32] <- charToRaw(" ")
+          return(rawToChar(dum))})
+        value <- value[trimws(value) != ""]
+        if (length(value) == 0)
+          return("")
+        if (sort.f[idx]) return(sort(value)[1])
+        return(value[1])
       })
       
       if (!is.null(L$data[["(7FE0,0010)"]]) & length(L$data[["(7FE0,0010)"]])==0) df[f.idx,c("error")] <- TRUE
@@ -422,6 +432,15 @@
     header$object.info$scanning.sequence <- object.info$scanning.sequence
     header$object.info$SOP.label <- data[[grep("^[(]0008,0018[)]$",name)]]
     header$object.info$encoding <- tryCatch (data[[grep("^[(]0008,0005[)]$",name)]],error = function (e) "")
+    header$object.info$study.description <- object.info$study.description
+    header$object.info$serie.description <- object.info$serie.description
+    
+    conv_idx <- integer(0)
+    if(header$object.info$encoding!="") {
+      conv_idx <- grep(paste0("^",tolower (gsub("[[:space:],_,-]", "", header$object.info$encoding)),"$"),
+                       tolower (gsub("[[:space:],_,-]", "", iconvlist())))}
+    
+    
     if (Rdcm.mode) {
       header$object.info$dicom.file  <- sort(basename(filename))
     }
@@ -433,7 +452,18 @@
     header$ref.pseudo <- paste("ref", object.info$ref.label, sep="")
     
     header$modality <- castlow.str (object.info$modality)
-    header$description <- paste(object.info$study.description, object.info$serie.description, sep="|")
+    
+    study.description <-  tryCatch (data[[grep("^[(]0008,1030[)]$",name)]],error = function (e) "")
+    serie.description <-  tryCatch (data[[grep("^[(]0008,103E[)]$",name)]],error = function (e) "")
+    if (is.na(study.description)) study.description <- ""
+    if (is.na(serie.description)) serie.description <- ""
+    
+    if (length(conv_idx)>0) {
+      study.description <- iconv(study.description,iconvlist()[conv_idx[1]])
+      serie.description <- iconv(serie.description,iconvlist()[conv_idx[1]])
+    }
+    
+    header$description <- paste(study.description, serie.description, sep="|")
     
     
     # header$acq.date <- tryCatch (data[[grep("^[(]0008,0023[)]$",name)]],error = function (e) "")
@@ -796,6 +826,9 @@
     header$object.info$scanning.sequence <- object.info$scanning.sequence
     header$object.info$SOP.label <- data[[grep("^[(]0008,0018[)]$",name)]]
     header$object.info$encoding <- tryCatch (data[[grep("^[(]0008,0005[)]$",name)]],error = function (e) "")
+    header$object.info$study.description <- object.info$study.description
+    header$object.info$serie.description <- object.info$serie.description
+    
     conv_idx <- integer(0)
     if(header$object.info$encoding!="") {
       conv_idx <- grep(paste0("^",tolower (gsub("[[:space:],_,-]", "", header$object.info$encoding)),"$"),
@@ -811,7 +844,19 @@
     header$ref.pseudo <- paste("ref", object.info$ref.label, sep="")
     
     header$modality <- castlow.str (object.info$modality)
-    header$description <- paste(object.info$study.description, object.info$serie.description, sep="|")
+    
+    study.description <-  tryCatch (data[[grep("^[(]0008,1030[)]$",name)]],error = function (e) "")
+    serie.description <-  tryCatch (data[[grep("^[(]0008,103E[)]$",name)]],error = function (e) "")
+    if (is.na(study.description)) study.description <- ""
+    if (is.na(serie.description)) serie.description <- ""
+    
+    if (length(conv_idx)>0) {
+      study.description <- iconv(study.description,iconvlist()[conv_idx[1]])
+      serie.description <- iconv(serie.description,iconvlist()[conv_idx[1]])
+    }
+    
+    header$description <- paste(study.description, serie.description, sep="|")
+    # header$description <- paste(object.info$study.description, object.info$serie.description, sep="|")
 
     
     # header$acq.date <- tryCatch (data[[grep("^[(]3006,0008[)]$",name)]],error = function (e) "")
@@ -892,7 +937,7 @@
       db.name <- c ("(3006,0080)(3006,0082)","(3006,0080)(3006,0084)","(3006,0080)(3006,0085)",
                     "(3006,0080)(3006,0086) item1 (0008,0100)","(3006,0080)(3006,0086) item1 (0008,0102)",
                     "(3006,0080)(3006,0086) item1 (0008,0103)","(3006,0080)(3006,0086) item1 (0008,0104)",
-                    "(3006,0080)(3006,00A4)","(3006,0080)(3006,00A")
+                    "(3006,0080)(3006,00A4)","(3006,0080)(3006,00A6)")
       
       
       db.tag <- do.call(rbind.data.frame, lapply (db.name, function(l) unlist(strsplit(l,"[)][(]"))))
@@ -968,6 +1013,14 @@
     header$object.info$scanning.sequence <- object.info$scanning.sequence
     header$object.info$SOP.label <- data[[grep("^[(]0008,0018[)]$",name)]]
     header$object.info$encoding <- tryCatch (data[[grep("^[(]0008,0005[)]$",name)]],error = function (e) "")
+    header$object.info$study.description <- object.info$study.description
+    header$object.info$serie.description <- object.info$serie.description
+    
+    conv_idx <- integer(0)
+    if(header$object.info$encoding!="") {
+      conv_idx <- grep(paste0("^",tolower (gsub("[[:space:],_,-]", "", header$object.info$encoding)),"$"),
+                       tolower (gsub("[[:space:],_,-]", "", iconvlist())))}
+    
     if (Rdcm.mode) header$object.info$dicom.file  <- sort(basename(filename))
     header$object.info$nb.of.subobject <- nb.of.rtplan
     
@@ -995,7 +1048,18 @@
     header$ref.pseudo <- paste("ref", object.info$ref.label, sep="")
     
     header$modality <- castlow.str (object.info$modality)
-    header$description <- paste(object.info$study.description, object.info$serie.description, sep="|")
+    study.description <-  tryCatch (data[[grep("^[(]0008,1030[)]$",name)]],error = function (e) "")
+    serie.description <-  tryCatch (data[[grep("^[(]0008,103E[)]$",name)]],error = function (e) "")
+    if (is.na(study.description)) study.description <- ""
+    if (is.na(serie.description)) serie.description <- ""
+    
+    if (length(conv_idx)>0) {
+      study.description <- iconv(study.description,iconvlist()[conv_idx[1]])
+      serie.description <- iconv(serie.description,iconvlist()[conv_idx[1]])
+    }
+    
+    header$description <- paste(study.description, serie.description, sep="|")
+    # header$description <- paste(object.info$study.description, object.info$serie.description, sep="|")
     
     
     # header$acq.date <- tryCatch (data[[grep("^[(]300A,0006[)]$",name)]],error = function (e) "")
@@ -1380,6 +1444,14 @@
   header$object.info$scanning.sequence <- object.info$scanning.sequence
   header$object.info$SOP.label <- unique(tryCatch (sapply(data, function (d) d[[grep("^[(]0008,0018[)]$",names(d))]]),error = function (e)  ""))
   header$object.info$encoding <- tryCatch (data[[1]][[grep("^[(]0008,0005[)]$",name)]],error = function (e) "")
+  header$object.info$study.description <- object.info$study.description
+  header$object.info$serie.description <- object.info$serie.description
+  
+  conv_idx <- integer(0)
+  if(header$object.info$encoding!="") {
+    conv_idx <- grep(paste0("^",tolower (gsub("[[:space:],_,-]", "", header$object.info$encoding)),"$"),
+                     tolower (gsub("[[:space:],_,-]", "", iconvlist())))}
+  
   
   header$object.info$nb.of.subobject <- NA
   
@@ -1398,7 +1470,18 @@
   header$ref.pseudo <- paste("ref", object.info$ref.label, sep="")
   
   header$modality <- castlow.str (object.info$modality)
-  header$description <- paste(object.info$study.description, object.info$serie.description, sep="|")
+  study.description <-  tryCatch (data[[1]][[grep("^[(]0008,1030[)]$",name)]],error = function (e) "")
+  serie.description <-  tryCatch (data[[1]][[grep("^[(]0008,103E[)]$",name)]],error = function (e) "")
+  if (is.na(study.description)) study.description <- ""
+  if (is.na(serie.description)) serie.description <- ""
+  
+  if (length(conv_idx)>0) {
+    study.description <- iconv(study.description,iconvlist()[conv_idx[1]])
+    serie.description <- iconv(serie.description,iconvlist()[conv_idx[1]])
+  }
+  
+  header$description <- paste(study.description, serie.description, sep="|")
+  # header$description <- paste(object.info$study.description, object.info$serie.description, sep="|")
   
   
   # header$acq.date <- unique(sapply(data, function (d) tryCatch (d[[grep("^[(]0008,0023[)]$",names(d))]],error = function (e)  "")))
@@ -1426,7 +1509,7 @@
   filename <- sapply (data, function(l) l$filename)
   data <- lapply(data, function(l) l$data)
   
-  name <- names(data[[1]])
+  name <- names (data[[1]])
   
   header <- list()
   header$patient <- trimws (tryCatch (data[[1]][[grep("^[(]0010,0020[)]$",name)]],error = function (e) ""))
@@ -1458,6 +1541,14 @@
   header$object.info$scanning.sequence <- object.info$scanning.sequence
   header$object.info$SOP.label <- data[[1]][[grep("^[(]0008,0018[)]$",name)]]
   header$object.info$encoding <- tryCatch (data[[1]][[grep("^[(]0008,0005[)]$",name)]],error = function (e) "")
+  header$object.info$study.description <- object.info$study.description
+  header$object.info$serie.description <- object.info$serie.description
+  
+  conv_idx <- integer(0)
+  if(header$object.info$encoding!="") {
+    conv_idx <- grep(paste0("^",tolower (gsub("[[:space:],_,-]", "", header$object.info$encoding)),"$"),
+                     tolower (gsub("[[:space:],_,-]", "", iconvlist())))}
+  
   if (Rdcm.mode) header$object.info$dicom.file <-sort(basename(filename))
   
   header$object.info$nb.of.subobject <- length(data)
@@ -1466,7 +1557,17 @@
   header$ref.pseudo <- paste("ref", object.info$ref.label, sep="")
   
   header$modality <- castlow.str (object.info$modality)
-  header$description <- paste(object.info$study.description, object.info$serie.description, sep="|")
+  study.description <-  tryCatch (data[[1]][[grep("^[(]0008,1030[)]$",name)]],error = function (e) "")
+  serie.description <-  tryCatch (data[[1]][[grep("^[(]0008,103E[)]$",name)]],error = function (e) "")
+  if (is.na(study.description)) study.description <- ""
+  if (is.na(serie.description)) serie.description <- ""
+  if (length(conv_idx)>0) {
+    study.description <- iconv(study.description,iconvlist()[conv_idx[1]])
+    serie.description <- iconv(serie.description,iconvlist()[conv_idx[1]])
+  }
+  
+  header$description <- paste(study.description, serie.description, sep="|")
+  # header$description <- paste(object.info$study.description, object.info$serie.description, sep="|")
   
   
   # header$acq.date <- tryCatch (data[[1]][[grep("^[(]0008,0023[)]$",name)]],error = function (e) "")
@@ -1524,14 +1625,14 @@
   filename <- sapply (data, function(l) l$filename)
   data <- lapply(data, function(l) l$data)
  
-  
+  name <- names (data[[1]])
   header <- list()
-  header$patient <- trimws (tryCatch (data[[1]][[grep("^[(]0010,0020[)]$",names (data[[1]]))]],error = function (e) ""))
-  header$patient.name <- tryCatch (data[[1]][[grep("^[(]0010,0010[)]$",names (data[[1]]))]],error = function (e) "")
+  header$patient <- trimws (tryCatch (data[[1]][[grep("^[(]0010,0020[)]$",name)]],error = function (e) ""))
+  header$patient.name <- tryCatch (data[[1]][[grep("^[(]0010,0010[)]$",name)]],error = function (e) "")
   if (is.na(header$patient.name)) header$patient.name <- ""
   header$patient.name <- trimws(header$patient.name)                               
-  header$patient.bd <- tryCatch (data[[1]][[grep("^[(]0010,0030[)]$",names(data[[1]]))]],error = function (e) "")
-  header$patient.sex <- toupper(trimws (tryCatch (data[[1]][[grep("^[(]0010,0040[)]$",names(data[[1]]))]],error = function (e) "")))
+  header$patient.bd <- tryCatch (data[[1]][[grep("^[(]0010,0030[)]$",name)]],error = function (e) "")
+  header$patient.sex <- toupper(trimws (tryCatch (data[[1]][[grep("^[(]0010,0040[)]$",name)]],error = function (e) "")))
   
   header$file.basename <- ""
   header$file.dirname <- ""
@@ -1550,10 +1651,19 @@
   header$object.info$serie.UID <- object.info$serie.UID
   header$object.info$scanning.sequence <- object.info$scanning.sequence
   header$object.info$SOP.label <- ""
-  header$object.info$encoding <- tryCatch (data[[1]][[grep("^[(]0008,0005[)]$",names(data[[1]]))]],error = function (e) "")
+  header$object.info$encoding <- tryCatch (data[[1]][[grep("^[(]0008,0005[)]$",name)]],error = function (e) "")
+  header$object.info$study.description <- object.info$study.description
+  header$object.info$serie.description <- object.info$serie.description
+  
+  conv_idx <- integer(0)
+  if(header$object.info$encoding!="") {
+    conv_idx <- grep(paste0("^",tolower (gsub("[[:space:],_,-]", "", header$object.info$encoding)),"$"),
+                     tolower (gsub("[[:space:],_,-]", "", iconvlist())))}
+  
   if (Rdcm.mode) header$object.info$dicom.file <- ""
   
-  image.nb <- as.numeric( sapply(data, function (d) tryCatch (d[[grep("[(]300C,0006[)]$",names(d))]],error = function (e) 1)))
+  image.nb <- 1:length(data)
+  #as.numeric( sapply(data, function (d) tryCatch (d[[grep("[(]300C,0006[)]$",names(d))]],error = function (e) 1)))
   header$object.info$nb.of.subobject <- length(unique(image.nb))
   
   header$ref.object.info <- list ()
@@ -1563,7 +1673,19 @@
   header$ref.pseudo <- paste("ref", object.info$ref.label, sep="")
   
   header$modality <- castlow.str (object.info$modality)
-  header$description <- paste(object.info$study.description, object.info$serie.description, sep="|")
+  
+  study.description <-  tryCatch (data[[1]][[grep("^[(]0008,1030[)]$",name)]],error = function (e) "")
+  serie.description <-  tryCatch (data[[1]][[grep("^[(]0008,103E[)]$",name)]],error = function (e) "")
+  if (is.na(study.description)) study.description <- ""
+  if (is.na(serie.description)) serie.description <- ""
+  
+  if (length(conv_idx)>0) {
+    study.description <- iconv(study.description,iconvlist()[conv_idx[1]])
+    serie.description <- iconv(serie.description,iconvlist()[conv_idx[1]])
+  }
+  
+  header$description <- paste(study.description, serie.description, sep="|")
+  # header$description <- paste(object.info$study.description, object.info$serie.description, sep="|")
   
   
   header$acq.date <- ""
@@ -1957,16 +2079,16 @@
   address <- lapply(data, function(l) l$address)
   filename <- sapply (data, function(l) l$filename)
   data <- lapply(data, function(l) l$data)
-  # name <- names(data[[1]])
-  
+
+  name <- names(data[[1]])
   header <- list()
-  header$patient <- trimws (tryCatch (data[[1]][[grep("^[(]0010,0020[)]$",names (data[[1]]))]],error = function (e) ""))
-  header$patient.name <-  tryCatch (data[[1]][[grep("^[(]0010,0010[)]$",names (data[[1]]))]],error = function (e) "")
+  header$patient <- trimws (tryCatch (data[[1]][[grep("^[(]0010,0020[)]$",name)]],error = function (e) ""))
+  header$patient.name <-  tryCatch (data[[1]][[grep("^[(]0010,0010[)]$",name)]],error = function (e) "")
   if (is.na(header$patient.name)) header$patient.name <- ""
   header$patient.name <- trimws(header$patient.name)
   
-  header$patient.bd <- tryCatch (data[[1]][[grep("^[(]0010,0030[)]$",names(data[[1]]))]],error = function (e) "")
-  header$patient.sex <- toupper(trimws (tryCatch (data[[1]][[grep("^[(]0010,0040[)]$",names(data[[1]]))]],error = function (e) "")))
+  header$patient.bd <- tryCatch (data[[1]][[grep("^[(]0010,0030[)]$",name)]],error = function (e) "")
+  header$patient.sex <- toupper(trimws (tryCatch (data[[1]][[grep("^[(]0010,0040[)]$",name)]],error = function (e) "")))
   
   header$file.basename <- ""
   header$file.dirname <- ""
@@ -1984,7 +2106,16 @@
   header$object.info$serie.UID <- object.info$serie.UID
   header$object.info$scanning.sequence <- object.info$scanning.sequence
   header$object.info$SOP.label <- ""
-  header$object.info$encoding <- tryCatch (data[[1]][[grep("^[(]0008,0005[)]$",names(data[[1]]))]],error = function (e) "")
+  header$object.info$encoding <- tryCatch (data[[1]][[grep("^[(]0008,0005[)]$",name)]],error = function (e) "")
+  header$object.info$study.description <- object.info$study.description
+  header$object.info$serie.description <- object.info$serie.description
+  
+  conv_idx <- integer(0)
+  if(header$object.info$encoding!="") {
+    conv_idx <- grep(paste0("^",tolower (gsub("[[:space:],_,-]", "", header$object.info$encoding)),"$"),
+                     tolower (gsub("[[:space:],_,-]", "", iconvlist())))}
+  
+  
   if (Rdcm.mode) header$object.info$dicom.file  <- ""
   image.nb <- sapply(data, function (d) tryCatch (d[[grep("^[(]0020,0100[)]$",names(d))]],error = function (e) tryCatch (d[[grep("[(]0020,0037[)]$",names(d))]],error = function (e) 1)))
   image.nb <- match(image.nb, unique(image.nb))
@@ -1996,7 +2127,18 @@
   header$ref.pseudo <- paste("ref", object.info$ref.label, sep="")
   
   header$modality <- castlow.str (object.info$modality)
-  header$description <- paste(object.info$study.description, object.info$serie.description, sep="|")
+  
+  study.description <-  tryCatch (data[[1]][[grep("^[(]0008,1030[)]$",name)]],error = function (e) "")
+  serie.description <-  tryCatch (data[[1]][[grep("^[(]0008,103E[)]$",name)]],error = function (e) "")
+  if (is.na(study.description)) study.description <- ""
+  if (is.na(serie.description)) serie.description <- ""
+  
+  if (length(conv_idx)>0) {
+    study.description <- iconv(study.description,iconvlist()[conv_idx[1]])
+    serie.description <- iconv(serie.description,iconvlist()[conv_idx[1]])
+  }
+  header$description <- paste(study.description, serie.description, sep="|")
+  # header$description <- paste(object.info$study.description, object.info$serie.description, sep="|")
   
   
   header$acq.date <- ""
@@ -2411,6 +2553,10 @@
             return (.load.vol.object (Lobj))
           },
           
+          "gammaindex" = {
+            return (.load.vol.object (Lobj))
+          },
+          
           "reg" = {
             return (.load.reg (Lobj))
           },
@@ -2435,7 +2581,9 @@
             class (L) <- "rtplan"
             return (L)
           },
-          return (.load.other (Lobj, raw.data.list))
+          { 
+            warning(paste(modality,"modality not analysed by espadon"))
+          return (.load.other (Lobj, raw.data.list))}
   )
   
 }
@@ -2888,9 +3036,10 @@
   } else {
     if (!is.null(Lobj$data)) L$vol3D.data <- Lobj$data
   }
-  if (L$missing.k.idx) 
-  warning(paste("some imaging plans of",L$object.alias, 
-                "are missing. Some results of espadon calculations are unpredictable. Consider using vol.repair() function to fix it."), call.=FALSE )
+  if (!is.null(L$missing.k.idx)){
+    if (L$missing.k.idx) 
+      warning(paste("some imaging plans of",L$object.alias, 
+                    "are missing. Some results of espadon calculations are unpredictable. Consider using vol.repair() function to fix it."), call.=FALSE )}
   return (L)
 }
 
@@ -3381,7 +3530,8 @@
   db_
 }
 
-.pt.in.polygon <- function (point.x,point.y, pol.x, pol.y){
+################################################################################
+.pt.in.polygon <- function (point.x,point.y, pol.x, pol.y,eps=1.0e-20){
 
   pol_le <- length(pol.x)
   if (length(pol.y) != pol_le) stop("vectors pol.x and pol.y must have the same length")
@@ -3411,7 +3561,7 @@
   rgx <- range(pol.x)
   rgy <- range(pol.y)
   f <- point.x>=rgx[1] & point.x<=rgx[2] & point.y>=rgy[1] & point.y<=rgy[2]
-  if (any(f)) result[f] = .ptinpolygonC(point.x[f],point.y[f], pol.x, pol.y)
+  if (any(f)) result[f] = .ptinpolygonC(point.x[f],point.y[f], pol.x, pol.y,eps=eps)
   return(result)
 
 }

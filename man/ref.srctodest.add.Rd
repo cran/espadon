@@ -11,7 +11,7 @@ ref.srctodest.add(src.ref, dest.ref, TM = diag(4), T.MAT = NULL)
 
 \item{dest.ref}{Character string, pseudonym of the destination frame of reference.}
 
-\item{TM}{4x4 tansfert matrix for moving from \code{src.ref} to {dest.ref}.}
+\item{TM}{4x4 tansfert matrix for moving from \code{src.ref} to \code{dest.ref}.}
 
 \item{T.MAT}{"t.mat" class object created by
 \link[espadon]{load.patient.from.dicom}, \link[espadon]{load.patient.from.Rdcm}

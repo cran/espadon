@@ -29,7 +29,8 @@ display.plane(
   struct.lwd = 2,
   main = NULL,
   legend.plot = TRUE,
-  legend.shift = 0
+  legend.shift = 0,
+  legend.roi.pseudo = TRUE
 )
 }
 \arguments{
@@ -113,6 +114,10 @@ displayed on the image. It is displayed by default.}
 
 \item{legend.shift}{Numeric. It shifts (in mm) the display of the RoI legend
 on x-axis.}
+
+\item{legend.roi.pseudo}{Boolean. If \code{TRUE}, the name used
+for a RoI in the legend comes from the \code{struct$roi.info$roi.pseudo}
+column, otherwise the \code{struct$roi.info$name} column.}
 }
 \value{
 Returns a display of the  transverse, sagittal or frontal plane. This plane

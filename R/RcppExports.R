@@ -49,7 +49,7 @@
     .Call('_espadon_meshinfront', PACKAGE = 'espadon', pt_x, pt_y, pt_z, p2_x, p2_y, p2_z, u_x, u_y, u_z, n_A, n_B, n_C)
 }
 
-.ptinpolygonC <- function(point_x, point_y, pol_x, pol_y) {
-    .Call('_espadon_ptinpolygonC', PACKAGE = 'espadon', point_x, point_y, pol_x, pol_y)
+.ptinpolygonC <- function(point_x, point_y, pol_x, pol_y, eps = 1.0e-9) {
+    .Call('_espadon_ptinpolygonC', PACKAGE = 'espadon', point_x, point_y, pol_x, pol_y, eps)
 }
 

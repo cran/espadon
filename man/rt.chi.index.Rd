@@ -29,17 +29,17 @@ rt.chi.index(
 \item{vol.max}{Positive number, by default equal to the maximum value of the reference volume.
 See Details.}
 
-\item{dose.th}{Positive number, in percent, used to determine the dose difference criterion. See Details.}
+\item{dose.th}{Number between 0 and 1, used to determine the dose difference criterion. See Details.}
 
 \item{delta.r}{Positive number, in mm. Distance difference criterion.}
 
-\item{analysis.th}{Positive number, in percent. Only the voxels whose value are
+\item{analysis.th}{Number between 0 and 1. Only the voxels whose value are
 greater than or equal \code{analyse.th * vol.max} are processed.}
 
 \item{local}{Boolean. If \code{local = FALSE} (default), a global Chi index
 is computed, and a local Chi index otherwise.}
 
-\item{local.th}{Positive number, in percent. Local threshold, only used if
+\item{local.th}{Number between 0 and 1. Local threshold, only used if
 \code{local = TRUE}. See Details.}
 
 \item{project.to.isocenter}{Boolean. If \code{TRUE}, and if \code{vol} and

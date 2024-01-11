@@ -7,13 +7,13 @@
 #' @param abs Boolean. If \code{TRUE} (default), the absolute value of Chi is computed.
 #' @param vol.max Positive number, by default equal to the maximum value of the reference volume.
 #' See Details.
-#' @param dose.th Positive number, in percent, used to determine the dose difference criterion. See Details.
+#' @param dose.th Number between 0 and 1, used to determine the dose difference criterion. See Details.
 #' @param delta.r Positive number, in mm. Distance difference criterion.
-#' @param analysis.th Positive number, in percent. Only the voxels whose value are 
+#' @param analysis.th Number between 0 and 1. Only the voxels whose value are 
 #' greater than or equal \code{analyse.th * vol.max} are processed.
 #' @param local Boolean. If \code{local = FALSE} (default), a global Chi index 
 #' is computed, and a local Chi index otherwise.
-#' @param local.th Positive number, in percent. Local threshold, only used if 
+#' @param local.th Number between 0 and 1. Local threshold, only used if 
 #' \code{local = TRUE}. See Details.
 #' @param project.to.isocenter Boolean. If \code{TRUE}, and if \code{vol} and 
 #' \code{vol.ref} are of modality "rtimage", the size of the pixels is corrected 

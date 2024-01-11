@@ -169,7 +169,8 @@ dicom.set.tag.value <- function (dicom.raw.data, tag, tag.value,
              }
            },
            "IS" = {
-             mem <- suppressWarnings(as.numeric(tag.value_ [conf.idx]))
+             mem <-unlist(strsplit(tag.value_ [conf.idx],"[\\]"))
+             mem <- suppressWarnings(as.numeric(mem))
              if (is.na(mem)){
                message (paste ("tag", tag_[conf.idx], "is not IS compliant. This TAG is not modified."))
                conformity.flag[conf.idx] <- FALSE
@@ -183,7 +184,7 @@ dicom.set.tag.value <- function (dicom.raw.data, tag, tag.value,
                if (length(new.raw)%%2==1) new.raw <- c (new.raw,as.raw(32))
                tag.value_ [conf.idx] <- rawToChar(new.raw)
                tag.raw.l[[conf.idx]] <- new.raw
-               m <- match(new.raw, charToRaw("0123456789+- "))
+               m <- match(new.raw, charToRaw("\\0123456789+- "))
                if (length(new.raw)>12 | any(is.na(m))){
                  message (paste ("tag", tag_[conf.idx], "is not IS compliant. This TAG is not modified."))
                  conformity.flag[conf.idx] <- FALSE

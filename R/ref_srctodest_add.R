@@ -3,7 +3,7 @@
 #' reference with the destination frame of reference. 
 #' @param src.ref Character string, pseudonym of the source frame of reference.
 #' @param dest.ref Character string, pseudonym of the destination frame of reference.
-#' @param TM 4x4 tansfert matrix for moving from \code{src.ref} to {dest.ref}.
+#' @param TM 4x4 tansfert matrix for moving from \code{src.ref} to \code{dest.ref}.
 #' @param T.MAT "t.mat" class object created by 
 #' \link[espadon]{load.patient.from.dicom}, \link[espadon]{load.patient.from.Rdcm} 
 #' or \link[espadon]{load.T.MAT}. If \code{T.MAT = NULL}, then only the link 

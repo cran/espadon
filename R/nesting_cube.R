@@ -61,9 +61,9 @@ nesting.cube <- function (obj, pt.min, pt.max, alias = "", description = NULL,..
     struct.cube[3, 5:8] <- pt.max[3]
     
     struct.in.obj.cube.idx <- round(solve (obj$xyz.from.ijk) %*% struct.cube,6)
-    rg.i <- c(floor(min(struct.in.obj.cube.idx[1,])):ceiling(max(struct.in.obj.cube.idx[1,])))
-    rg.j <- c(floor(min(struct.in.obj.cube.idx[2,])):ceiling(max(struct.in.obj.cube.idx[2,])))
-    rg.k <- c(floor(min(struct.in.obj.cube.idx[3,])):ceiling(max(struct.in.obj.cube.idx[3,])))
+    rg.i <- c(ceiling(min(struct.in.obj.cube.idx[1,])):floor(max(struct.in.obj.cube.idx[1,])))
+    rg.j <- c(ceiling(min(struct.in.obj.cube.idx[2,])):floor(max(struct.in.obj.cube.idx[2,])))
+    rg.k <- c(ceiling(min(struct.in.obj.cube.idx[3,])):floor(max(struct.in.obj.cube.idx[3,])))
     pt000 <- c(rg.i[1],rg.j[1],rg.k[1], 1) %*% t(obj$xyz.from.ijk)
     
     flag.i <- rg.i>=0 & rg.i<obj$n.ijk[1]

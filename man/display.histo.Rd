@@ -24,7 +24,7 @@ display.histo(
 \item{ygrid}{Boolean indicating the display of the y grid.}
 
 \item{MC.plot}{Boolean. If \code{MC.plot = TRUE}, then \code{display.histo} displays,
-if they exist, the quantile zones (Prob = {0, .05, .25, .5, .75, .95, 1})
+if they exist, the quantile zones (Prob = 0, .05, .25, .5, .75, .95, 1)
 of variations in counts.}
 
 \item{MC.col}{Character string, a valid palette with 4 colours corresponding to

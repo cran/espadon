@@ -25,9 +25,9 @@
 #' the title just indicates the value of \code{k}.
 #' @param abs.lab Label of the image abcissa. By default \code{abs.lab = 'i'}.
 #' @param ord.lab Label of the image ordinate. By default \code{ord.lab = 'j'}.
-#' @param abs.flip Boolean defaults to \code{FALSE} flipping the horizontal axis 
+#' @param flip Boolean defaults to \code{FALSE} flipping the horizontal axis 
 #' of the background image.
-#' @param ord.flip Boolean defaults to \code{FALSE} flipping the vertical axis 
+#' @param flop Boolean defaults to \code{FALSE} flipping the vertical axis 
 #' of the background image.
 #' @param bg Background color of the image. By default, this color is black.
 #' @param abs.rng Vector of 2 elements indicating the minimum and maximum 
@@ -36,6 +36,7 @@
 #' background image ordinate to display.
 #' @param interpolate Boolean, indicating whether to apply linear interpolation 
 #' to the image.
+#' @param ... others argument of plot function like xaxt, yaxt...
 #' @return Returns a display of the  \mjeqn{k^{th}}{ascii} image plane of \code{vol}.
 #' @seealso \link[espadon]{display.plane}.
 #' @examples
@@ -80,89 +81,98 @@ display.kplane <- function(vol, k = vol$k.idx [ceiling (length (vol$k.idx) / 2)]
                            col = grey.colors (255, start = 0, end = 1), 
                            breaks = NULL,
                            sat.transp = FALSE, add = FALSE, main = NULL,
-                           abs.lab = "i", ord.lab = "j", abs.flip = FALSE,
-                           ord.flip = FALSE, bg="#000000", abs.rng = NULL,
-                           ord.rng = NULL, interpolate = FALSE) {
-
+                           abs.lab = "i", ord.lab = "j", flip = FALSE,
+                           flop = FALSE, bg="#000000", abs.rng = NULL,
+                           ord.rng = NULL, interpolate = FALSE, ...) {
+  args = list(...)
+  k <- k[1]
+  if (!is.null(args[["abs.flip"]])) { 
+    flip <- args[["abs.flip"]]
+    args[["abs.flip"]] <- NULL
+  }
+  if (!is.null(args[["ord.flip"]]))  {
+    flop <- args[["ord.flip"]]
+    args[["ord.flip"]] <- NULL
+  }
   
   if (!is (vol, "volume")) stop ("vol should be a volume class object.")
   if(is.null(vol$vol3D.data)){
     stop ("empty vol$vol3D.data.")
   }
-      
-  k <- k[1]
+  vol$dxyz <- c(dxy,1)
+  vol$orientation <- c(1,0,0,0,1,0)
+  vol$xyz.from.ijk[1,] <- c(dxy[1],0,0,pt00[1])
+  vol$xyz.from.ijk[2,] <- c(0,dxy[2],0,pt00[2])
+  vol$xyz.from.ijk[3,] <- c(0,0,1,0)
+  vol$xyz0 <- (as.matrix(expand.grid(0,0,vol$k.idx,1)) %*% t(vol$xyz.from.ijk))[,1:3]
+  
+  expt.pt <-get.extreme.pt(vol)
+  expt.pt_ <- expt.pt[1:2,] + vol$dxyz[c(1,2,1,2)]* c(-0.5,-0.5,0.5, 0.5)
   
   
-  rg.min <- pt00 - 0.5 * dxy[1:2] 
-  rg.max <- pt00 + (vol$n.ijk[1:2]-0.5) * dxy[1:2] 
-  # rg.min <- c (min (rg.min_[1],rg.max_[1]), min(rg.min_[2],rg.max_[2]))
-  # rg.max <- c (max (rg.min_[1],rg.max_[1]), max(rg.min_[2],rg.max_[2]))
-  
+  if (is.null(abs.rng)){
+    abs.rng <- as.numeric(expt.pt_[1,])
+    if (flip) abs.rng[1:2] <- abs.rng[2:1]
+  } 
+  if (is.null(ord.rng)){
+    ord.rng <- as.numeric(expt.pt_[2,])
+    if (flop) ord.rng[1:2] <- ord.rng[2:1]
+  } 
   
   if (!add){
-    
-    if (is.null(abs.rng)){
-      abs.rng_ <- range(c(rg.min[1],rg.max[1]))
-    } else {
-      abs.rng_ <- abs.rng
-    }
-    if (abs.flip) abs.rng_[1:2] <- abs.rng_[2:1]
-    
-    if (is.null(ord.rng)){
-      ord.rng_ <- range(c(rg.min[2],rg.max[2]))
-    } else {
-      ord.rng_ <- ord.rng
-    }
-    if (ord.flip) ord.rng_[1:2] <- ord.rng_[2:1]
-    
-    # par(mar=c(4,4,4,4))
     if (is.null(main)) main = paste("@ k =",k)
+    args[["x"]] <- abs.rng
+    args[["y"]] <- ord.rng
+    args[["type"]] <- "n"
+    args[["xlim"]] <- abs.rng
+    args[["ylim"]] <- ord.rng
+    args[["main"]] <- main
+    args[["xlab"]] <- abs.lab
+    args[["ylab"]] <- ord.lab
+    args[["xaxs"]] <- "i"
+    args[["yaxs"]] <- "i"
+    args[["asp"]] <- 1
+    do.call(plot,args)
     
-    plot (abs.rng_, ord.rng_, type="n", xlim = abs.rng_, ylim = ord.rng_, asp=1,
-          main=main ,xlab=abs.lab, ylab = ord.lab, xaxs="i", yaxs="i")
     rect(par("usr")[1], par("usr")[3], par("usr")[2], par("usr")[4], col = bg)
-    
   }
   
-  if (!(k %in% vol$k.idx)){ 
+  if (!(k %in% vol$k.idx)){
     text((par("usr")[1]+par("usr")[2])/2, (par("usr")[3]+par("usr")[4])/2, "missing plane",
          col= "red", cex = 2)
   } else {
-    map <- aperm (as.matrix(vol$vol3D.data[,,which(k==vol$k.idx)], 
-                            dim =vol$n.ijk[1:2] ), perm=c (2, 1))
+    usr.x <- par("usr")[1:2]
+    usr.y <- par("usr")[3:4]
+    pt.min <- c(max(min(usr.x),min(abs.rng), expt.pt[1,1]),max(min(usr.y), min(ord.rng), expt.pt[2,1]), k )
+    pt.max <- c(min(max(usr.x), max(abs.rng), expt.pt[1,2]), min(max(usr.y), max(ord.rng), expt.pt[2,2]), k )
     
+    imin <- as.numeric(vol$min.pixel) #r[1]
+    imax <- as.numeric(vol$max.pixel) #r[2]
+    
+    vol <- nesting.cube(vol, pt.min, pt.max)
     if (!is.na(vol$min.pixel) & !is.na(vol$max.pixel)) {
-      # abs.left <- rg.min[1] - dxy[1]/2.0
-      # ord.bottom <- rg.min[2] - dxy[2]/2.0
-      # abs.right <- rg.max[1] + dxy[1]/2.0
-      # ord.top <- rg.max[2] + dxy[2]/2.0
-      abs.left <- rg.min[1] 
-      ord.bottom <- rg.min[2] 
-      abs.right <- rg.max[1]
-      ord.top <- rg.max[2]
-      
-      imin <- as.numeric(vol$min.pixel) #r[1]
-      imax <- as.numeric(vol$max.pixel) #r[2]
+      expt.pt <- get.extreme.pt(vol)[1:2,] + vol$dxyz[c(1,2,1,2)]* c(-0.5,-0.5,0.5, 0.5)
       
       if (!is.null(breaks) & !any(is.na(breaks))) {
         if (length(breaks)!= length (col) + 1) stop("length(breaks) must be equal to length(col) + 1.")
-        
       } else {
         breaks <- .pixel.scale (imin,imax,length(col))
       }
       
-      
       if(!any(is.na(breaks))){
         if (!sat.transp) {
-          # map[which(map <= imin)] <- imin
-          # map[which(map >= imax)] <- imax
           breaks[1] <- imin - 1
           breaks[length (breaks)] <- imax + 1
         }
+        map <- aperm (as.matrix(vol$vol3D.data[,,1], dim =vol$n.ijk[1:2] ), perm=c (2, 1))
         map.layer <- matrix (col[cut (as.numeric (map),breaks, include.lowest=TRUE)], nrow=nrow(map))
         
-        rasterImage (map.layer[nrow(map.layer):1,], xleft = abs.left, ybottom = ord.bottom,
-                     xright = abs.right, ytop = ord.top, interpolate = interpolate)
+        if (usr.x[2]<usr.x[1]) expt.pt[1,] <- rev(expt.pt[1,])
+        if (usr.y[2]<usr.y[1]) expt.pt[2,] <- rev(expt.pt[2,])
+        if ((usr.x[2]-usr.x[1])* vol$dxyz[1] < 0) map.layer <- map.layer[,ncol(map.layer):1]
+        if ((usr.y[2]-usr.y[1])* vol$dxyz[2] > 0) map.layer <- map.layer[nrow(map.layer):1,]
+        rasterImage (map.layer, xleft = expt.pt[1,1], ybottom = expt.pt[2,1],
+                     xright = expt.pt[1,2], ytop = expt.pt[2,2], interpolate = interpolate)
       }
       
     }

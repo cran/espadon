@@ -619,7 +619,7 @@ toy.load.patient <- function (
                                                         description =  "IMRT|PTV52")
         
       pat$rtdose[[1]]$patient <- pat$pat.pseudo
-	  pat$rtdose[[1]]$patient.name <- pat$patient$name[1]
+      pat$rtdose[[1]]$patient.name <- pat$patient$name[1]
       pat$rtdose[[1]]$patient.bd <- pat$patient$birth.date[1]
       pat$rtdose[[1]]$patient.sex <- pat$patient$sex[1]
       pat$rtdose[[1]]$object.name <- n
@@ -701,7 +701,7 @@ toy.load.patient <- function (
     n <-paste0(rt.date,"_ref1_do",ref1.do.nb[3],"_rtstruct")
     pat$rtstruct[[paste0(n,1)]] <- S
     pat$rtstruct[[1]]$patient <- pat$pat.pseudo
-	pat$rtstruct[[1]]$patient.name <- pat$patient$name[1]
+    pat$rtstruct[[1]]$patient.name <- pat$patient$name[1]
     pat$rtstruct[[1]]$patient.bd <- pat$patient$birth.date[1]
     pat$rtstruct[[1]]$patient.sex <- pat$patient$sex[2]
     pat$rtstruct[[1]]$object.name <- n

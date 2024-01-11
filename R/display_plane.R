@@ -62,6 +62,9 @@
 #' displayed on the image. It is displayed by default.
 #' @param legend.shift Numeric. It shifts (in mm) the display of the RoI legend 
 #' on x-axis.
+#' @param legend.roi.pseudo Boolean. If \code{TRUE}, the name used 
+#' for a RoI in the legend comes from the \code{struct$roi.info$roi.pseudo} 
+#' column, otherwise the \code{struct$roi.info$name} column.
 #' @details If \code{roi.name}, \code{roi.sname}, and \code{roi.idx} are
 #' all set to \code{NULL}, all closed planar or point RoI are selected.
 #' If a RoI is not present in the requested plane, the RoI legend won't mention it.
@@ -117,7 +120,8 @@ display.plane <- function (bottom = NULL, top = NULL, struct = NULL,
                            bottom.breaks = NULL, top.breaks = NULL, 
                            sat.transp = FALSE,
                            struct.lwd=2, main = NULL, 
-                           legend.plot = TRUE, legend.shift = 0) {
+                           legend.plot = TRUE, legend.shift = 0,
+                           legend.roi.pseudo = TRUE) {
   
   xpd <- NULL
 
@@ -369,6 +373,7 @@ display.plane <- function (bottom = NULL, top = NULL, struct = NULL,
       legendlty <- list()
       legendpch <- list()
       label.index <- 1
+      if (legend.roi.pseudo) {legend.name <- struct$roi.info$roi.pseudo} else {legend.name <- struct$roi.info$name}
       if (lab[w.idx]=="z" & 
           (bottom.p$ref.pseudo==struct$ref.pseudo | warn.ref) & 
           all(round(as.numeric(struct$ref.from.contour),6)== as.numeric(diag(4)))) {
@@ -415,7 +420,7 @@ display.plane <- function (bottom = NULL, top = NULL, struct = NULL,
           }
           if (test.pt){
             legendcol[[label.index]]<- struct$roi.info$color[j]
-            legendlabel[[label.index]]<- struct$roi.info$roi.pseudo[j]
+            legendlabel[[label.index]]<- legend.name[j]
             label.index<-label.index+1
           }
         }

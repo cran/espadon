@@ -30,7 +30,7 @@
 #' healthy RoI.
 
 #' @param dosimetry Vector indicating the requested dose indicators from among 
-#' 'D.min', 'D.max', 'D.mean' and 'STD.' If \code{D.xpc} is different from 
+#' 'D.min', 'D.max', 'D.mean' and 'STD'. If \code{D.xpc} is different from 
 #' \code{NULL}, it will be added.
 #' @param volume.indices Vector indicating the requested volume indices from among 
 #' 'V.tot',  'V.prescdose' (i.e. volume over \code{presc.dose}) and 'area'. If 
@@ -59,7 +59,7 @@
 #' \code{target.roi.idx} are all set to \code{NULL}, all RoI containing 'ptv' 
 #' (if they exist) are selected.
 
-#' @return  Return  a list containing (if requested)
+#' @return  Returns  a list containing (if requested)
 
 #' @return \mjeqn{-~dosimetry}{ascii} : dataframe containing, for all target and 
 #' healthy structures:

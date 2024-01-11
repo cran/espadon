@@ -22,7 +22,7 @@
 #' RoI.
   
 #' @param dosimetry Vector indicating the requested dose indicators from among 
-#' 'D.min', 'D.max', 'D.mean' and 'STD.' If \code{D.xpc} is different from 
+#' 'D.min', 'D.max', 'D.mean' and 'STD'. If \code{D.xpc} is different from 
 #' \code{NULL}, it will be added.
 #' @param volume.indices Vector indicating the requested volume indices from among 
 #' 'V.tot',  'V.prescdose' (i.e. volume over \code{presc.dose}) and 'area'. If 

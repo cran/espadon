@@ -74,7 +74,7 @@ struct.from.mesh <- function(mesh, z, thickness = NULL,
   obj$roi.info[1,] <- c(roi.nb[1], roi.name,"","AUTOMATIC",roi.color, castlow.str(roi.name))
   obj$object.alias <- alias[1]
   obj$description <- description
-  obj$roi.obs[1,] <- c(1,roi.nb[1],roi.name,"","","","",roi.type,"")
+  obj$roi.obs[1,] <- c(1,roi.nb[1],"","","","","",roi.type,"")
   
   pt <- t(mesh$mesh$vb[1:3,])
   z <- sort(unique(z))
@@ -231,7 +231,7 @@ struct.from.mesh <- function(mesh, z, thickness = NULL,
             keep <- .pt.in.polygon (ptj[1 ,1], ptj[1 ,2], ptk[ ,1], ptk[ ,2]) > 0.5
             return (ifelse (any(keep), k,NA))}))
           r <- r[!is.na (r)]
-          L.ct_[[j]]$level <- ifelse (length(r)!=0, length(r), 0)
+          L.ct_[[j]]$level <- length(r)
         } 
       } else L.ct_[[same.k.roi]]$level <- 0
       L.ct <-  c(L.ct,L.ct_)

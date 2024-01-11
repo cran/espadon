@@ -82,7 +82,11 @@
 #' -\tab the scanning sequence (value of TAG (0018,0020)),\cr
 #' -\tab the list of SOP labels (values of TAG (0008,0018)),\cr
 #' -\tab the dicom source files,\cr
-#' -\tab the encoding of the content of text tags (values of TAG (0008,0005)) and\cr 
+#' -\tab the encoding of the content of text tags (values of TAG (0008,0005))\cr 
+#' -\tab the description of the study (values of TAG (0008,1030)) in which all 
+#' letters whose ASCCI code is not between 32 and 125 are deleted,\cr 
+#' -\tab the description of the serie (values of TAG (0008,103E)) in which all 
+#' letters whose ASCCI code is not between 32 and 125 are deleted,\cr 
 #' -\tab the number of sub-objects.
 #' }
 #' }
@@ -116,7 +120,7 @@
 #' \itemize{
 #' \item \code{$origin}: the xyz-coordinates of the source point.
 #' \item \code{$direction}: the xyz-coordinates of the main direction of the fan.
-#' \item \code{$orientation}: the xyz-coordinates of the two unit vectors of the plane orthogonal to the {$direction}.
+#' \item \code{$orientation}: the xyz-coordinates of the two unit vectors of the plane orthogonal to the \code{$direction}.
 #' \item \code{$xyz}: the xyz-coordinates of the unit vectors of the fan rays
 #' \item \code{$local}: depending on the generation of the fan rays, it can be the spherical coordinates, 
 #' the deflection angles, the voxel coordinates...
@@ -165,7 +169,7 @@
 #' }
 #' 
 #' 
-#' @note {- the "rtplan" class also includes :}
+#' @note \emph{- the "rtplan" class also includes :}
 #' \itemize{
 #' \item \code{$approval.status}: value of TAG (300E,0002).
 #' \item \code{$number}: sub-object number.

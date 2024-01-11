@@ -1,7 +1,7 @@
 Package: espadon
 Type: Package
 Title: Easy Study of Patient DICOM Data in Oncology
-Version: 1.4.1
+Version: 1.5.1
 Authors@R: 
     c(person(given = "Cathy",
            family = "Fontbonne",
@@ -34,10 +34,10 @@ Depends: R (>= 4.3.0)
 Suggests: knitr, rmarkdown, sf
 VignetteBuilder: knitr
 NeedsCompilation: yes
-Packaged: 2023-08-28 09:27:38 UTC; cfontbonne
+Packaged: 2024-01-11 09:05:14 UTC; cfontbonne
 Author: Cathy Fontbonne [aut, cre] (LPC-CAEN, France),
   Jean-Marc Fontbonne [aut] (LPC-CAEN, France),
   Nathan Azemar [ctb] (LPC-CAEN, France)
 Maintainer: Cathy Fontbonne <contact.espadon@lpccaen.in2p3.fr>
 Repository: CRAN
-Date/Publication: 2023-08-28 10:10:02 UTC
+Date/Publication: 2024-01-11 09:30:05 UTC

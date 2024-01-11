@@ -7,7 +7,7 @@
 #' @param xgrid Boolean indicating the display of the x grid.
 #' @param ygrid Boolean indicating the display of the y grid.
 #' @param MC.plot Boolean. If \code{MC.plot = TRUE}, then \code{display.dV_dx} displays,
-#' if they exist, the quantile zones (Prob = {0, .025, .25, .5, .75, .975, 1})
+#' if they exist, the quantile zones (Prob = 0, .025, .25, .5, .75, .975, 1)
 #' of variations in volume density.
 #' @param MC.col Character string, a valid palette with 4 colours corresponding 
 #' to 100%, 95%, 50% and median of MC data.
