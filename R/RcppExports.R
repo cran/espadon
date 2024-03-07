@@ -53,3 +53,7 @@
     .Call('_espadon_ptinpolygonC', PACKAGE = 'espadon', point_x, point_y, pol_x, pol_y, eps)
 }
 
+.roiinterC <- function(pt1_x, pt1_y, u1_x, u1_y, d1, pt2_x, pt2_y, eps = 1e-6) {
+    .Call('_espadon_roiinterC', PACKAGE = 'espadon', pt1_x, pt1_y, u1_x, u1_y, d1, pt2_x, pt2_y, eps)
+}
+

@@ -303,7 +303,7 @@ display.DVH (DVH, MC.plot = TRUE, col = "#ff0000", lwd = 2)
 The espadon package offers the possibility of computing many radiotherapy indices. After specifying the target volumes to be treated (if available), the healthy volumes to be protected (if available), the dose distribution from rt-dose file, the functions ***rt.indices.from.roi*** and ***rt.indices.from.bin*** can calculate, on demand : 
 
 - dosimetry indices : minimum, maximum, average dose, standard deviation, requested D.x% and requested D.xcc.
-- volume indices  :  total volume, surface area and requested V.xGy.
+- volume indices  :  total volume, surface area and requested V.xGy or V.x%.
 - conformity indices : prescription isodose target volume (PITV),  prescription dose spillage (PDS), conformity index (CI), conformation number (CN), new conformity index (NCI), Dice similarity coefficient (DSC), conformity index based on distance (CIdistance), conformity distance index (CDI), triple point conformity scale (CS3), underdosed lesion factor (ULF), overdosed healthy tissues factor (OHTF), geometric conformity index (gCI), COIN , critical organ scoring index (COSI), generalized COSI (gCOSI).
 - homogeneity indices from RTOG or ICRU.
 - gradient indices : gradient index based on volumes ratio, modified gradient index (mGI).
@@ -331,6 +331,45 @@ rt.indices.from.roi (D.on.CT, S, target.roi.name = "ptv",
 
 The espadon package can also compute the Gamma index and the Chi index in 2D or 3D, using the ***rt.gamma.index*** and ***rt.chi.index***.
 
+## Spatial similarity metrics
 
+The espadon package calculates several spatial similarity metrics, such as :
 
+- the volumetric DICE similarity defined by DSC = 2 (VA ∩ VB) / (VA+VB)
+- the Dice-jaccard coefficient defined by DJC = (VA ∩ VB) / (VA ∪ VB)
+- the mean distance to conformity MDC, over-contouring mean distance over.MDC and under-contouring mean distance under.MDC, defined by Jena et al [1]
+- the maximum , mean and quantiles of Hausdorff distances
+- the surface DICE metric defined by Nikolov et al [2]
 
+Metrics using the volumes of regions of interest (ROIs) are calculated using the ***sp.similarity.from.bin*** function, and those using surfaces are calculated using the ***sp.similarity.from.mesh*** function.
+
+In the following example, the patient's file contains a CT-scan file and an rt-struct file in which the contours of two regions of interest are to be compared. To calculate the spatial similarity metrics, first generate the binary volumes relative to the ROIs to be compared.
+
+```{r, eval = FALSE}
+library (espadon)
+patient.folder <- choose.dir ()
+pat <- load.patient.from.dicom (patient.folder, data = FALSE)
+
+S <- load.obj.data (pat$rtstruct[[1]])
+CT <- load.obj.data (pat$ct[[1]])
+
+# The binary objects for 2 ROIs named "roi A" and "roi B" respectively :
+bin.A <- bin.from.roi (CT, S, roi.sname = "roi A", alias = "ROI A")
+bin.B <- bin.from.roi (CT, S, roi.sname = "roi B", alias = "ROI B")
+
+# The mesh objects for these 2 ROIs:
+# FYI: the smooth.iteration argument avoids staircase meshing, thanks to z-axis binning.
+#      As a result, ROI contours are also smoothed in XY.
+mesh.A <- mesh.from.bin(bin.A, smooth.iteration = 10, alias = "ROI A")
+mesh.B <- mesh.from.bin(bin.B, smooth.iteration = 10, alias = "ROI B")
+
+# spatial similarity
+sp.similarity.from.bin (bin.A , bin.B)
+sp.similarity.from.mesh (mesh.A , mesh.B, hausdorff.quantile = c (0.5, 0.95), surface.DSC.tol = 1:3)
+```
+
+### References
+
+[1] Jena R, et al. (2010). “A novel algorithm for the morphometric assessment of radiotherapy treatment planning volumes.”Br J Radiol., 83(985), 44-51.doi:10.1259/bjr/27674581.
+
+[2] Nikolov S, et al. (2018). “Deep learning to achieve clinically applicable segmentation of head and neck anatomy for radiotherapy.” ArXiv,abs/1809.04430.

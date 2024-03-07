@@ -11,7 +11,7 @@ display.plane(
   roi.name = NULL,
   roi.sname = NULL,
   roi.idx = NULL,
-  struct.dxyz = c(1, 1, 1),
+  struct.dxyz = c(0.5, 0.5, struct$thickness),
   display.ref = NULL,
   T.MAT = NULL,
   interpolate = TRUE,
@@ -21,8 +21,7 @@ display.plane(
   abs.rng = NULL,
   ord.rng = NULL,
   bottom.col = grey.colors(255, start = 0, end = 1),
-  top.col = rainbow(255, s = seq(1, 0, length.out = 255), start = 0, end = 4/6, alpha =
-    seq(0.8, 0, length.out = 255), rev = TRUE),
+  top.col = pal.rainbow(255),
   bottom.breaks = NULL,
   top.breaks = NULL,
   sat.transp = FALSE,
@@ -30,7 +29,8 @@ display.plane(
   main = NULL,
   legend.plot = TRUE,
   legend.shift = 0,
-  legend.roi.pseudo = TRUE
+  legend.roi.pseudo = TRUE,
+  ...
 )
 }
 \arguments{
@@ -52,10 +52,9 @@ object. By default \code{roi.sname = NULL}. See Details.}
 \item{roi.idx}{Vector of indices of the RoI that belong to the \code{struct}
 object. By default \code{roi.idx = NULL}. See Details.}
 
-\item{struct.dxyz}{Vector of 3 numbers. Used in case of \code{bottom} and
-\code{top} are set to \code{NULL}. It represents the virtual steps of a temporary
-volume created in the \code{display.ref} frame of reference, initialized at 1 mm
-in the 3 directions x, y and z.}
+\item{struct.dxyz}{3D vector. Used in case of \code{bottom} and
+\code{top} are set to \code{NULL}. It represents the voxel size in the \code{display.ref}
+frame of reference, used to calculate contours in frontal or sagittal view.}
 
 \item{display.ref}{Character string. Pseudonym of the frame of reference used
 for display. If \code{NULL} (default), the bottom image FoR, or top image FoR
@@ -65,8 +64,8 @@ for display. If \code{NULL} (default), the bottom image FoR, or top image FoR
 or \link[espadon]{load.T.MAT}. If \code{T.MAT} is \code{NULL}, \code{bottom},
 \code{top} and \code{struct} must have the same frame of reference.}
 
-\item{interpolate}{Boolean, indicating whether to apply trilinear interpolation
-to the \code{bottom} and \code{top} volumes.
+\item{interpolate}{Boolean, indicating whether to apply linear interpolation,
+when calculating the bottom and top cuts,and then when displaying them.
 If \code{interpolate = FALSE}, the values of the nearest voxels are used. When \code{TRUE} (by delfault),
 trilinear interpolation is used.}
 
@@ -118,6 +117,8 @@ on x-axis.}
 \item{legend.roi.pseudo}{Boolean. If \code{TRUE}, the name used
 for a RoI in the legend comes from the \code{struct$roi.info$roi.pseudo}
 column, otherwise the \code{struct$roi.info$name} column.}
+
+\item{...}{others parameters of plot function}
 }
 \value{
 Returns a display of the  transverse, sagittal or frontal plane. This plane
@@ -170,5 +171,6 @@ display.plane (bottom = CT, top = MR, interpolate = FALSE, display.ref ="ref2",
                T.MAT = patient$T.MAT)
 }
 \seealso{
-\link[espadon]{display.kplane}.
+\link[espadon]{display.kplane}, \link[espadon]{plot.volume},
+\link[espadon]{plot.struct}, \link[espadon]{plot.mesh}.
 }

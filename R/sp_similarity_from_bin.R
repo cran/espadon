@@ -2,7 +2,7 @@
 #' \loadmathjax
 #' @description The \code{sp.similarity.from.bin} function computes volumetric Dice 
 #' similarity coefficient, Dice-Jaccard coefficient and Dice surface similarity coefficient.
-#' @param vol.A,vol.B "volume" class objects, of \code{"binary"} modality
+#' @param vol.A,vol.B "volume" class objects, of \code{"binary"} modality. \code{vol.B} is the reference for MDC calculation.
 #' @param coeff Vector indicating the requested metrics from among 
 #' 'DSC' (Dice similarity coefficient),'DJC' (Dice-Jaccard coefficient), 
 #' and 'MDC' (mean distance to conformity). Equal to \code{NULL} if not requested.
@@ -14,7 +14,7 @@
 #' \item Dice-Jaccard coefficient \code{DJC} defined by :
 #' \mjdeqn{DJC = \frac{V_{A} ~\cap~ V_{B}}{V_{A} ~\cup~ V_{B}}}{ascii}
 #' \item mean distance to conformity \code{MDC}, over-contouring mean distance 
-#' \code{over.MDC}and under-contouring mean distance \code{under.MDC}, defined by 
+#' \code{over.MDC} and under-contouring mean distance \code{under.MDC}, defined by 
 #' \emph{Jena et al} \strong{\[1\]}
 #' }
 #' 

@@ -115,7 +115,6 @@ display.kplane (D, k = floor (length(D$k.idx)*3/8),
                 interpolate = FALSE)
 
 display.kplane (CT, k = floor (length(CT$k.idx)/3), col = pal.RVV (1000),
-                breaks = seq(-1000, 1000, length.out = 1001),
                 bg = "darkblue", ord.flip = TRUE, interpolate = FALSE)
 }
 \seealso{

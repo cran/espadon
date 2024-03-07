@@ -11,13 +11,12 @@ struct.from.mesh(
   roi.name = mesh$object.alias,
   roi.nb = 1,
   roi.color = "#ff0000",
-  roi.type = c("", "EXTERNAL", "PTV", "CTV", "GTV", "TREATED_VOLUME", "IRRAD_VOLUME",
-    "OAR", "BOLUS", "AVOIDANCE", "ORGAN", "MARKER", "REGISTRATION", "ISOCENTER",
-    "CONTRAST_AGENT", "CAVITY", "BRACHY_CHANNEL", "BRACHY_ACCESSORY", "BRACHY_SRC_APP",
-    "BRACHY_CHNL_SHLD", "SUPPORT", "FIXATION", "DOSE_REGION", "CONTROL",
-    "DOSE_MEASUREMENT"),
+  roi.type = "",
   alias = "",
-  description = NULL
+  description = NULL,
+  force.closed = TRUE,
+  verbose = TRUE,
+  ...
 )
 }
 \arguments{
@@ -38,11 +37,19 @@ it is deduced from \code{z}.}
 "TREATED_VOLUME", "IRRAD_VOLUME", "OAR", "BOLUS", "AVOIDANCE", "ORGAN", "MARKER",
 "REGISTRATION", "ISOCENTER", "CONTRAST_AGENT", "CAVITY", "BRACHY_CHANNEL",
 "BRACHY_ACCESSORY", "BRACHY_SRC_APP", "BRACHY_CHNL_SHLD", "SUPPORT", "FIXATION",
-"DOSE_REGION","CONTROL" and "DOSE_MEASUREMENT"}
+"DOSE_REGION","CONTROL" and "DOSE_MEASUREMENT".}
 
 \item{alias}{Character string, \code{$alias} of the created object.}
 
 \item{description}{Character string, describing the the created object.}
+
+\item{force.closed}{Boolean. Set to \code{TRUE} when the mesh represents the
+surface of a closed volume.}
+
+\item{verbose}{Boolean. If \code{TRUE} (default), a progress bar indicates
+the state of calculation.}
+
+\item{...}{Others parameters}
 }
 \value{
 Returns a "struct" class object (see \link[espadon]{espadon.class}

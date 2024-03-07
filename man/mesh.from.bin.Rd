@@ -7,7 +7,7 @@
 mesh.from.bin(
   bin,
   alias = "",
-  tol = min(bin$dxyz)/2,
+  tol = min(abs(bin$dxyz))/2,
   smooth.iteration = 10,
   smooth.type = c("taubin", "laplace", "HClaplace", "fujiLaplace", "angWeight",
     "surfPreserveLaplace"),

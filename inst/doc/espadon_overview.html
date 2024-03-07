@@ -12,7 +12,7 @@
 
 <meta name="author" content="Cathy &amp; Jean-Marc Fontbonne" />
 
-<meta name="date" content="2024-01-11" />
+<meta name="date" content="2024-03-07" />
 
 <title>espadon overview</title>
 
@@ -340,7 +340,7 @@ code > span.er { color: #a61717; background-color: #e3d2d2; }
 
 <h1 class="title toc-ignore">espadon overview</h1>
 <h4 class="author">Cathy &amp; Jean-Marc Fontbonne</h4>
-<h4 class="date">2024-01-11</h4>
+<h4 class="date">2024-03-07</h4>
 
 
 
@@ -690,8 +690,8 @@ dose distribution from rt-dose file, the functions
 <ul>
 <li>dosimetry indices : minimum, maximum, average dose, standard
 deviation, requested D.x% and requested D.xcc.</li>
-<li>volume indices : total volume, surface area and requested
-V.xGy.</li>
+<li>volume indices : total volume, surface area and requested V.xGy or
+V.x%.</li>
 <li>conformity indices : prescription isodose target volume (PITV),
 prescription dose spillage (PDS), conformity index (CI), conformation
 number (CN), new conformity index (NCI), Dice similarity coefficient
@@ -724,6 +724,59 @@ are outlined.</p>
 <p>The espadon package can also compute the Gamma index and the Chi
 index in 2D or 3D, using the <strong><em>rt.gamma.index</em></strong>
 and <strong><em>rt.chi.index</em></strong>.</p>
+</div>
+<div id="spatial-similarity-metrics" class="section level2">
+<h2>Spatial similarity metrics</h2>
+<p>The espadon package calculates several spatial similarity metrics,
+such as :</p>
+<ul>
+<li>the volumetric DICE similarity defined by DSC = 2 (VA ∩ VB) /
+(VA+VB)</li>
+<li>the Dice-jaccard coefficient defined by DJC = (VA ∩ VB) / (VA ∪
+VB)</li>
+<li>the mean distance to conformity MDC, over-contouring mean distance
+over.MDC and under-contouring mean distance under.MDC, defined by Jena
+et al [1]</li>
+<li>the maximum , mean and quantiles of Hausdorff distances</li>
+<li>the surface DICE metric defined by Nikolov et al [2]</li>
+</ul>
+<p>Metrics using the volumes of regions of interest (ROIs) are
+calculated using the <strong><em>sp.similarity.from.bin</em></strong>
+function, and those using surfaces are calculated using the
+<strong><em>sp.similarity.from.mesh</em></strong> function.</p>
+<p>In the following example, the patient’s file contains a CT-scan file
+and an rt-struct file in which the contours of two regions of interest
+are to be compared. To calculate the spatial similarity metrics, first
+generate the binary volumes relative to the ROIs to be compared.</p>
+<div class="sourceCode" id="cb17"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb17-1"><a href="#cb17-1" tabindex="-1"></a><span class="fu">library</span> (espadon)</span>
+<span id="cb17-2"><a href="#cb17-2" tabindex="-1"></a>patient.folder <span class="ot">&lt;-</span> <span class="fu">choose.dir</span> ()</span>
+<span id="cb17-3"><a href="#cb17-3" tabindex="-1"></a>pat <span class="ot">&lt;-</span> <span class="fu">load.patient.from.dicom</span> (patient.folder, <span class="at">data =</span> <span class="cn">FALSE</span>)</span>
+<span id="cb17-4"><a href="#cb17-4" tabindex="-1"></a></span>
+<span id="cb17-5"><a href="#cb17-5" tabindex="-1"></a>S <span class="ot">&lt;-</span> <span class="fu">load.obj.data</span> (pat<span class="sc">$</span>rtstruct[[<span class="dv">1</span>]])</span>
+<span id="cb17-6"><a href="#cb17-6" tabindex="-1"></a>CT <span class="ot">&lt;-</span> <span class="fu">load.obj.data</span> (pat<span class="sc">$</span>ct[[<span class="dv">1</span>]])</span>
+<span id="cb17-7"><a href="#cb17-7" tabindex="-1"></a></span>
+<span id="cb17-8"><a href="#cb17-8" tabindex="-1"></a><span class="co"># The binary objects for 2 ROIs named &quot;roi A&quot; and &quot;roi B&quot; respectively :</span></span>
+<span id="cb17-9"><a href="#cb17-9" tabindex="-1"></a>bin.A <span class="ot">&lt;-</span> <span class="fu">bin.from.roi</span> (CT, S, <span class="at">roi.sname =</span> <span class="st">&quot;roi A&quot;</span>, <span class="at">alias =</span> <span class="st">&quot;ROI A&quot;</span>)</span>
+<span id="cb17-10"><a href="#cb17-10" tabindex="-1"></a>bin.B <span class="ot">&lt;-</span> <span class="fu">bin.from.roi</span> (CT, S, <span class="at">roi.sname =</span> <span class="st">&quot;roi B&quot;</span>, <span class="at">alias =</span> <span class="st">&quot;ROI B&quot;</span>)</span>
+<span id="cb17-11"><a href="#cb17-11" tabindex="-1"></a></span>
+<span id="cb17-12"><a href="#cb17-12" tabindex="-1"></a><span class="co"># The mesh objects for these 2 ROIs:</span></span>
+<span id="cb17-13"><a href="#cb17-13" tabindex="-1"></a><span class="co"># FYI: the smooth.iteration argument avoids staircase meshing, thanks to z-axis binning.</span></span>
+<span id="cb17-14"><a href="#cb17-14" tabindex="-1"></a><span class="co">#      As a result, ROI contours are also smoothed in XY.</span></span>
+<span id="cb17-15"><a href="#cb17-15" tabindex="-1"></a>mesh.A <span class="ot">&lt;-</span> <span class="fu">mesh.from.bin</span>(bin.A, <span class="at">smooth.iteration =</span> <span class="dv">10</span>, <span class="at">alias =</span> <span class="st">&quot;ROI A&quot;</span>)</span>
+<span id="cb17-16"><a href="#cb17-16" tabindex="-1"></a>mesh.B <span class="ot">&lt;-</span> <span class="fu">mesh.from.bin</span>(bin.B, <span class="at">smooth.iteration =</span> <span class="dv">10</span>, <span class="at">alias =</span> <span class="st">&quot;ROI B&quot;</span>)</span>
+<span id="cb17-17"><a href="#cb17-17" tabindex="-1"></a></span>
+<span id="cb17-18"><a href="#cb17-18" tabindex="-1"></a><span class="co"># spatial similarity</span></span>
+<span id="cb17-19"><a href="#cb17-19" tabindex="-1"></a><span class="fu">sp.similarity.from.bin</span> (bin.A , bin.B)</span>
+<span id="cb17-20"><a href="#cb17-20" tabindex="-1"></a><span class="fu">sp.similarity.from.mesh</span> (mesh.A , mesh.B, <span class="at">hausdorff.quantile =</span> <span class="fu">c</span> (<span class="fl">0.5</span>, <span class="fl">0.95</span>), <span class="at">surface.DSC.tol =</span> <span class="dv">1</span><span class="sc">:</span><span class="dv">3</span>)</span></code></pre></div>
+<div id="references" class="section level3">
+<h3>References</h3>
+<p>[1] Jena R, et al. (2010). “A novel algorithm for the morphometric
+assessment of radiotherapy treatment planning volumes.”Br J Radiol.,
+83(985), 44-51.doi:10.1259/bjr/27674581.</p>
+<p>[2] Nikolov S, et al. (2018). “Deep learning to achieve clinically
+applicable segmentation of head and neck anatomy for radiotherapy.”
+ArXiv,abs/1809.04430.</p>
+</div>
 </div>
 
 

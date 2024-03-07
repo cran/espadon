@@ -2,14 +2,15 @@
 % Please edit documentation in R/sp_similarity_from_mesh.R
 \name{sp.similarity.from.mesh}
 \alias{sp.similarity.from.mesh}
-\title{Distance-based spatial similarity metrics calculated from the mesh.}
+\title{Distance-based spatial similarity metrics calculated from the mesh.
+\loadmathjax}
 \usage{
 sp.similarity.from.mesh(
   mesh1,
   mesh2,
   hausdorff.coeff = c("HD.max", "HD.mean"),
   hausdorff.quantile = c(0.5, 0.95),
-  surface.DSC.tol = seq(0, 10, 1)
+  surface.tol = seq(0, 10, 1)
 )
 }
 \arguments{
@@ -23,16 +24,22 @@ sp.similarity.from.mesh(
 representing the quantiles of the unsigned distances between \code{mesh1} and \code{mesh2}.
 Equal to \code{NULL} if not requested.}
 
-\item{surface.DSC.tol}{numeric vector representing the maximum margins of
+\item{surface.tol}{numeric vector representing the maximum margins of
 deviation which may be tolerated without penalty. Equal to \code{NULL} if not requested.}
 }
 \value{
 Returns a list containing (if requested):
 \itemize{
 \item \code{Hausdorff} : dataframe including the maximum, mean and quantiles
-\item \code{surfaceDSC} : dataframe with the columns \code{tol} and \code{surfaceDSC},
-representing respectively the requested tolerances and the surface Dice
-similarity coefficients defined by \emph{Nikolov et al} \strong{[1]}
+\item \code{smetrics} : dataframe with the columns:
+\itemize{
+\item \code{tol} : the requested tolerances
+\item \code{sDSC} : the surface Dice similarity coefficients,defined by
+\emph{Nikolov et al} \strong{[1]}
+\item \code{sAPL} : the surface Added Path Length in \mjeqn{mm^{2}}{ascii},
+introduced (in pixels) by  \emph{Vaassen et al} \strong{[2]}
+
+}
 }
 }
 \description{
@@ -57,10 +64,12 @@ mesh2$mesh$vb[1:3,] <- R2 * mesh2$mesh$normals[1:3,] + mesh2$mesh$vb[1:3,] +
              
 sp.similarity.from.mesh (mesh1 , mesh2, 
                          hausdorff.quantile = seq (0, 1, 0.05),
-                         surface.DSC.tol = seq (0, dR + abs(R2-R1), 0.5))
+                         surface.tol = seq (0, dR + abs(R2-R1), 0.5))
 }
 \references{
 \strong{[1]} \insertRef{Nikolov2018DeepLT}{espadon}
+
+\strong{[2]} \insertRef{Vaassen2020Eval}{espadon}
 }
 \seealso{
 \link[espadon]{sp.similarity.from.bin}

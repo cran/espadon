@@ -9,7 +9,7 @@
 #' no alpha channel is added to the colors.
 #' @param min.col,max.col respectively the color below -1000HU (by default, black,
 #'  i.e. \code{"#000000"}) and above +1000HU (by default, white, i.e. \code{"#FFFFFF"})
-#' @return Returns a vector of colors of size \code{n}.
+#' @return Returns a color-labeled vector of size \code{n}.
 
 #' @importFrom Rdpack reprompt
 #' @references 
@@ -85,7 +85,7 @@ pal.RVV <- function (n, alpha = NULL, min.col="#000000", max.col="#FFFFFF") {
   for (i in 1:length (HU.Y)) HU.col.pal <- c(HU.col.pal, adjust.col(HU.Y[i], HU.col[i, ]))
   HU.col.pal[1] <- min.col
   HU.col.pal[length (HU.col.pal)] <- max.col
-  
+  attr(HU.col.pal,"label") <-"RVV"
   if (!is.null (alpha)) {
     alpha[alpha > 1] <- 1
     alpha[alpha < 0] <- 0

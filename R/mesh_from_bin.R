@@ -65,7 +65,7 @@
 #' @importFrom rgl tmesh3d
 #' @importFrom methods is
 #' @export
-mesh.from.bin <- function (bin, alias="", tol = min(bin$dxyz)/2, 
+mesh.from.bin <- function (bin, alias="", tol = min(abs(bin$dxyz))/2, 
                            smooth.iteration = 10, 
                            smooth.type = c("taubin", "laplace", "HClaplace", 
                                            "fujiLaplace", "angWeight",

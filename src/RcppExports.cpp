@@ -220,6 +220,24 @@ BEGIN_RCPP
     return rcpp_result_gen;
 END_RCPP
 }
+// roiinterC
+std::vector <double> roiinterC(std::vector <double> pt1_x, std::vector <double> pt1_y, double u1_x, double u1_y, double d1, std::vector <double> pt2_x, std::vector <double> pt2_y, double eps);
+RcppExport SEXP _espadon_roiinterC(SEXP pt1_xSEXP, SEXP pt1_ySEXP, SEXP u1_xSEXP, SEXP u1_ySEXP, SEXP d1SEXP, SEXP pt2_xSEXP, SEXP pt2_ySEXP, SEXP epsSEXP) {
+BEGIN_RCPP
+    Rcpp::RObject rcpp_result_gen;
+    Rcpp::RNGScope rcpp_rngScope_gen;
+    Rcpp::traits::input_parameter< std::vector <double> >::type pt1_x(pt1_xSEXP);
+    Rcpp::traits::input_parameter< std::vector <double> >::type pt1_y(pt1_ySEXP);
+    Rcpp::traits::input_parameter< double >::type u1_x(u1_xSEXP);
+    Rcpp::traits::input_parameter< double >::type u1_y(u1_ySEXP);
+    Rcpp::traits::input_parameter< double >::type d1(d1SEXP);
+    Rcpp::traits::input_parameter< std::vector <double> >::type pt2_x(pt2_xSEXP);
+    Rcpp::traits::input_parameter< std::vector <double> >::type pt2_y(pt2_ySEXP);
+    Rcpp::traits::input_parameter< double >::type eps(epsSEXP);
+    rcpp_result_gen = Rcpp::wrap(roiinterC(pt1_x, pt1_y, u1_x, u1_y, d1, pt2_x, pt2_y, eps));
+    return rcpp_result_gen;
+END_RCPP
+}
 
 static const R_CallMethodDef CallEntries[] = {
     {"_espadon_dicombrowser", (DL_FUNC) &_espadon_dicombrowser, 7},
@@ -235,6 +253,7 @@ static const R_CallMethodDef CallEntries[] = {
     {"_espadon_medianfilterC", (DL_FUNC) &_espadon_medianfilterC, 6},
     {"_espadon_meshinfront", (DL_FUNC) &_espadon_meshinfront, 12},
     {"_espadon_ptinpolygonC", (DL_FUNC) &_espadon_ptinpolygonC, 5},
+    {"_espadon_roiinterC", (DL_FUNC) &_espadon_roiinterC, 8},
     {NULL, NULL, 0}
 };
 

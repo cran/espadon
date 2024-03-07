@@ -32,8 +32,7 @@
 #' library (rgl)
 #' open3d()
 #' display.3D.sections(CT, cross.pt= c(0, 50, 80),
-#'                     col= pal.RVV(200, alpha= c(rep(0,90), rep(1,110))),
-#'                     breaks = seq(-1000, 1000, length.out = 201))
+#'                     col= pal.RVV(200, alpha= c(rep(0,90), rep(1,110))))
 
 
 #' @export

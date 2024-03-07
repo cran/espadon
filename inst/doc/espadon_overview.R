@@ -193,3 +193,25 @@ knitr::opts_chunk$set(
 #                       healthy.roi.name = "chiasm",
 #                       presc.dose = 0.9 * 70)
 
+## ---- eval = FALSE------------------------------------------------------------
+#  library (espadon)
+#  patient.folder <- choose.dir ()
+#  pat <- load.patient.from.dicom (patient.folder, data = FALSE)
+#  
+#  S <- load.obj.data (pat$rtstruct[[1]])
+#  CT <- load.obj.data (pat$ct[[1]])
+#  
+#  # The binary objects for 2 ROIs named "roi A" and "roi B" respectively :
+#  bin.A <- bin.from.roi (CT, S, roi.sname = "roi A", alias = "ROI A")
+#  bin.B <- bin.from.roi (CT, S, roi.sname = "roi B", alias = "ROI B")
+#  
+#  # The mesh objects for these 2 ROIs:
+#  # FYI: the smooth.iteration argument avoids staircase meshing, thanks to z-axis binning.
+#  #      As a result, ROI contours are also smoothed in XY.
+#  mesh.A <- mesh.from.bin(bin.A, smooth.iteration = 10, alias = "ROI A")
+#  mesh.B <- mesh.from.bin(bin.B, smooth.iteration = 10, alias = "ROI B")
+#  
+#  # spatial similarity
+#  sp.similarity.from.bin (bin.A , bin.B)
+#  sp.similarity.from.mesh (mesh.A , mesh.B, hausdorff.quantile = c (0.5, 0.95), surface.DSC.tol = 1:3)
+

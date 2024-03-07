@@ -39,10 +39,8 @@ new.CT <- add.margin (CT, xyz.margin = c (-10, -10, 10), alias = "new CT")
 # display of the CT before and after, in the middle plane
 z.mid <- apply (get.extreme.pt (CT), 1, mean)[3]
 display.plane (bottom = CT, view.coord = z.mid, bottom.col = pal.RVV(1000),
-               bottom.breaks = seq(-1000, 1000, length.out = 1001),
                bg = "#00ffff", interpolate = FALSE)
 display.plane (bottom = new.CT, view.coord = z.mid, bottom.col = pal.RVV(1000),
-               bottom.breaks = seq(-1000, 1000, length.out = 1001),
                bg = "#00ffff", interpolate = FALSE)
 
 }

@@ -67,7 +67,6 @@
 #'                 interpolate = FALSE)
 #' 
 #' display.kplane (CT, k = floor (length(CT$k.idx)/3), col = pal.RVV (1000),
-#'                 breaks = seq(-1000, 1000, length.out = 1001),
 #'                 bg = "darkblue", ord.flip = TRUE, interpolate = FALSE)
 
 #' @export
@@ -156,6 +155,8 @@ display.kplane <- function(vol, k = vol$k.idx [ceiling (length (vol$k.idx) / 2)]
       if (!is.null(breaks) & !any(is.na(breaks))) {
         if (length(breaks)!= length (col) + 1) stop("length(breaks) must be equal to length(col) + 1.")
       } else {
+        pal <- attributes(col)$label
+        if (!is.null(pal)) if (pal=="RVV"){imin=-1000; imax = 1000}
         breaks <- .pixel.scale (imin,imax,length(col))
       }
       

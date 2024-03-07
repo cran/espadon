@@ -9,11 +9,9 @@
 #' tissue identification or image segment labelling. Its length must be \code{col} length.
 #' @param override.breaks Boolean. When \code{FALSE} (by default) ordinates are set to breaks. when \code{TRUE}
 #' colors are uniformely displayed, and associated breaks set to the correct ordinates for the given colors.
-#' @param bg Color of the background, seen by transparency for palette having alpha
-#' channel.
 #' @param new.window Boolean. If \code{TRUE}, it opens a new window for displaying
 #' the palette.
-#' @param ylab character string. Label of ordinates.
+#' @param ... others parameters of plot or axis functions
 #' @note the breaks are not necessarily evenly spaced. In this case, the colour palette
 #' can be represented as the breaks are defined (default option) or by choosing a
 #' constant spacing for each colour and displaying the associated abscissa
@@ -29,57 +27,69 @@
 #'                  ylab = "a simple color palette")
 #' display.palette (c ("red", "green", "blue"), breaks = c(0, 1, 3, 7), 
 #'                  override.breaks = TRUE)
-#' display.palette (c ("red", "green", "blue"), factors = c ("red", "green", "blue"))
-#' display.palette (c ("gray", "green", "blue"), factors = c (NA, 1, 2))
+#' display.palette (c ("red", "green", "blue"), 
+#'                  factors = c("red", "green", "blue"))
+#' display.palette (c ("grey", "green", "blue"), factors = c(NA, 1, 2))
 #'
-#' # for RVV palette, HU range must be [-1000, 1000]
-#' display.palette (pal.RVV (255), breaks = seq (-1000, 1000, length.out=256))
+#' # for RVV palette, the function computes breaks between -1000 and 1000
+#' display.palette (pal.RVV (255), new.window = TRUE)
 #'
 #' # a palette for dose, for instance
 #' display.palette (rainbow (255, start = 0, end = 4/6, rev = TRUE), 
-#'                  breaks = seq (0, 60, length.out = 256))
+#'                  breaks = seq (0, 60, length.out = 256), new.window = TRUE)
 #'
 #' # black & white palette for CTs or MRs
 #' display.palette (grey.colors (255, start = 0, end = 1), 
-#'                  breaks = seq (0, 60, length.out = 256))
+#'                  breaks = seq (0, 60, length.out = 256), new.window = TRUE)
 #'
 #' # transparency affects colors depending on background (black in first exemple,
 #' # white in the second one)
-#' display.palette (rainbow (255, s = seq (1, 0, length.out = 255),
-#'                           start = 0, end = 4/6,
-#'                           alpha = seq (0.8, 0, length.out = 255), rev = TRUE),
-#'                           breaks = seq (0, 60, length.out=256))
-#' display.palette (rainbow (255, s = seq (1, 0, length.out = 255),
-#'                           start = 0, end = 4/6,
-#'                           alpha = seq (0.8, 0, length.out = 255), rev = TRUE),
-#'                           breaks = seq (0, 60, length.out=256), bg = "white")
+#' display.palette (pal.rainbow(255), breaks = seq (0, 60, length.out=256))
+#' display.palette (pal.rainbow(255), breaks = seq (0, 60, length.out=256), 
+#'                  bg = "white", new.window = TRUE)
 #' }                         
 #' # colors contracted range using non uniform breaks in the plot window
-#' display.palette (rainbow(255, s = seq(1, 0.8, length.out = 255), 
-#'                          start = 0, end = 4/6, 
-#'                          alpha = seq(0.8, 0.6, length.out = 255), rev = TRUE),
+#' display.palette (pal.rainbow(255),
 #'                  breaks = seq (0, 1, length.out = 256)^0.25 * 60, bg="grey", 
 #'                  new.window = FALSE)
 #'
 #' # the same using breaks override
-#' display.palette (rainbow(255, s = seq(1, 0.8, length.out = 255), 
-#'                          start = 0, end = 4/6, 
-#'                          alpha = seq(0.8, 0.6, length.out = 255), rev = TRUE),
+#' display.palette (pal.rainbow(255),
 #'                  breaks = seq (0, 1, length.out = 256)^0.25 * 60, bg="grey", 
 #'                  override.breaks = TRUE, new.window = FALSE)
 #' 
 #' @export
 #' @importFrom grDevices dev.new
 #' @importFrom stats approx
-display.palette <- function (col, breaks = NULL, factors = NULL, override.breaks = FALSE,
-                             bg = "black", new.window = TRUE, ylab="")
-{
+display.palette <- function (col, breaks = NULL, factors = NULL, 
+                             override.breaks = FALSE,
+                             new.window = FALSE,...) {
+
+
+  pal <- attributes(col)$label
+  if (!is.null(pal)) if (pal=="RVV" & is.null(breaks) & is.null(factors)){
+    breaks <- seq(-1000,1000, length.out = length(col) + 1)}
+  
   if (is.null(breaks) & is.null(factors))
     stop("breaks & factors can not both be null.")
+  
   if (new.window) {
     dev.new (width = 2, height = 5, noRStudioGD = T)
     par (mar = c (1, 4, 1, 0.1))
   }
+  
+  args <- tryCatch(list(...), error=function(e)list())
+  args_ <- args
+  if (is.null(args[["ylab"]])) args[["ylab"]]<-""
+  if (is.null(args[["xlab"]])) args[["xlab"]]<-""
+  if (is.null(args[["las"]])) args[["las"]]<-2
+  if (is.null(args_[["las"]])) args_[["las"]]<-2
+  args[["x"]] <- c(0, 2)
+  args[["type"]] <- "n"
+  args[["xaxt"]] <- "n"
+  args[["yaxs"]] <- "i"
+  bg <-args[["bg"]]; if(is.null(bg)) bg <- "black";args[["bg"]] <- NULL
+  
   if (!is.null(breaks)) {
     if (!is.null(factors))
       message("breaks is used in priority.")
@@ -87,8 +97,10 @@ display.palette <- function (col, breaks = NULL, factors = NULL, override.breaks
       stop ("breaks length must be col length + 1.\n")
     
     if (!override.breaks) {
-      plot(c(0, 2), range (breaks), type = "n", xaxt = "n",
-           xlab = "", ylab = ylab, las = 2, yaxs = "i")
+      args[["y"]]  <- range (breaks)
+      do.call(plot,args)
+      # plot(c(0, 2), range (breaks), type = "n", xaxt = "n",
+      #      xlab = "", ylab = ylab, las = 2, yaxs = "i")
       rect(par("usr")[1], par("usr")[3], par("usr")[2],
            par("usr")[4], col = bg)
       for (i in 1:length (col))
@@ -96,8 +108,11 @@ display.palette <- function (col, breaks = NULL, factors = NULL, override.breaks
               breaks[i+1], col = col[i], border = NA)
       rect (par("usr")[1], par("usr")[3], par("usr")[2], par("usr")[4])
     } else {
-      plot(c (0, 2), c(0.5, length (col) + 0.5), type = "n", xaxt = "n", yaxt="n",
-           xlab = "", ylab = ylab, las = 2, yaxs = "i")
+      args[["y"]]  <- c(0.5, length (col) + 0.5)
+      args[["yaxt"]] <- "n"
+      do.call(plot,args)
+      # plot(c (0, 2), c(0.5, length (col) + 0.5), type = "n", xaxt = "n", yaxt="n",
+      #      xlab = "", ylab = ylab, las = 2, yaxs = "i")
       rect(par("usr")[1], par("usr")[3], par("usr")[2],
            par("usr")[4], col = bg)
       for (i in 1:length (col))
@@ -110,7 +125,13 @@ display.palette <- function (col, breaks = NULL, factors = NULL, override.breaks
       } else {
         y <- seq (0.5, length (col) + 0.5, length.out = 10)
         b <- approx (0.5 + 0:length (col), breaks, y)$y
-        axis (2, y, round (b, 1), las = 2)
+        
+        args_[["side"]] <- 2
+        args_[["at"]] <- y
+        args_[["labels "]] <- round (b, 1)
+        do.call(axis,args_)
+        
+        # axis (2, y, round (b, 1), las = 2)
       }
     }
     
@@ -119,16 +140,22 @@ display.palette <- function (col, breaks = NULL, factors = NULL, override.breaks
       stop ("factors length must be col length.\n")
     breaks <- c(0, 1:length (col)) + 0.5
     
-    plot(c (0, 2), c(1 - 0.5, length (col) + 0.5), type = "n", xaxt = "n", yaxt="n",
-         xlab = "", ylab = "", las = 2, yaxs = "i")
+    args[["y"]]  <- c(1 - 0.5, length (col) + 0.5)
+    args[["yaxt"]] <- "n"
+    do.call(plot,args)
+    # plot(c (0, 2), c(1 - 0.5, length (col) + 0.5), type = "n", xaxt = "n", yaxt="n",
+    #      xlab = "", ylab = "", las = 2, yaxs = "i")
     rect(par("usr")[1], par("usr")[3], par("usr")[2],
          par("usr")[4], col = bg)
     for (i in 1:length (col))
-      rect (par("usr")[1], i-0.5, par("usr")[2],
-            i+0.5, col = col[i], border = NA)
-    rect (par("usr")[1], par("usr")[3], par("usr")[2],
-          par("usr")[4])
-    axis (2, 1:length (factors), factors, las=2)
+      rect (par("usr")[1], i-0.5, par("usr")[2], i+0.5, col = col[i], border = NA)
+    rect (par("usr")[1], par("usr")[3], par("usr")[2], par("usr")[4])
+    
+    args_[["side"]] <- 2
+    args_[["at"]] <-1:length (factors)
+    args_[["labels "]] <- factors
+    do.call(axis,args_)
+    # axis (2, 1:length (factors), factors, las=2)
   }
   
 }

@@ -17,7 +17,7 @@ no alpha channel is added to the colors.}
 i.e. \code{"#000000"}) and above +1000HU (by default, white, i.e. \code{"#FFFFFF"})}
 }
 \value{
-Returns a vector of colors of size \code{n}.
+Returns a color-labeled vector of size \code{n}.
 }
 \description{
 The \code{RVV.pal} function produces a color palette where

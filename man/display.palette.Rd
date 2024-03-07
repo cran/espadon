@@ -9,9 +9,8 @@ display.palette(
   breaks = NULL,
   factors = NULL,
   override.breaks = FALSE,
-  bg = "black",
-  new.window = TRUE,
-  ylab = ""
+  new.window = FALSE,
+  ...
 )
 }
 \arguments{
@@ -27,13 +26,10 @@ tissue identification or image segment labelling. Its length must be \code{col} 
 \item{override.breaks}{Boolean. When \code{FALSE} (by default) ordinates are set to breaks. when \code{TRUE}
 colors are uniformely displayed, and associated breaks set to the correct ordinates for the given colors.}
 
-\item{bg}{Color of the background, seen by transparency for palette having alpha
-channel.}
-
 \item{new.window}{Boolean. If \code{TRUE}, it opens a new window for displaying
 the palette.}
 
-\item{ylab}{character string. Label of ordinates.}
+\item{...}{others parameters of plot or axis functions}
 }
 \value{
 Returns in a new device (if \code{new.window = TRUE}), or in the
@@ -58,42 +54,34 @@ display.palette (c ("red", "green", "blue"), breaks = c(0, 1, 3, 7),
                  ylab = "a simple color palette")
 display.palette (c ("red", "green", "blue"), breaks = c(0, 1, 3, 7), 
                  override.breaks = TRUE)
-display.palette (c ("red", "green", "blue"), factors = c ("red", "green", "blue"))
-display.palette (c ("gray", "green", "blue"), factors = c (NA, 1, 2))
+display.palette (c ("red", "green", "blue"), 
+                 factors = c("red", "green", "blue"))
+display.palette (c ("grey", "green", "blue"), factors = c(NA, 1, 2))
 
-# for RVV palette, HU range must be [-1000, 1000]
-display.palette (pal.RVV (255), breaks = seq (-1000, 1000, length.out=256))
+# for RVV palette, the function computes breaks between -1000 and 1000
+display.palette (pal.RVV (255), new.window = TRUE)
 
 # a palette for dose, for instance
 display.palette (rainbow (255, start = 0, end = 4/6, rev = TRUE), 
-                 breaks = seq (0, 60, length.out = 256))
+                 breaks = seq (0, 60, length.out = 256), new.window = TRUE)
 
 # black & white palette for CTs or MRs
 display.palette (grey.colors (255, start = 0, end = 1), 
-                 breaks = seq (0, 60, length.out = 256))
+                 breaks = seq (0, 60, length.out = 256), new.window = TRUE)
 
 # transparency affects colors depending on background (black in first exemple,
 # white in the second one)
-display.palette (rainbow (255, s = seq (1, 0, length.out = 255),
-                          start = 0, end = 4/6,
-                          alpha = seq (0.8, 0, length.out = 255), rev = TRUE),
-                          breaks = seq (0, 60, length.out=256))
-display.palette (rainbow (255, s = seq (1, 0, length.out = 255),
-                          start = 0, end = 4/6,
-                          alpha = seq (0.8, 0, length.out = 255), rev = TRUE),
-                          breaks = seq (0, 60, length.out=256), bg = "white")
+display.palette (pal.rainbow(255), breaks = seq (0, 60, length.out=256))
+display.palette (pal.rainbow(255), breaks = seq (0, 60, length.out=256), 
+                 bg = "white", new.window = TRUE)
 }                         
 # colors contracted range using non uniform breaks in the plot window
-display.palette (rainbow(255, s = seq(1, 0.8, length.out = 255), 
-                         start = 0, end = 4/6, 
-                         alpha = seq(0.8, 0.6, length.out = 255), rev = TRUE),
+display.palette (pal.rainbow(255),
                  breaks = seq (0, 1, length.out = 256)^0.25 * 60, bg="grey", 
                  new.window = FALSE)
 
 # the same using breaks override
-display.palette (rainbow(255, s = seq(1, 0.8, length.out = 255), 
-                         start = 0, end = 4/6, 
-                         alpha = seq(0.8, 0.6, length.out = 255), rev = TRUE),
+display.palette (pal.rainbow(255),
                  breaks = seq (0, 1, length.out = 256)^0.25 * 60, bg="grey", 
                  override.breaks = TRUE, new.window = FALSE)
 

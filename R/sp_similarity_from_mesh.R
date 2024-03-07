@@ -1,4 +1,5 @@
 #' Distance-based spatial similarity metrics calculated from the mesh.
+#' \loadmathjax
 #' @description The \code{sp.similarity.from.mesh} function computes Hausdorff 
 #' distances and surface Dice similarity coefficient.
 #' @param mesh1,mesh2 espadon mesh class objects
@@ -8,18 +9,25 @@
 #' @param hausdorff.quantile numeric vector of probabilities with values between 0 and 1,
 #' representing the quantiles of the unsigned distances between \code{mesh1} and \code{mesh2}.
 #' Equal to \code{NULL} if not requested.
-#' @param surface.DSC.tol numeric vector representing the maximum margins of 
+#' @param surface.tol numeric vector representing the maximum margins of 
 #' deviation which may be tolerated without penalty. Equal to \code{NULL} if not requested.
 #' @return Returns a list containing (if requested): 
 #' \itemize{
 #' \item \code{Hausdorff} : dataframe including the maximum, mean and quantiles 
-#' \item \code{surfaceDSC} : dataframe with the columns \code{tol} and \code{surfaceDSC},
-#' representing respectively the requested tolerances and the surface Dice 
-#' similarity coefficients defined by \emph{Nikolov et al} \strong{\[1\]}
+#' \item \code{smetrics} : dataframe with the columns:
+#'  \itemize{
+#'  \item \code{tol} : the requested tolerances
+#'  \item \code{sDSC} : the surface Dice similarity coefficients,defined by 
+#'  \emph{Nikolov et al} \strong{\[1\]}
+#'  \item \code{sAPL} : the surface Added Path Length in \mjeqn{mm^{2}}{ascii},
+#'   introduced (in pixels) by  \emph{Vaassen et al} \strong{\[2\]}
+#'  
+#' }
 #' }
 #' @importFrom Rdpack reprompt
 #' @references \strong{\[1\]} \insertRef{Nikolov2018DeepLT}{espadon}
-
+#' @references \strong{\[2\]} \insertRef{Vaassen2020Eval}{espadon}
+#' 
 #' @seealso \link[espadon]{sp.similarity.from.bin}
 #' @examples
 #' library (Rvcg)
@@ -39,12 +47,12 @@
 #'              
 #' sp.similarity.from.mesh (mesh1 , mesh2, 
 #'                          hausdorff.quantile = seq (0, 1, 0.05),
-#'                          surface.DSC.tol = seq (0, dR + abs(R2-R1), 0.5))
+#'                          surface.tol = seq (0, dR + abs(R2-R1), 0.5))
 #' @export
 sp.similarity.from.mesh <- function (mesh1, mesh2, 
                                      hausdorff.coeff = c('HD.max', 'HD.mean'),
                                      hausdorff.quantile = c(0.5,0.95), 
-                                     surface.DSC.tol = seq(0,10, 1)) {
+                                     surface.tol = seq(0,10, 1)) {
   
   if (!all(hausdorff.quantile<=1 & hausdorff.quantile>=0)) stop("hausdorff.quantile must be between 0 and 1")
   if (!is.null(mesh1$ref.pseudo) & !is.null(mesh2$ref.pseudo))
@@ -101,15 +109,23 @@ sp.similarity.from.mesh <- function (mesh1, mesh2,
     L[['Hausdorff']] <-data.frame(label = label, HD = c(HD, result.quantile))
   
 
-  if (length(surface.DSC.tol)==0) return(L)
+  if (length(surface.tol)==0) return(L)
  
   S1.tot <- sum(S1)
   S2.tot <- sum(S2)
-  surface.DSC <- data.frame(tol= surface.DSC.tol,
-                            sDSC =sapply(surface.DSC.tol, 
-                                         function(d) sum(S1[d1<=d]) + 
-                                           sum(S2[d2<=d]))/ (S1.tot + S2.tot))
-  L[['surfaceDSC']] <- surface.DSC
+  # surface.DSC <- data.frame (tol= surface.tol,
+  #                            sDSC =sapply(surface.tol, 
+  #                                         function(d) sum(S1[d1<=d]) + 
+  #                                           sum(S2[d2<=d]))/ (S1.tot + S2.tot))
+  # L[['surfaceDSC']] <- surface.DSC
+  
+  surface.metrics <- do.call (rbind.data.frame,
+                              lapply(surface.tol, function(d){
+                                data.frame(tol = d, sDSC = (sum(S1[d1<=d]) + 
+                                             sum(S2[d2<=d]))/ (S1.tot + S2.tot),
+                                           sAPL = sum(S1[d1>d]))
+                              }))
+  L[['smetrics']] <- surface.metrics
   return(L)
   
 }

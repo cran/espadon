@@ -12,7 +12,7 @@ sp.similarity.from.bin(
 )
 }
 \arguments{
-\item{vol.A, vol.B}{"volume" class objects, of \code{"binary"} modality}
+\item{vol.A, vol.B}{"volume" class objects, of \code{"binary"} modality. \code{vol.B} is the reference for MDC calculation.}
 
 \item{coeff}{Vector indicating the requested metrics from among
 'DSC' (Dice similarity coefficient),'DJC' (Dice-Jaccard coefficient),
@@ -26,7 +26,7 @@ returns a dataframe containing (if requested):
 \item Dice-Jaccard coefficient \code{DJC} defined by :
 \mjdeqn{DJC = \frac{V_{A} ~\cap~ V_{B}}{V_{A} ~\cup~ V_{B}}}{ascii}
 \item mean distance to conformity \code{MDC}, over-contouring mean distance
-\code{over.MDC}and under-contouring mean distance \code{under.MDC}, defined by
+\code{over.MDC} and under-contouring mean distance \code{under.MDC}, defined by
 \emph{Jena et al} \strong{[1]}
 }
 }

@@ -13,7 +13,8 @@ bin.from.roi(
   T.MAT = NULL,
   within = TRUE,
   alias = "",
-  description = NULL
+  description = NULL,
+  verbose = TRUE
 )
 }
 \arguments{
@@ -46,6 +47,9 @@ depending on their \code{$level} field. If \code{within = FALSE}, only the
 \item{description}{Character string, describing the created object. If
 \code{description = NULL}
 (default value), it will be set to \code{struct$roi.info$roi.pseudo[roi.idx]}.}
+
+\item{verbose}{Boolean. If \code{TRUE} (default), a progress bar indicates
+the state of calculation.}
 }
 \value{
 Returns a "volume" class object of "binary" modality (see

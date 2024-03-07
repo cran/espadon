@@ -13,7 +13,7 @@
 
 #####################################################################################
 .espadon.version <- function(){
-  return ("1.5.1")
+  return ("1.6.0")
 }
 
 #####################################################################################
@@ -1250,7 +1250,7 @@
                      "chair.head.frame.position", "snout.position", "meterset.rate",
                      "scan.spot.id","scan.spot.pos.nb","scan.spot.pos.map","scan.spot.reordering.allowed",
                      "scan.spot.meterset.weight","scanning.spot.size","painting.nb")
-    ctl.pt.num.tag <- c(1:5,7,9,11:12,14:16,19:23,25,27,30:31,33,36:38)
+    ctl.pt.num.tag <- c(1:5,7,9,11:12,14:16,19:23,25,27,30:31,33,38)
     
     coll.name <- c("type", "source.distance", "nb","position.boundaries","position")
     coll.tag <- c("(300A,00B8)", "(300A,00BA)", "(300A,00BC)", "(300A,00BE)", "(300A,011C)")
@@ -1315,13 +1315,21 @@
         spot.map <- NULL
         if (!is.null(info$scan.spot.pos.map)) {
           
-          spot.map<- cbind(matrix(as.numeric(unlist(strsplit(info$scan.spot.pos.map[j],",|c[(]|[)]"))[-1]), 
-                                  ncol=2, byrow=TRUE),0,1)
+          dum <- unlist(strsplit(info$scan.spot.pos.map[j],",|c[(]|[)]"))
+          if (length(dum) >1) dum <- dum[-1] 
+          spot.map<- cbind(matrix(as.numeric(dum), ncol=2, byrow=TRUE),0,1)
           spot.map <-  (spot.map %*% t(M))
           spot.map <- cbind(rep(info$ctl.pt.idx[j],nrow(spot.map)),spot.map)
           colnames(spot.map) <- c("ctl.pt.idx","x","y","z","t")
-        } 
-        
+          
+          if (!is.null(info$scan.spot.meterset.weight)) {
+            spot.map <- cbind(spot.map,NA)
+            colnames(spot.map) <- c("ctl.pt.idx","x","y","z","t","meterset.weight")
+            dum <- unlist(strsplit(info$scan.spot.meterset.weight[j],",|c[(]|[)]"))
+            if (length(dum)>1) dum <- dum[-1]
+            spot.map[1:length(dum),"meterset.weight"] <- as.numeric(dum)
+          }
+        }
         list(beam.orientation = beam.orientation, beam.source= beam.source, 
              beam.direction=beam.direction, beam.isocenter=beam.isocenter, 
              spot.map = spot.map)
@@ -1335,7 +1343,9 @@
       beam.isocenter <- as.matrix(do.call(rbind,lapply(L,function(l) l$beam.isocenter)))
       colnames(beam.isocenter) <- c("x","y","z")
       spot.map <- do.call(rbind,lapply(L,function(l) l$spot.map))
-      if (!is.null(spot.map)) spot.map <- spot.map[,1:4]
+      if (!is.null(spot.map)) spot.map <- spot.map[,-5] 
+
+  
       ########################
       p.t_ <- gsub(")","[)]",gsub("(","[(]",p.t, fixed=TRUE), fixed=TRUE)
       p.t2 <- paste0 ("^",p.t_," [(]300A,011A[)] item[[:digit:]]+$")
@@ -1373,7 +1383,7 @@
     
   }
   
-  
+
   if (sum(header$fraction.info$nb.of.brachy.app)>0){
     
     st.idx <- grep ("^[(]300A,0070[)] item[[:digit:]]+$", name)
@@ -2589,7 +2599,6 @@
 }
 
 #############################################################################
-
 .struct.moreinfo <- function(roi.data, ref.from.contour,thickness){
   if (is.null(roi.data)) return (NULL)
   db <- lapply (roi.data , function (l2) {
@@ -2602,16 +2611,16 @@
     pt <- do.call(rbind,pt)
     pt$t <- 1
     pt <-as.data.frame(t(ref.from.contour %*% t(as.matrix(pt))))
-
-
+    
+    
     if (nrow(pt)==0) return (list(min.x=NA, max.x=NA,
-                                   min.y=NA, max.y = NA,
-                                   min.z=NA, max.z = NA,
-                                   vol = NA, Gx = NA, Gy = NA, Gz = NA, continue=NA))
+                                  min.y=NA, max.y = NA,
+                                  min.z=NA, max.z = NA,
+                                  vol = NA, Gx = NA, Gy = NA, Gz = NA, continue=NA))
     
     r <- t(matrix (c(range (pt[,1]), range (pt[,2]), range (pt[,3])),
-                 ncol=2, byrow = T))
-   
+                   ncol=2, byrow = T))
+    
     if (sign(thickness)==-1) {
       z.breaks <- sort(unique(unlist (sapply(l2,function(l) l$pt$z))), decreasing = TRUE)
     } else { 
@@ -2628,8 +2637,6 @@
     }
     
     
-
-    
     if (setequal (r[1,], r[2,])) return (list (min.x = r[1,1], max.x = r[2,1],
                                                min.y = r[1,2], max.y = r[2,2],
                                                min.z = r[1,3], max.z = r[2,3],
@@ -2637,22 +2644,33 @@
                                                Gx = r[1,1], Gy = r[1,2], Gz = r[1,3], continue=continue))
     
     dum <- lapply(l2, function (l) {
-      # if (length(unique(round(l$pt[ ,3],3)))!=1) return( list(A= NA, Gx=NA, Gy=NA, Gz= NA))
-      if (!(castlow.str(l$type) %in% c("closedplanar","point"))) return( list(A= NA, Gx=NA, Gy=NA, Gz= NA))
-      if (nrow(l$pt)==1){
+      
+      if  (grepl("open",castlow.str(l$type))){ 
+        idx <- 2:nrow(l$pt)
+        w <- sqrt(diff(l$pt[,1])^2 + diff(l$pt[,2])^2 +  diff(l$pt[,3])^2)
+        G <- c(c(sum(0.5*w[idx-1]*(l$pt[idx-1,1] + l$pt[idx,1])), sum(0.5*w[idx-1]*(l$pt[idx-1,2] + l$pt[idx,2])),
+                 sum(0.5*w[idx-1]*(l$pt[idx-1,3] + l$pt[idx,3])))/sum(w), 1)
+        G_ <- G %*% t(ref.from.contour)
+        return( list(A= 0, Gx=G_[1], Gy=G_[2], Gz= G_[3]))
+        
+      } else if  (castlow.str(l$type)=="point"){
         G_ <- as.numeric(c(l$pt[1,],1)) %*% t(ref.from.contour)
         return( list(A= 0, Gx=G_[1], Gy=G_[2], Gz= G_[3]))
+        
+      } else if (castlow.str(l$type)=="closedplanar"){
+        idx <- 2:nrow(l$pt)
+        A <- sum (l$pt[idx-1,1] * l$pt[idx,2] - l$pt[idx,1] * l$pt[idx-1,2]) / 2
+        G <- c (sum ((l$pt[idx-1,1] + l$pt[idx,1]) * (l$pt[idx-1,1] * l$pt[idx,2] - l$pt[idx,1] * l$pt[idx-1,2])) / (6 * A),
+                sum ((l$pt[idx-1,2] + l$pt[idx,2]) * (l$pt[idx-1,1] * l$pt[idx,2] - l$pt[idx,1] * l$pt[idx-1,2])) / (6 * A),
+                l$pt[1,3], 1 )
+        G_ <- G %*% t(ref.from.contour)
+        A <- ifelse (l$level%% 2 == 0, abs(A), -abs(A))
+        
+        return( list(A= A, Gx=G_[1], Gy=G_[2], Gz= G_[3]))
+        
+      } else {
+        return( list(A= NA, Gx=NA, Gy=NA, Gz= NA))
       }
-      idx <- 2:nrow(l$pt)
-      A <- sum (l$pt[idx-1,1] * l$pt[idx,2] - l$pt[idx,1] * l$pt[idx-1,2]) / 2
-      G <- c (sum ((l$pt[idx-1,1] + l$pt[idx,1]) * (l$pt[idx-1,1] * l$pt[idx,2] - l$pt[idx,1] * l$pt[idx-1,2])) / (6 * A),
-              sum ((l$pt[idx-1,2] + l$pt[idx,2]) * (l$pt[idx-1,1] * l$pt[idx,2] - l$pt[idx,1] * l$pt[idx-1,2])) / (6 * A),
-              l$pt[1,3], 1 )
-      G_ <- G %*% t(ref.from.contour)
-      A <- ifelse (l$level%% 2 == 0, abs(A), -abs(A))
-      
-      return( list(A= A, Gx=G_[1], Gy=G_[2], Gz= G_[3]))
-      
     })
     levels <- sapply (l2, function (l) l$level)
     A <- sapply(dum, function(l) l$A)
@@ -2665,8 +2683,13 @@
       G <- c(NA, NA, NA)
     } else if (sumA != 0) {
       G <- c(sum(A * Gx), sum(A * Gy), sum(A * Gz)) / sumA
-    } else {
-      G <- c(r[1,1],r[1,2], r[1,3])
+    } else if (length(Gx)==1){
+      G <- c(Gx,Gy,Gz)
+    }else {
+      w <- sqrt(diff(Gx)^2 + diff(Gy)^2 +  diff(Gz)^2)
+      idx <- 2:length(Gx)
+      G <- c(c(sum(0.5*w[idx-1]*(Gx[idx-1] + Gx[idx])), sum(0.5*w[idx-1]*(Gy[idx-1] + Gy[idx])),
+               sum(0.5*w[idx-1]*(Gz[idx-1] + Gz[idx])))/sum(w))
     }
     return (list (min.x = r[1,1], max.x = r[2,1],
                   min.y = r[1,2], max.y = r[2,2],
@@ -2863,7 +2886,7 @@
               roi.index.k <-same.k.roi[same.k.roi!=j]
               # if (length(roi.index.z)!=0) {
               r <- unique (sapply (roi.index.k, function (k) {
-                if ( castlow.str (L$roi.data[[i]][[k]]$type) != "closedplanar") return(NA)
+                if (castlow.str (L$roi.data[[i]][[k]]$type) != "closedplanar") return(NA)
                 ptk <- L$roi.data[[i]][[k]]$pt
                 keep <- .pt.in.polygon (ptj[ ,1], ptj[ ,2],
                                               ptk[ ,1], ptk[ ,2]) > 0.5
