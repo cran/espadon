@@ -4,35 +4,35 @@ knitr::opts_chunk$set(
   comment = "#>"
 )
 
-## ---- eval = FALSE------------------------------------------------------------
+## ----eval = FALSE-------------------------------------------------------------
 #  vol <- load.obj.from.dicom (image_path)
 
-## ---- eval = FALSE------------------------------------------------------------
+## ----eval = FALSE-------------------------------------------------------------
 #  dicom.to.Rdcm.converter("D:/dcm/patient001", "D:/Rdcm/patient001“)
 
-## ---- eval = FALSE------------------------------------------------------------
+## ----eval = FALSE-------------------------------------------------------------
 #  dcm.filename <- file.choose ()
 #  df <- dicom.parser (dicom.raw.data.loader (dcm.filename), as.txt = TRUE, try.parse = TRUE)
 
-## ---- eval = FALSE------------------------------------------------------------
+## ----eval = FALSE-------------------------------------------------------------
 #  library(espadon)
 #  pat.dir <- choose.dir () # patient folder containing mr, ct, rt-struct, rt-dose, rt-plan and reg…
 #  pat <- load.patient.from.dicom (pat.dir)
 #  display.obj.links (pat)
 
-## ---- eval = FALSE------------------------------------------------------------
+## ----eval = FALSE-------------------------------------------------------------
 #  S <- load.obj.data (pat$rtstruct[[1]])
 #  CT <- load.obj.data (pat$ct[[1]])
 #  MR <- load.obj.data (pat$mr[[1]])
 #  D <- load.obj.data (pat$rtdose[[1]])
 
-## ---- eval = FALSE------------------------------------------------------------
+## ----eval = FALSE-------------------------------------------------------------
 #  CT <- load.obj.from.dicom(ct_dicom_file_path)
 #  display.kplane (CT, k =10, col = pal.RVV(1000),
 #                  breaks = seq(-1000, 1000, length.out = 1001),
 #                  ord.flip = TRUE, interpolate = TRUE)
 
-## ---- eval = FALSE------------------------------------------------------------
+## ----eval = FALSE-------------------------------------------------------------
 #  library(espadon)
 #  library(rgl)
 #  pat.dir <- choose.dir () # patient folder containing mr, ct, rt-struct, and reg
@@ -58,19 +58,19 @@ knitr::opts_chunk$set(
 #  
 #  play3d (spin3d (rpm = 4), duration = 15)
 
-## ---- eval = FALSE------------------------------------------------------------
+## ----eval = FALSE-------------------------------------------------------------
 #  nesting.MR <- nesting.roi (MR, S, roi.sname = "brain", T.MAT = pat$T.MAT,
 #                             vol.restrict = TRUE, mar)
 #  display.3D.stack (nesting.MR, ktext = FALSE, line.lw d= 2)
 #  display.3D.contour (S, roi.sname = "brain", display.ref = MR$ref.pseudo,
 #                      T.MAT = pat$T.MAT)
 
-## ---- eval = FALSE------------------------------------------------------------
+## ----eval = FALSE-------------------------------------------------------------
 #  MR.on.CT <- vol.regrid (MR, CT, T.MAT=pat$T.MAT, interpolate = TRUE)
 #  display.3D.stack (MR.on.CT, display.ref = CT$ref.pseudo , T.MAT = pat$T.MAT,
 #                    ktext = FALSE, line.lwd = 2, line.col = "#844A39")
 
-## ---- eval = FALSE------------------------------------------------------------
+## ----eval = FALSE-------------------------------------------------------------
 #  # Points determination : centers of the eyes and the chiasm found in rtstruct data
 #  roi.idx <- select.names (S$roi.info$roi.pseudo, roi.name c("eye", "chiasm"))
 #  pt <- S$roi.info[roi.idx, c("Gx", "Gy", "Gz")]
@@ -92,7 +92,7 @@ knitr::opts_chunk$set(
 #                 main = "cut plane", bg = "#379DA2", sat.transp = T,
 #                 legend.plot = FALSE, interpolate = TRUE)
 
-## ---- eval = FALSE------------------------------------------------------------
+## ----eval = FALSE-------------------------------------------------------------
 #  nesting.MR <- nesting.roi (MR, S, roi.sname = "brain", T.MAT = pat$T.MAT,
 #                             vol.restrict = TRUE,
 #                             xyz.margin = c(20, 20, 20)) # to reduce the computation time
@@ -100,14 +100,14 @@ knitr::opts_chunk$set(
 #                             T.MAT = pat$T.MAT)
 #  MR. brain <- vol.from.bin (nesting.MR, bin.brain)
 
-## ---- eval = FALSE------------------------------------------------------------
+## ----eval = FALSE-------------------------------------------------------------
 #  bin.min.150 <- bin.from.vol (MR.brain, min = 150)
 #  
 #  display.plane (bin.min.150, view.coord = 0, view.type = "sagi",
 #                 main = "bin.min.150", bg = "#379DA2", legend.plot = FALSE,
 #                 sat.transp = TRUE, interpolate = TRUE)
 
-## ---- eval = FALSE------------------------------------------------------------
+## ----eval = FALSE-------------------------------------------------------------
 #  bin.smooth <- bin.opening (bin.min.150, radius = 1.5))
 #  bin.cluster <- bin.clustering (bin.smooth)
 #  
@@ -136,7 +136,7 @@ knitr::opts_chunk$set(
 #  play3d (spin3d (rpm = 4), duration = 15)
 #  
 
-## ---- eval = FALSE------------------------------------------------------------
+## ----eval = FALSE-------------------------------------------------------------
 #  library (espadon)
 #  patient.folder <- choose.dir ()
 #  pat <- load.patient.from.dicom (patient.folder, data = TRUE)
@@ -156,7 +156,7 @@ knitr::opts_chunk$set(
 #  display.3D.mesh (mesh.heart, color = "red", specular = "black",
 #                   alpha = 1)
 
-## ---- eval = FALSE------------------------------------------------------------
+## ----eval = FALSE-------------------------------------------------------------
 #  library (espadon)
 #  patient.folder <- choose.dir ()
 #  pat <- load.patient.from.dicom (patient.folder, data = FALSE)
@@ -177,7 +177,7 @@ knitr::opts_chunk$set(
 #  
 #  display.DVH (DVH, MC.plot = TRUE, col = "#ff0000", lwd = 2)
 
-## ---- eval = FALSE------------------------------------------------------------
+## ----eval = FALSE-------------------------------------------------------------
 #  library (espadon)
 #  patient.folder <- choose.dir ()
 #  pat <- load.patient.from.dicom (patient.folder, data = FALSE)
@@ -193,7 +193,7 @@ knitr::opts_chunk$set(
 #                       healthy.roi.name = "chiasm",
 #                       presc.dose = 0.9 * 70)
 
-## ---- eval = FALSE------------------------------------------------------------
+## ----eval = FALSE-------------------------------------------------------------
 #  library (espadon)
 #  patient.folder <- choose.dir ()
 #  pat <- load.patient.from.dicom (patient.folder, data = FALSE)

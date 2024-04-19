@@ -3,7 +3,7 @@
 #' matrices from or to volume's cutting planes frame of reference.
 #' @param vol "volume" class object.
 #' @param origin Vector of the x, y, z coordinates of the origin point of 
-#' the cut planes frame of reference.
+#' the cutting planes frame of reference.
 #' @param ref.cutplane Name of the volume's cutting planes frame of reference. 
 #' By default \code{ref.cutplane = paste0 (vol$ref.pseudo,".m")}.
 #' @param T.MAT "t.mat" class object created by 

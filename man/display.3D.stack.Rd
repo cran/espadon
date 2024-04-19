@@ -22,9 +22,9 @@ display.3D.stack(
 \arguments{
 \item{vol}{"volume" class object to display.}
 
-\item{k.idx}{vector of plane numbers to be displayed, to be chosen in
+\item{k.idx}{vector of cutting plane numbers to be displayed, to be chosen in
 \code{vol$k.idx}. By default \code{k.idx} is a vector of 10 uniformly
-distributed planes in the volume.}
+distributed cutting planes in the volume.}
 
 \item{display.ref}{Character string. Pseudonym of the frame of reference used
 for display.}
@@ -48,7 +48,7 @@ the range.
 \item{border}{Boolean. If \code{TRUE} (default), the borders of the planes defined
 in \code{k.idx} are displayed.}
 
-\item{ktext}{Boolean. If \code{TRUE} (default), the  selected plane numbers
+\item{ktext}{Boolean. If \code{TRUE} (default), the  selected cutting plane numbers
 are displayed.}
 
 \item{line.col}{Color of cube, planes and texts displayed.}
@@ -64,7 +64,7 @@ colors of the palettes are managed by \code{col} and \code{breaks}.
 }
 \description{
 The \code{display.3D.stack} function displays in 3D the requested
-planes of a "volume" class object.
+cutting planes of a "volume" class object.
 }
 \examples{
 # loading of toy-patient objects (decrease dxyz for better result)

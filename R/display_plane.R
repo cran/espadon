@@ -248,19 +248,18 @@ display.plane <- function (bottom = NULL, top = NULL, struct = NULL,
       if (is.na(top.p$max.pixel)) {
         top.p <- NULL; 
         message("no top view @", coord.lab," = ", round(view.coord[coord.idx],2), " mm")
-      
-        if (is.null (main)) {
-          if (args[["add"]]){
-            idx <- which(top.p$xyz.from.ijk[,3]!=0)
-            mtext (paste (top$modality, " (", top$description,") @ ", c("x","y","z")[idx],
-                          " = ",round (top.p$xyz0[1,idx],3)," mm",sep=""),
-                   side=3, line=0.4, col='gray32', cex=0.8)
-          }
-          if (top$modality =="rtdose")
-            text (par("usr")[1], par("usr")[4] - (par("usr")[4]-par("usr")[3])*0.1,
-                  paste("  Dose max : ",round (top.p$max.pixel, 3)," Gy",sep=""), cex=1, col="red",adj = c(0,0))
+      } else if (is.null (main)) {
+        if (args_[["add"]]){
+          idx <- which(top.p$xyz.from.ijk[,3]!=0)
+          mtext (paste (top$modality, " (", top$description,") @ ", c("x","y","z")[idx],
+                        " = ",round (top.p$xyz0[1,idx],3)," mm",sep=""),
+                 side=3, line=0.4, col='gray32', cex=0.8)
         }
+        if (top$modality =="rtdose")
+          text (par("usr")[1], par("usr")[4] - (par("usr")[4]-par("usr")[3])*0.1,
+                paste("  Dose max : ",round (top.p$max.pixel, 3)," Gy",sep=""), cex=1, col="red",adj = c(0,0))
       }
+      
     }
     if (length(list.roi.idx)!=0){
       args_ <- args

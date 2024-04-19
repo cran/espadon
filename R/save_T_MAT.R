@@ -98,7 +98,7 @@ save.T.MAT <- function (T.MAT, dirname) {
       ok[idx] <- TRUE
     }else {
       if (file.exists(T.MAT$reg.info$file$path[idx])) warning (paste(reg$file.basename, "already exists."))
-      h <- qserialize(obj$header)
+      h <- qserialize(c(obj$header,list(espadon.version=.espadon.version())))
       a <- numeric(0)
       d <- qserialize(obj$data)
       zz <-  file(T.MAT$reg.info$file$path[idx], "wb")

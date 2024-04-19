@@ -182,8 +182,14 @@ load.patient.from.Rdcm <- function (dirname, data = FALSE, dvh = FALSE,
   modality <- sort (unique (base.n$modality[base.n$modality!="reg"]))
   obj <- lapply(modality, function (m) {
     obj.flag <- base.n$modality==m
+    
     alias <-  base.n$object.alias[obj.flag]
-    fname <- file.path(dirname,base.n$file.basename[obj.flag])
+    tab.L <- strsplit(alias,paste0("[_]ref|[_]do|[_]", m))
+    tab.L <- do.call(rbind.data.frame,lapply(tab.L,function(v) c(v,rep("",4))[1:4]))
+    tab.L[2:4] <-lapply(tab.L[2:4], as.numeric)
+    alias <- alias[order(tab.L[,1],tab.L[,2],tab.L[,3],tab.L[,4])]
+    
+    # fname <- file.path(dirname,base.n$file.basename[obj.flag])
     match.index <- match(alias, sapply (dicomlist, function(l) l$header$object.alias))
     lobj.l <- list()
     for (idx in 1:length(alias)) lobj.l[[idx]] <- .load.object (Lobj = dicomlist[[match.index[idx]]], data=data, raw.data.list=dicomlist)

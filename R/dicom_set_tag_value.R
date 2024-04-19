@@ -124,9 +124,10 @@ dicom.set.tag.value <- function (dicom.raw.data, tag, tag.value,
              if (length(new.raw)%%2==1) new.raw <- c(new.raw, as.raw(32))
              tag.value_ [conf.idx] <- rawToChar(new.raw)
              tag.raw.l[[conf.idx]] <- new.raw
-             m <- match(new.raw, as.raw(c(65:90,48:57,95,32)))
+             m <- match(new.raw, as.raw(c(65:90,48:57,92,95,32)))
              
-             if (length(new.raw)>16 | any(is.na(m))){
+             #if (length(new.raw)>16 | any(is.na(m))){
+			 if (any(is.na(m))){
                message (paste ("tag", tag_[conf.idx], "is not CS compliant. This TAG is not modified."))
                conformity.flag[conf.idx] <- FALSE
              }

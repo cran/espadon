@@ -1,10 +1,10 @@
 #' Display in 3D the selected planes of an \pkg{espadon} class volume
 #' @description The \code{display.3D.stack} function displays in 3D the requested 
-#' planes of a "volume" class object.
+#' cutting planes of a "volume" class object.
 #' @param vol "volume" class object to display.
-#' @param k.idx vector of plane numbers to be displayed, to be chosen in 
+#' @param k.idx vector of cutting plane numbers to be displayed, to be chosen in 
 #' \code{vol$k.idx}. By default \code{k.idx} is a vector of 10 uniformly 
-#' distributed planes in the volume.
+#' distributed cutting planes in the volume.
 #' @param display.ref Character string. Pseudonym of the frame of reference used 
 #' for display.
 #' @param T.MAT "t.mat" class object, created by \link[espadon]{load.patient.from.Rdcm} 
@@ -21,7 +21,7 @@
 #' @param cube Boolean. If \code{TRUE} (default), the "volume" edges are displayed.
 #' @param border Boolean. If \code{TRUE} (default), the borders of the planes defined 
 #' in \code{k.idx} are displayed.
-#' @param ktext Boolean. If \code{TRUE} (default), the  selected plane numbers 
+#' @param ktext Boolean. If \code{TRUE} (default), the  selected cutting plane numbers 
 #' are displayed.
 #' @param line.col Color of cube, planes and texts displayed.
 #' @param line.lwd Line width of the border and cube, by default at 1. 

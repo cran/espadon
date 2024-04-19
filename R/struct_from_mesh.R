@@ -398,6 +398,7 @@ struct.from.mesh <- function(mesh, z, thickness = NULL,
                 op <- (pt$pt[1]!=pt$pt[nrow(pt)])
                 pt <- vb[pt$pt,c("x","y","z")]
                 if (clean & nrow(pt)>1) {
+                  if (round(polyg.area(pt),6) == 0) return (NULL)
                   pt <- pt[c(TRUE, !(round(diff(pt[,1]),6)==0 & round(diff(pt[,2]),6)==0)),]
                   if(nrow(pt)>2) {
                     slope.x <- diff(pt[,1])
@@ -411,7 +412,7 @@ struct.from.mesh <- function(mesh, z, thickness = NULL,
                 return(list(type="CLOSED_PLANAR", pt = pt, level =0))
               }))
               
-              # L.ct_ <- L.ct_[!sapply(L.ct_, is.null)]
+              L.ct_ <- L.ct_[!sapply(L.ct_, is.null)]
               # length(sapply(L.ct_,function(l) l$type))
               if (length(L.ct_)>0){
                 same.k.roi <- 1:length(L.ct_)

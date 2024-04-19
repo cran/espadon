@@ -13,7 +13,7 @@
 
 #####################################################################################
 .espadon.version <- function(){
-  return ("1.6.0")
+  return ("1.7.0")
 }
 
 #####################################################################################
@@ -1746,14 +1746,6 @@
       header$ref.object.info <- NULL
       header$ref.object.alias <- NULL
     }
-    #
-    beam.idx <- grep("[(]300C,0006[)]$", name)
-    if (length(beam.idx)>0) {header_$beam.number <- as.numeric(unlist(dat[beam.idx]))
-    } else {header_$beam.nb <- NA}
-    
-    # Dose_Summation_Type
-    Dose.Summation.Type <-  tryCatch (dat[[grep("[(]3004,000A[)]$", name)]],error = function (e) "")
-    if (Dose.Summation.Type=="") header$warning <- c(header$warning,"no (3004,000A) for Dose Summation Type")
     
     #unit
     header_$unit <- tryCatch (dat[[grep("^[(]3004,0002[)]$", name)]],error = function (e) "")
@@ -1765,10 +1757,16 @@
         header_$unit <- "Gy"
       }
     }
+    
+    beam.idx <- tryCatch (dat[[grep("[(]300C,0006[)]$", name)]],error = function (e) NA)
+    Dose.Summation.Type <-  tryCatch (dat[[grep("[(]3004,000A[)]$", name)]],error = function (e) "")
+    # if (Dose.Summation.Type=="") header$warning <- c(header$warning,"no (3004,000A) for Dose Summation Type")
     physical <- tryCatch (dat[[grep("^[(]3004,0004[)]$", name)]],error = function (e) "")
-    if (physical=="") {header$warning <- c(header$warning,"not Physical dose")
-    }else {if (tolower (trimws (physical))!="physical") header$warning <- c(header$warning,"(3004,0004) should be Physical dose for map")
-    }
+    header_$rtdose.info <- data.frame (type=physical,Dose.Summation.Type=Dose.Summation.Type, 
+                                       referenced.beam.number = beam.idx)
+    # if (physical=="") {header$warning <- c(header$warning,"not Physical dose")
+    # }else {if (tolower (trimws (physical))!="physical") header$warning <- c(header$warning,"(3004,0004) should be Physical dose for map")
+    # }
     
     vol.exist <-    tryCatch (any(grepl("^[(]7FE0,0010[)]$", name)),error = function (e) FALSE)
     
@@ -2127,8 +2125,24 @@
   
   
   if (Rdcm.mode) header$object.info$dicom.file  <- ""
-  image.nb <- sapply(data, function (d) tryCatch (d[[grep("^[(]0020,0100[)]$",names(d))]],error = function (e) tryCatch (d[[grep("[(]0020,0037[)]$",names(d))]],error = function (e) 1)))
-  image.nb <- match(image.nb, unique(image.nb))
+  # image.nb <- sapply(data, function (d) tryCatch (d[[grep("^[(]0020,0100[)]$",names(d))]],error = function (e) tryCatch (d[[grep("[(]0020,0037[)]$",names(d))]],error = function (e) 1)))
+  image.nb <- as.numeric(sapply(data, function (d) tryCatch (d[[grep("^[(]0020,0100[)]$",names(d))]],error = function (e) NA)))
+  image.nb.label <- "temporal.position"
+  if (is.na(image.nb[1])) {
+    image.nb <- as.numeric(sapply(data, function (d) tryCatch (d[[grep("^[(]0020,9241[)]$",names(d))]],error = function (e) NA)))
+    image.nb.label <- "cardiac.phase.percent"
+  }
+  if (is.na(image.nb[1])){
+    image.nb <- as.numeric(sapply(data, function (d) tryCatch (d[[grep("^[(]0020,0012[)]$",names(d))]],error = function (e) NA)))
+    image.nb.label <- ""
+  }
+  if (is.na(image.nb[1])) {
+    image.nb <- sapply(data, function (d) tryCatch (d[[grep("[(]0020,0037[)]$",names(d))]],error = function (e) 1))
+    image.nb.label <- ""
+  }
+  
+  image.label.value <- sort(unique(image.nb))
+  image.nb <- match(image.nb, image.label.value)
   
   header$object.info$nb.of.subobject <- length(unique(image.nb))
   # header$ref.object.info <- list ()
@@ -2165,6 +2179,7 @@
     fn <- filename[selection]
     
     header_$number <- img.idx
+    if (image.nb.label!="") header_[[image.nb.label]] <- image.label.value[[img.idx]]
     if (Rdcm.mode) {
       header$file.basename <- paste(object.info$outfilename,img.idx, ".Rdcm", sep="")
       header$object.info$dicom.file  <- basename(fn)
@@ -2191,7 +2206,7 @@
     header$creation.date <- unique(sapply(dat, function (d) tryCatch (d[[grep("^[(]0008,0012[)]$",names(d))]],error = function (e)  "")))
     header$study.time <- unique(sapply(dat, function (d) tryCatch (d[[grep("^[(]0008,0030[)]$",names(d))]],error = function (e)  "")))
  
-    header_$unit <- ""
+    header_$unit <- unique(sapply(dat, function (d) tryCatch (d[[grep("^[(]0028,1054[)]$",names(d))]],error = function (e)  "")))
     
     nz <-  sum (sapply(dat, function (d) any(grepl("^[(]7FE0,0010[)]$",names(d)))), na.rm=TRUE)
     ## nombre de lignes et colonnes
@@ -2220,11 +2235,12 @@
     if (header_$orientation[1] =="")  header$error <- c (header$error,"(0020,0037) patient orientation error")
     sep <-unique(unlist(strsplit(tolower(header_$orientation),"[[:digit:]]|[ ]|[.]|[e]|[+]|[-]")))
     sep <- sep[sep!=""]
-    ref.machine <- NULL
+
     if (length(sep)==1){
       header_$orientation <- as.numeric (unlist(strsplit(header_$orientation,sep, fixed=TRUE)))
-      ref.machine <-  (.ref.create (header_$orientation))
     } else {header_$orientation <- c(1,0,0,0,1,0,0)}
+    
+    ref.machine <-  (.ref.create (header_$orientation))
     
     ## position de l'image dans le référentiel patient
     header_$xyz0 <- sapply(dat, function (d) tryCatch (d[[grep("[(]0020,0032[)]$",names(d))]],error = function (e) ""))
@@ -2254,10 +2270,22 @@
           #on corrige l'ordre des DICOM
           dat <- dat[Z.order]
           add <- add[Z.order]
-          dz <- machine.xyz0[2:nrow(machine.xyz0),3]- machine.xyz0[1:(nrow(machine.xyz0)-1),3]
+          dz <- diff(machine.xyz0[,3])# machine.xyz0[2:nrow(machine.xyz0),3]- machine.xyz0[1:(nrow(machine.xyz0)-1),3]
           dz0 <- min(abs(dz))
-          header_$dxyz[3] <- mean(dz[round(abs(dz)/dz0,0)==1])
-          
+          header_$dxyz[3] <- round(mean(dz[round(abs(dz)/dz0,0)==1]),9)
+          if (abs(abs(header_$dxyz[3]) - header_$slice.thickness)>1e-9) {
+            who <- trimws(paste(header$patient,header$patient.name))
+            if (grepl("[[:alnum:]]", who)) who <- paste0(who,"'s ")
+            warning(paste0( "In ", who,
+                            header$modality,", slice thichness of ", 
+                            round(header_$slice.thickness,2),
+                          " mm defined by TAG (0018,0050) is not compatible with calculated slice thickness of ",
+                          round(abs(header_$dxyz[3]),2), " mm. The thickness used for the following is ",
+                          round(abs(header_$dxyz[3]),2), " mm."),call. = FALSE)
+            header_$slice.thickness <- abs(header_$dxyz[3])
+            }
+        } else {
+          header_$dxyz[3] <- sign(header_$dxyz[3])*abs(header_$slice.thickness)
         }
         header_$xyz.from.ijk <-.xyz.from.ijk.create (header_$orientation, header_$dxyz, header_$xyz0[1, ])
         if (nrow(machine.xyz0)>1){ header_$k.idx <- round((machine.xyz0[ ,3] - machine.xyz0[1,3])/header_$dxyz[3],0)
@@ -2440,7 +2468,9 @@
   row.names(ref.info) <- NULL
   
   ref.info_ <- unique(ref.info[,1:2])
-  if (nrow(ref.info_) != nrow(ref.info)) warning("Check the uniqueness of the patient : different PID, name, birthday or sex.", call.=FALSE)
+  if (nrow(ref.info_) != nrow(ref.info)) 
+    warning(paste("Check the uniqueness of the patient", ref.info_$patient.name[1],
+                  ": different PID, name, birthday or sex.", call.=FALSE))
   
   
   reg.list <- lapply (reg.list, function (l) l$reg.list)
@@ -2532,39 +2562,39 @@
 # load fonctions
 #############################################################################################
 
-.load.object <- function(Lobj, data=FALSE, nb = NULL, raw.data.list=NULL) {
+.load.object <- function(Lobj, data=TRUE, nb = NULL, raw.data.list=NULL) {
   modality  <- Lobj$header$modality
   # fname <- file.path (Lobj$header$file.dirname, Lobj$header$file.basename)
   switch( modality,
           "rtstruct" = {
-            return (.load.rtstruct (Lobj, nb, raw.data.list))
+            return (.load.rtstruct (Lobj, data = data, roi.nb = nb, raw.data.list = raw.data.list))
           },
           "rtimage" = {
-            return (.load.vol.object(Lobj, raw.data.list))
+            return (.load.vol.object(Lobj, data = data, raw.data.list = raw.data.list))
           },
           "rtdose" = {
-            return (.load.vol.object(Lobj, raw.data.list))
+            return (.load.vol.object(Lobj, data = data, raw.data.list = raw.data.list))
           },
           "ct" = {
-            return (.load.vol.object (Lobj))
+            return (.load.vol.object (Lobj, data = data))
           },
           "ct1" = {
-            return (.load.vol.object (Lobj))
+            return (.load.vol.object (Lobj, data = data))
           },
           "mr" = {
-            return (.load.vol.object (Lobj))
+            return (.load.vol.object (Lobj, data = data))
           },
 
           "pt" = {
-            return (.load.vol.object (Lobj))
+            return (.load.vol.object (Lobj, data = data))
           },
           
           "binary" = {
-            return (.load.vol.object (Lobj))
+            return (.load.vol.object (Lobj, data = data))
           },
           
           "gammaindex" = {
-            return (.load.vol.object (Lobj))
+            return (.load.vol.object (Lobj, data = data))
           },
           
           "reg" = {
@@ -2572,19 +2602,19 @@
           },
           
           "mesh" = {
-            return (.load.mesh (Lobj))
+            return (.load.mesh (Lobj, data = data))
           },
           
           "histo" = {
-            return (.load.histo (Lobj))
+            return (.load.histo (Lobj, data = data))
           },   
           
           "dvh" = {
-            return (.load.histo (Lobj))
+            return (.load.histo (Lobj, data = data))
           }, 
           
           "histo2D" = {
-            return (.load.histo2D (Lobj))
+            return (.load.histo2D (Lobj, data = data))
           },
           "rtplan" = {
             L <- .load.other (Lobj, raw.data.list)
@@ -2592,7 +2622,7 @@
             return (L)
           },
           { 
-            warning(paste(modality,"modality not analysed by espadon"))
+            warning(paste(modality,"modality not analysed by espadon"), call.=FALSE)
           return (.load.other (Lobj, raw.data.list))}
   )
   
@@ -2705,13 +2735,13 @@
 }
 
 #######################################################################################
-.load.rtimage<- function (Lobj, roi.nb = NULL, raw.data.list=NULL) {
+.load.rtimage<- function (Lobj, data = TRUE, roi.nb = NULL, raw.data.list=NULL) {
 }
 #######################################################################################
 #' @importFrom stats median
 ## @importFrom sp point.in.polygon
-.load.rtstruct <- function (Lobj, roi.nb = NULL, raw.data.list=NULL) {
-  
+.load.rtstruct <- function (Lobj, data = TRUE, roi.nb = NULL, raw.data.list=NULL) {
+  if (!data) Lobj$data <- NULL
   # Lobj <- load.Rdcm.raw.data (filename, data=TRUE)
   L <- Lobj$header
   # L$info <- NULL
@@ -2855,25 +2885,30 @@
   # (L$thickness==0)
       nb.plane<- as.numeric(sapply( L$roi.data,function(l) length(l)))
    
-      z.diff <- lapply(L$roi.data[which(nb.plane>=2)],function(l) {
+      z.diff <- sort(unlist(lapply(L$roi.data[which(nb.plane>=2)],function(l) {
         z <- sort(unique(sapply(l,function(l_) median(l_$pt[,3]))))
         if(length(z)<2) return(NULL)
-        unique(sort(diff (z)))
-      })
-      z.diff <- z.diff[!sapply(z.diff,is.null)]
+        diff (z)
+      })))
       
+      diff.f <- FALSE
       if (length(z.diff)>0) {
-        thickness <- unlist(z.diff)
-        thickness <- tryCatch(round(median(thickness [thickness >1e-2]),3), error = function (e) 0)
-      }
-    
-    if ((abs(L$thickness - thickness)> 1e-6) & (L$thickness!=0))
-      warning(paste(L$object.alias, "has a thickness different from that of its reference object", 
-                    L$ref.object.alias, "of", L$thickness - thickness, "mm"), call. = FALSE)
-    L$thickness <- thickness
+        thickness <- tryCatch(round(median(z.diff [z.diff >1e-2]),3), error = function (e) 0)
+        diff.f <- all(z.diff==thickness)
+      } else {thickness <- 0}
+      
+      if ((abs(L$thickness - thickness)> 1e-6) & (L$thickness!=0))
+        warning(paste(L$object.alias, "has a thickness different from that of its reference object", 
+                      L$ref.object.alias, "of", L$thickness - thickness, "mm"), call. = FALSE)
+      
+      if ((L$thickness==0) | diff.f) L$thickness <- thickness
+      
     # on vérifie si les contours sont des contours inscrits ou non.
-    for (i in roi.used) {
+    for (i in roi.used[nb.plane!=0]) {
       roi.all.z<- sapply(L$roi.data[[i]], function(li)  li$pt[1,3])
+      ord <- order(roi.all.z)
+      L$roi.data[[i]] <- L$roi.data[[i]][ord]
+      roi.all.z <- roi.all.z[ord]
       if (length(roi.all.z)>0) {     
         kz <- rep(0,length(roi.all.z))
         if (L$thickness!=0) kz <- round((roi.all.z -roi.all.z[1])/L$thickness)
@@ -2963,8 +2998,8 @@
 
 #######################################################################################
 
-.load.mesh <- function (Lobj) {
-  
+.load.mesh <- function (Lobj, data = TRUE) {
+  if (!data) Lobj$data <- NULL
   L <- Lobj$header
   class(L) <- "mesh"
   if (!is.null(Lobj$data)) {
@@ -2975,8 +3010,8 @@
 }
 #######################################################################################
 
-.load.histo2D <- function (Lobj) {
-  
+.load.histo2D <- function (Lobj, data = TRUE) {
+  if (!data) Lobj$data <- NULL
   L <- Lobj$header
   class(L) <- "histo2D"
   if (!is.null(Lobj$data)) {
@@ -2988,8 +3023,8 @@
 
 #######################################################################################
 
-.load.histo <- function (Lobj) {
-  
+.load.histo <- function (Lobj, data = TRUE) {
+  if (!data) Lobj$data <- NULL
   L <- Lobj$header
   class(L) <- "histo"
   if (!is.null(Lobj$data)) {
@@ -3000,8 +3035,9 @@
 }
 
 #######################################################################################
-.load.vol.object <- function (Lobj, raw.data.list=NULL) {
+.load.vol.object <- function (Lobj, data = TRUE, raw.data.list=NULL) {
   
+  if (!data) Lobj$data <- NULL
   # Lobj <- load.Rdcm.raw.data (filename, data=TRUE)
   L <- Lobj$header
   if (!is.null (L$ref.object.alias) & (length(L$ref.object.info)!=0)) {

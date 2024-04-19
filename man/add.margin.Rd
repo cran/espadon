@@ -10,7 +10,7 @@ add.margin(vol, xyz.margin, alias = "", description = NULL)
 \item{vol}{"volume" class object.}
 
 \item{xyz.margin}{Vector of the 3 positive or negative x, y and z margins in
-mm, in the frame of reference of volume cut planes.}
+mm, in the frame of reference of volume cutting planes.}
 
 \item{alias}{Character string, \code{$alias} of the created object}
 
@@ -36,7 +36,7 @@ CT <- patient$ct[[1]]
 
 # Calculation of new volumes decreased by 10 mm in all directions.
 new.CT <- add.margin (CT, xyz.margin = c (-10, -10, 10), alias = "new CT")
-# display of the CT before and after, in the middle plane
+# display of the CT before and after, in the middle cutting plane
 z.mid <- apply (get.extreme.pt (CT), 1, mean)[3]
 display.plane (bottom = CT, view.coord = z.mid, bottom.col = pal.RVV(1000),
                bg = "#00ffff", interpolate = FALSE)

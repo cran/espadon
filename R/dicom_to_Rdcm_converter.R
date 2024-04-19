@@ -7,8 +7,8 @@
 #' in this reference system, and the object modality (mr, ct, rtstruct...).
 #' @param dcm.files String vector, representing the list of the full names of 
 #' the DICOM files of the same patient, or its directory.
-#' @param pat.dest.dir Character string, representing the full name of patient 
-#' directory, which will contain files converted \pkg{espadon}. 
+#' @param pat.dest.dir Character string representing the full name of the patient's 
+#' directory, which will contain files converted into Rdcm objects.
 #' @param update Boolean. If set to \code{TRUE}, and if \code{pat.dest.dir} 
 #' contains previously converted files, these files are updated,even if they are 
 #' duplicated. They retain the same \pkg{espadon} reference frame assignment.

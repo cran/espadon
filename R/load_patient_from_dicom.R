@@ -12,8 +12,7 @@
 #' @param tag.dictionary Dataframe, by default equal to 
 #' \link[espadon]{dicom.tag.dictionary}, 
 #' whose structure it must keep. This dataframe is used to parse DICOM files.
-#' @param verbose Boolean. If \code{TRUE}, a progress bar indicates the progress 
-#' of the conversion.
+#' @param verbose Boolean. If \code{TRUE}, a progress bar indicates loading progress.
 #' @return Returns an \pkg{espadon} object of class "patient", describing the 
 #' information from \code{dcm.files}. See \link[espadon]{espadon.class} for a 
 #' description of the "patient" class.
@@ -23,7 +22,7 @@
 #' \link[espadon]{load.obj.from.Rdcm} and \link[espadon]{load.T.MAT}.
 #' @examples
 #' # First, save toy.dicom.raw () raw data to a temporary file pat.dir for testing.
-#' pat.dir <- file.path (tempdir(), "toy_dccm") 
+#' pat.dir <- file.path (tempdir(), "toy_dcm") 
 #' dir.create (pat.dir, recursive = TRUE) 
 #' dcm.filename <- tempfile (pattern = "toyrtplan", tmpdir = pat.dir,
 #'                           fileext = ".dcm")
@@ -141,7 +140,12 @@ load.patient.from.dicom <- function (dcm.files, data = FALSE, dvh = FALSE,
   l$T.MAT <- suppressWarnings(.load.T.MAT.by.reglist (reg.list))
   modality <- sort (unique (base.n$modality[base.n$modality!="reg"]))
   obj <- lapply(modality, function (m) {
-    alias <-  sort(base.n$object.alias[(base.n$modality==m)])
+    alias <-  base.n$object.alias[(base.n$modality==m)]
+    tab.L <- strsplit(alias,paste0("[_]ref|[_]do|[_]", m))
+    tab.L <- do.call(rbind.data.frame,lapply(tab.L,function(v) c(v,rep("",4))[1:4]))
+    tab.L[2:4] <-lapply(tab.L[2:4], as.numeric)
+    alias <- alias[order(tab.L[,1],tab.L[,2],tab.L[,3],tab.L[,4])]
+    
     match.index <- match(alias, sapply (obj.list, function(l) l$header$object.alias))
     lobj.l <- list()
     for (idx in 1:length(alias)) lobj.l[[idx]] <- .load.object (Lobj = obj.list[[match.index[idx]]], data=data, raw.data.list=obj.list)

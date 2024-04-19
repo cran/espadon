@@ -2,8 +2,8 @@
 % Please edit documentation in R/espadon-package.R
 \docType{package}
 \name{espadon-package}
-\alias{espadon}
 \alias{espadon-package}
+\alias{espadon}
 \title{espadon: Easy Study of Patient DICOM Data in Oncology}
 \description{
 Exploitation, processing and 2D-3D visualization of DICOM-RT files (structures, dosimetry, imagery) for medical physics and clinical research, in a patient-oriented perspective.

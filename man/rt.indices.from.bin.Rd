@@ -104,15 +104,15 @@ struct <- patient$rtstruct[[1]]
 T.MAT <- patient$T.MAT
 
 # creation of the list of target binary volumes
-taget.roi.idx <- select.names (struct$roi.info$roi.pseudo, roi.sname = "ptv")
+target.roi.idx <- select.names (struct$roi.info$roi.pseudo, roi.sname = "ptv")
 healthy.roi.idx <- select.names (struct$roi.info$roi.pseudo, roi.sname = "eye")
-target.bin.list <- lapply (taget.roi.idx , function (idx) {
+target.bin.list <- lapply (target.roi.idx , function (idx) {
   vr <- nesting.roi (D, struct, roi.idx = idx, xyz.margin = c (5, 5, 5),
                      T.MAT = T.MAT, alias = struct$roi.info$name[idx])
   b <- bin.from.roi(vr, struct, roi.idx = idx, T.MAT = T.MAT,
                     alias = struct$roi.info$name[idx])
   })
-names (target.bin.list) <- struct$roi.info$name[taget.roi.idx]
+names (target.bin.list) <- struct$roi.info$name[target.roi.idx]
 
 healthy.bin.list <- lapply (healthy.roi.idx , function (idx) {
   vr <- nesting.roi (D, struct, roi.idx = idx, xyz.margin = c (5, 5, 5),

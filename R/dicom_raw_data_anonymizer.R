@@ -5,9 +5,9 @@
 #' DICOM file.
 #' @param offset Integer, default to 0. Each date of the DICOM will be shifted 
 #' by this offset expressed in days.
+#' @param new.PIN Character string, representing the PIN remplacing the old one.
 #' @param reset.private.tag Boolean, if \code{TRUE}, the value of tags that are 
 #' not in the \code{tag.dictionary} is removed.
-#' @param new.PIN Character string, representing the PIN remplacing the old one.
 #' @param tag.dictionary Dataframe, by default equal to 
 #' \link[espadon]{dicom.tag.dictionary}, whose structure it must keep. This 
 #' dataframe is used to parse DICOM files.

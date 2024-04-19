@@ -54,7 +54,7 @@ toy.load.patient <- function (
   pat.name <- "PMan"
   pat.pseudo <- "PM"
   bd <- "19800522"
-  sex <- c("M","O")
+  sex <- c("M")#,"O")
   if (!rtstruct.f) sex <- sex[1]
   
   PM.radius <- 120
@@ -82,17 +82,17 @@ toy.load.patient <- function (
   if (any (!is.na(match(modality, c("ct", "rtdose")))))
     pat$T.MAT$ref.info <- rbind(pat$T.MAT$ref.info, 
                                 data.frame(ref.pseudo = "ref1", 
-                                           ref = "2.16.840.1.114357.58485835081.6250.1551498438.0.3"))
+                                           ref = "1.2.826.0.1.3680043.10.1002.9415909408182024"))
   if (any (!is.na(match(modality, c("rtstruct")))))
     pat$T.MAT$ref.info <- rbind(pat$T.MAT$ref.info, 
                                 data.frame(ref.pseudo = "ref1", 
-                                           ref = "2.16.840.1.114357.58485835081.6250.1551498438.0.3"))
+                                           ref = "1.2.826.0.1.3680043.10.1002.9415909408182024"))
   
   
   if (any (!is.na(match(modality, c("mr")))))
     pat$T.MAT$ref.info <- rbind(pat$T.MAT$ref.info, 
                                 data.frame(ref.pseudo = "ref2", 
-                                           ref = "2.16.840.1.114357.58094835081.62350.15267498438.0.1"))
+                                           ref = "1.2.826.0.1.3680043.10.1002.2767261731078746"))
   pat$T.MAT$ref.info <- unique(pat$T.MAT$ref.info[,1:2])
   pat$T.MAT$reg.info <- list()
   pat$T.MAT$reg.info$patient <- data.frame(patient = pat.pseudo, patient.name = pat.name, patient.bd=bd, patient.sex=sex)
@@ -139,7 +139,7 @@ toy.load.patient <- function (
   pt000 <- -(n.ijk/2)*dxyz + c(1,1,1)
   b <- vol.create (n.ijk = n.ijk, dxyz = dxyz, pt000=pt000, modality = "binary",
                    default.value = FALSE, ref.pseudo = "ref1", 
-                   frame.of.reference = "2.16.840.1.114357.58485835081.6250.1551498438.0.3",
+                   frame.of.reference = "1.2.826.0.1.3680043.10.1002.9415909408182024",
                    number = 1)
   b$max.pixel <- TRUE
   
@@ -570,11 +570,11 @@ toy.load.patient <- function (
       vol.create (n.ijk = n.ijk, dxyz = dxyz, pt000=pt000, modality = "ct",
                   default.value = -1000, ref.pseudo = "ref1", 
                   description = "FULL^BODY|initial",
-                  frame.of.reference = "2.16.840.1.114357.58485835081.6250.1551498438.0.3",
+                  frame.of.reference = "1.2.826.0.1.3680043.10.1002.9415909408182024",
                   number = 1)
     
     pat$ct[[1]]$patient <- pat$pat.pseudo
-	pat$ct[[1]]$patient.name <- pat$patient$name[1]
+    pat$ct[[1]]$patient.name <- pat$patient$name[1]
     pat$ct[[1]]$patient.bd <- pat$patient$birth.date[1]
     pat$ct[[1]]$patient.sex <- pat$patient$sex[1]
     pat$ct[[1]]$object.name <- n
@@ -671,7 +671,7 @@ toy.load.patient <- function (
       vol.create (n.ijk = n.ijk[perm], dxyz = dxyz[perm], pt000=b$xyz0[1,], 
                   modality = "mr", default.value = 0, ref.pseudo = "ref2", 
                   description = "FULL^BODY|T1 GADO",
-                  frame.of.reference = "2.16.840.1.114357.58094835081.62350.15267498438.0.1",
+                  frame.of.reference = "1.2.826.0.1.3680043.10.1002.2767261731078746",
                   number = 1)
     pat$mr[[1]]$orientation <- as.vector(diag(3)[,perm])[1:6]
     pat$mr[[1]]$xyz.from.ijk[,1:3] <-b$xyz.from.ijk[,perm]   
@@ -703,13 +703,13 @@ toy.load.patient <- function (
     pat$rtstruct[[1]]$patient <- pat$pat.pseudo
     pat$rtstruct[[1]]$patient.name <- pat$patient$name[1]
     pat$rtstruct[[1]]$patient.bd <- pat$patient$birth.date[1]
-    pat$rtstruct[[1]]$patient.sex <- pat$patient$sex[2]
+    pat$rtstruct[[1]]$patient.sex <- pat$patient$sex[1]
     pat$rtstruct[[1]]$object.name <- n
     pat$rtstruct[[1]]$object.alias <- paste0(n,1)
     if (rtdose.f) pat$rtdose[[1]]$ref.object.alias <- pat$rtstruct[[1]]$object.alias
     if (ct.f) pat$rtstruct[[1]]$ref.object.alias <- pat$ct[[1]]$object.alias
     pat$rtstruct[[1]]$description <- "TREATMENT|RS: Approved Structure Set"
-    pat$rtstruct[[1]]$ref.object.alias <-  ct.n
+    pat$rtstruct[[1]]$ref.object.alias <-  paste0(ct.n,1)
     pat$rtstruct[[1]]$approval.status <- "APPROVED"
     pat$rtstruct[[1]]$study.date = rt.date
     pat$rtstruct[[1]]$creation.date = rt.date

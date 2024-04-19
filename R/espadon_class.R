@@ -370,6 +370,9 @@
 #' @note \emph{- the "volume" class also includes :}
 #' \itemize{
 #' \item \code{$number}: sub-object number.
+#' \item \code{$unit}: unit of the voxel
+#' \item \code{$rtdose.info}: for rtdose only, dataframe with the type, the dose 
+#' summation type and referenced beam number.
 #' \item \code{$n.ijk}: vector defining the number of indices i, j, k. The product
 #'  \code{prod(...$n.ijk)} represents the number of voxels in the 3D volume.
 #' \item \code{$slice.thickness}: thickness in mm of a plane.

@@ -18,7 +18,7 @@ raw data.
 }
 \examples{
 # First, save toy.dicom.raw () raw data to a temporary file for testing.
-pat.src.dir <- file.path (tempdir(), "toy_dccm")
+pat.src.dir <- file.path (tempdir(), "toy_dcm")
 dir.create (pat.src.dir, recursive = TRUE) 
 dcm.filename <- tempfile (pattern = "toyrtplan", tmpdir = pat.src.dir,
                           fileext = ".dcm")

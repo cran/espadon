@@ -1,7 +1,6 @@
 #' @keywords internal
 "_PACKAGE"
 #' @author Cathy & Jean-Marc Fontbonne
-#' @docType package
 #' @name espadon-package
 #' @aliases espadon
 #' @title Easy Study of Patient DICOM Data in Oncology

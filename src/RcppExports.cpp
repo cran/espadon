@@ -10,6 +10,27 @@ Rcpp::Rostream<true>&  Rcpp::Rcout = Rcpp::Rcpp_cout_get();
 Rcpp::Rostream<false>& Rcpp::Rcerr = Rcpp::Rcpp_cerr_get();
 #endif
 
+// addcommonptC
+Rcpp::List addcommonptC(std::vector <double> pt1_x, std::vector <double> pt1_y, std::vector <double> pt2_x, std::vector <double> pt2_y, std::vector <double> u1_x, std::vector <double> u1_y, std::vector <double> u2_x, std::vector <double> u2_y, std::vector <double> d1, std::vector <double> d2, double eps);
+RcppExport SEXP _espadon_addcommonptC(SEXP pt1_xSEXP, SEXP pt1_ySEXP, SEXP pt2_xSEXP, SEXP pt2_ySEXP, SEXP u1_xSEXP, SEXP u1_ySEXP, SEXP u2_xSEXP, SEXP u2_ySEXP, SEXP d1SEXP, SEXP d2SEXP, SEXP epsSEXP) {
+BEGIN_RCPP
+    Rcpp::RObject rcpp_result_gen;
+    Rcpp::RNGScope rcpp_rngScope_gen;
+    Rcpp::traits::input_parameter< std::vector <double> >::type pt1_x(pt1_xSEXP);
+    Rcpp::traits::input_parameter< std::vector <double> >::type pt1_y(pt1_ySEXP);
+    Rcpp::traits::input_parameter< std::vector <double> >::type pt2_x(pt2_xSEXP);
+    Rcpp::traits::input_parameter< std::vector <double> >::type pt2_y(pt2_ySEXP);
+    Rcpp::traits::input_parameter< std::vector <double> >::type u1_x(u1_xSEXP);
+    Rcpp::traits::input_parameter< std::vector <double> >::type u1_y(u1_ySEXP);
+    Rcpp::traits::input_parameter< std::vector <double> >::type u2_x(u2_xSEXP);
+    Rcpp::traits::input_parameter< std::vector <double> >::type u2_y(u2_ySEXP);
+    Rcpp::traits::input_parameter< std::vector <double> >::type d1(d1SEXP);
+    Rcpp::traits::input_parameter< std::vector <double> >::type d2(d2SEXP);
+    Rcpp::traits::input_parameter< double >::type eps(epsSEXP);
+    rcpp_result_gen = Rcpp::wrap(addcommonptC(pt1_x, pt1_y, pt2_x, pt2_y, u1_x, u1_y, u2_x, u2_y, d1, d2, eps));
+    return rcpp_result_gen;
+END_RCPP
+}
 // dicombrowser
 std::list <std::string> dicombrowser(std::vector <unsigned char> dicomrawdata, DataFrame tagdico, unsigned int nbTAG, std::string stop_tag, unsigned int stop_level, bool full_info, bool verbose);
 RcppExport SEXP _espadon_dicombrowser(SEXP dicomrawdataSEXP, SEXP tagdicoSEXP, SEXP nbTAGSEXP, SEXP stop_tagSEXP, SEXP stop_levelSEXP, SEXP full_infoSEXP, SEXP verboseSEXP) {
@@ -220,6 +241,23 @@ BEGIN_RCPP
     return rcpp_result_gen;
 END_RCPP
 }
+// ptnearestC
+Rcpp::List ptnearestC(std::vector <double> pt1_x, std::vector <double> pt1_y, std::vector <double> pt1_z, std::vector <double> pt2_x, std::vector <double> pt2_y, std::vector <double> pt2_z, bool full_info);
+RcppExport SEXP _espadon_ptnearestC(SEXP pt1_xSEXP, SEXP pt1_ySEXP, SEXP pt1_zSEXP, SEXP pt2_xSEXP, SEXP pt2_ySEXP, SEXP pt2_zSEXP, SEXP full_infoSEXP) {
+BEGIN_RCPP
+    Rcpp::RObject rcpp_result_gen;
+    Rcpp::RNGScope rcpp_rngScope_gen;
+    Rcpp::traits::input_parameter< std::vector <double> >::type pt1_x(pt1_xSEXP);
+    Rcpp::traits::input_parameter< std::vector <double> >::type pt1_y(pt1_ySEXP);
+    Rcpp::traits::input_parameter< std::vector <double> >::type pt1_z(pt1_zSEXP);
+    Rcpp::traits::input_parameter< std::vector <double> >::type pt2_x(pt2_xSEXP);
+    Rcpp::traits::input_parameter< std::vector <double> >::type pt2_y(pt2_ySEXP);
+    Rcpp::traits::input_parameter< std::vector <double> >::type pt2_z(pt2_zSEXP);
+    Rcpp::traits::input_parameter< bool >::type full_info(full_infoSEXP);
+    rcpp_result_gen = Rcpp::wrap(ptnearestC(pt1_x, pt1_y, pt1_z, pt2_x, pt2_y, pt2_z, full_info));
+    return rcpp_result_gen;
+END_RCPP
+}
 // roiinterC
 std::vector <double> roiinterC(std::vector <double> pt1_x, std::vector <double> pt1_y, double u1_x, double u1_y, double d1, std::vector <double> pt2_x, std::vector <double> pt2_y, double eps);
 RcppExport SEXP _espadon_roiinterC(SEXP pt1_xSEXP, SEXP pt1_ySEXP, SEXP u1_xSEXP, SEXP u1_ySEXP, SEXP d1SEXP, SEXP pt2_xSEXP, SEXP pt2_ySEXP, SEXP epsSEXP) {
@@ -240,6 +278,7 @@ END_RCPP
 }
 
 static const R_CallMethodDef CallEntries[] = {
+    {"_espadon_addcommonptC", (DL_FUNC) &_espadon_addcommonptC, 11},
     {"_espadon_dicombrowser", (DL_FUNC) &_espadon_dicombrowser, 7},
     {"_espadon_fansphereC", (DL_FUNC) &_espadon_fansphereC, 1},
     {"_espadon_fantovoxelC", (DL_FUNC) &_espadon_fantovoxelC, 9},
@@ -253,6 +292,7 @@ static const R_CallMethodDef CallEntries[] = {
     {"_espadon_medianfilterC", (DL_FUNC) &_espadon_medianfilterC, 6},
     {"_espadon_meshinfront", (DL_FUNC) &_espadon_meshinfront, 12},
     {"_espadon_ptinpolygonC", (DL_FUNC) &_espadon_ptinpolygonC, 5},
+    {"_espadon_ptnearestC", (DL_FUNC) &_espadon_ptnearestC, 7},
     {"_espadon_roiinterC", (DL_FUNC) &_espadon_roiinterC, 8},
     {NULL, NULL, 0}
 };

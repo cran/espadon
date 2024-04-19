@@ -15,7 +15,7 @@ ref.cutplane.add(
 \item{vol}{"volume" class object.}
 
 \item{origin}{Vector of the x, y, z coordinates of the origin point of
-the cut planes frame of reference.}
+the cutting planes frame of reference.}
 
 \item{ref.cutplane}{Name of the volume's cutting planes frame of reference.
 By default \code{ref.cutplane = paste0 (vol$ref.pseudo,".m")}.}

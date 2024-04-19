@@ -18,8 +18,8 @@ dicom.to.Rdcm.converter(
 \item{dcm.files}{String vector, representing the list of the full names of
 the DICOM files of the same patient, or its directory.}
 
-\item{pat.dest.dir}{Character string, representing the full name of patient
-directory, which will contain files converted \pkg{espadon}.}
+\item{pat.dest.dir}{Character string representing the full name of the patient's
+directory, which will contain files converted into Rdcm objects.}
 
 \item{update}{Boolean. If set to \code{TRUE}, and if \code{pat.dest.dir}
 contains previously converted files, these files are updated,even if they are

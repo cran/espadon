@@ -4,7 +4,7 @@
 #' rectangular parallelepiped circumscribed by a volume.
 #' @param vol "volume" class object.
 #' @param xyz.margin Vector of the 3 positive or negative x, y and z margins in 
-#' mm, in the frame of reference of volume cut planes.
+#' mm, in the frame of reference of volume cutting planes.
 #' @param alias Character string, \code{$alias} of the created object
 #' @param description Character string, describing the created object.
 #' If \code{description = NULL} (default value), it will be set to \code{vol$description}
@@ -24,7 +24,7 @@
 #' # Calculation of new volumes decreased by 10 mm in all directions.
 #' new.CT <- add.margin (CT, xyz.margin = c (-10, -10, 10), alias = "new CT")
 
-#' # display of the CT before and after, in the middle plane
+#' # display of the CT before and after, in the middle cutting plane
 #' z.mid <- apply (get.extreme.pt (CT), 1, mean)[3]
 #' display.plane (bottom = CT, view.coord = z.mid, bottom.col = pal.RVV(1000),
 #'                bg = "#00ffff", interpolate = FALSE)

@@ -14,7 +14,7 @@ bin.from.roi(
   within = TRUE,
   alias = "",
   description = NULL,
-  verbose = TRUE
+  ...
 )
 }
 \arguments{
@@ -48,8 +48,7 @@ depending on their \code{$level} field. If \code{within = FALSE}, only the
 \code{description = NULL}
 (default value), it will be set to \code{struct$roi.info$roi.pseudo[roi.idx]}.}
 
-\item{verbose}{Boolean. If \code{TRUE} (default), a progress bar indicates
-the state of calculation.}
+\item{...}{additional argument such as verbose}
 }
 \value{
 Returns a "volume" class object of "binary" modality (see

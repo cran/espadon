@@ -29,7 +29,7 @@ bool pt_sorter(inter_pt_st const& lpt, inter_pt_st const& rpt) {
       double d1,
       std::vector <double> pt2_x,
       std::vector <double> pt2_y,
-      double eps =1e-6){
+      double eps =1e-9){
   //
   unsigned short pt1_le, pt2_le;
   unsigned short i,j;
@@ -70,13 +70,13 @@ bool pt_sorter(inter_pt_st const& lpt, inter_pt_st const& rpt) {
         A1A2x = pt2_x[j]-pt1_x[i];
         A1A2y = pt2_y[j]-pt1_y[i];
         // if ((A1A2x!=0.0) || (A1A2y!=0.0)){ // pas le même point
-        if (fabs(diff)<eps){ // parallel
+        if (fabs(diff)<=eps){ // parallel
           // if (diff==0){ // parallel
-          if (fabs(A1A2x * u1_y-u1_x* A1A2y)<eps) { // same line
+          if (fabs(A1A2x * u1_y-u1_x* A1A2y)<=eps) { // same line
             // if (A1A2x * u1_y-u1_x* A1A2y==0) { // same line
             k1l = A1A2x * u1_x + A1A2y * u1_y;
-            // if (fabs(k1l)<eps) k1l = 0.0;
-            // if (fabs(d1-k1l)<eps) k1l = d1;
+            // if (fabs(k1l)<=eps) k1l = 0.0;
+            // if (fabs(d1-k1l)<=eps) k1l = d1;
             // Rcout<<"    "<<std::to_string((pt2_x[j+1]-pt1_x[i]))<<" "<<std::to_string((pt2_x[j]-pt1_x[i]))<<
             //   " "<<std::to_string((pt2_y[j+1]-pt1_y[i])) <<" "<<std::to_string(pt2_y[j]-pt1_y[i]);
             // if ((k1l>=0.0) && (k1l<d1)){
@@ -98,10 +98,10 @@ bool pt_sorter(inter_pt_st const& lpt, inter_pt_st const& rpt) {
           proj2 = A1A2x * u2_x + A1A2y * u2_y;
           k1l = (proj1 - proj2 * u1u2)/diff;
           k2l = (proj1 * u1u2 - proj2)/diff;
-          // if (fabs(k1l)<eps) k1l = 0.0;
-          if (fabs(k2l)<eps) k2l = 0.0;
-          // if (fabs(d1-k1l)<eps) k1l = d1;
-          if (fabs(d2-k2l)<eps) k2l = d2;
+          // if (fabs(k1l)<=eps) k1l = 0.0;
+          if (fabs(k2l)<=eps) k2l = 0.0;
+          // if (fabs(d1-k1l)<=eps) k1l = d1;
+          if (fabs(d2-k2l)<=eps) k2l = d2;
           if ( (k1l>=0.0) && (k1l<d1)  && (k2l>=0.0) && (k2l<d2) ){
             // Rcout<<"    "<<std::to_string((pt2_x[j+1]-pt1_x[i]))<<" "<<std::to_string((pt2_x[j]-pt1_x[i]))<<
             //   " "<<std::to_string((pt2_y[j+1]-pt1_y[i])) <<" "<<std::to_string(pt2_y[j]-pt1_y[i]);

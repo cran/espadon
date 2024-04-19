@@ -39,6 +39,7 @@ std::vector <double> fantovoxelC (std::vector <double> p,
 
   nb_out =0;
   for (m=0; m< p_le; m++){
+    R_CheckUserInterrupt();
     cum = 0;
     lambda[0] = 0 ;
     nb=1;

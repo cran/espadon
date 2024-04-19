@@ -30,8 +30,7 @@ loaded, for convenience. They are not used as is in \pkg{espadon} package.}
 \link[espadon]{dicom.tag.dictionary},
 whose structure it must keep. This dataframe is used to parse DICOM files.}
 
-\item{verbose}{Boolean. If \code{TRUE}, a progress bar indicates the progress
-of the conversion.}
+\item{verbose}{Boolean. If \code{TRUE}, a progress bar indicates loading progress.}
 }
 \value{
 Returns an \pkg{espadon} object of class "patient", describing the
@@ -44,7 +43,7 @@ pre-load in memory all patient objects from DICOM files.
 }
 \examples{
 # First, save toy.dicom.raw () raw data to a temporary file pat.dir for testing.
-pat.dir <- file.path (tempdir(), "toy_dccm") 
+pat.dir <- file.path (tempdir(), "toy_dcm") 
 dir.create (pat.dir, recursive = TRUE) 
 dcm.filename <- tempfile (pattern = "toyrtplan", tmpdir = pat.dir,
                           fileext = ".dcm")
