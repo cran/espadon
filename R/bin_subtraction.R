@@ -24,9 +24,11 @@
 #'
 #' # binaries
 #' bin.patient <- bin.from.roi (MR, struct = S, roi.name = "patient",
-#'                            alias = "patient", T.MAT = patient$T.MAT)
+#'                            alias = "patient", T.MAT = patient$T.MAT,
+#'                            verbose = FALSE)
 #' bin.ptv <- bin.from.roi (MR, struct = S, roi.name = "ptv",
-#'                            alias = "ptv", T.MAT = patient$T.MAT)
+#'                            alias = "ptv", T.MAT = patient$T.MAT,
+#'                            verbose = FALSE)
 #'
 #' #' calculation of the 'patient - ptv' binary
 #' bin <- bin.subtraction (bin.patient, bin.ptv, alias = "patient - ptv")
@@ -38,28 +40,23 @@
 #' @importFrom methods is
 bin.subtraction <- function (vol1, vol2 , alias = "", description = NULL) {
   
-  if (!is (vol1, "volume") | !is (vol2, "volume")){
-    warning ("vol1 or vol2 should be volume class objects.")
-    return (NULL)
+  if ((!is (vol1, "volume") & !is.null(vol1)) | (!is (vol2, "volume") & !is.null(vol1))) 
+    stop ("vol1 or vol2 should be volume class objects.")
+  if (!is.null(vol1)){
+    if (vol1$modality!="binary") stop ("vol1 must be of binary modality.")
+    if (is.null(vol1$vol3D.data)) stop ("empty vol1$vol3D.data.")
+  }
+  if (!is.null(vol2)){
+    if (vol2$modality!="binary") stop ("vol2 must be of binary modality.")
+    if (is.null(vol2$vol3D.data)) stop ("empty vol2$vol3D.data.")
   }
   
-  if ((vol1$modality!="binary") | (vol2$modality!="binary")) {
-    warning ("both volumes must be of binary modality.")
-    return (NULL)
-  }
-  if(is.null(vol1$vol3D.data)){
-    warning ("empty vol1$vol3D.data.")
-    return (NULL)
-  }
-  if(is.null(vol2$vol3D.data)){
-    warning ("empty vol2$vol3D.data.")
-    return (NULL)
-  }
+  if (is.null(vol1)) return (NULL)
+  if (is.null(vol2)) return (vol1)
+  
   #verifier que les volumes ont le même support
-  if (!grid.equal (vol1, vol2)) {
-    warning ("both volumes must share the same grid.")
-    return (NULL)
-  }
+  if (!grid.equal (vol1, vol2)) stop ("both volumes must share the same grid.")
+ 
   if (is.null(description))  description <-  paste (vol1$object.alias, "-", vol2$object.alias)
   Vb <- vol.copy (vol1, alias = alias, modality = "binary", description = description)
   

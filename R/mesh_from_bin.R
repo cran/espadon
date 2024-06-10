@@ -56,7 +56,7 @@
 #' S <- patient$rtstruct[[1]]
 #' 
 #' # creation of the patient mesh
-#' bin <- bin.from.roi (CT, struct = S, roi.name = "patient")
+#' bin <- bin.from.roi (CT, struct = S, roi.name = "patient", verbose = FALSE)
 #' mesh.patient <- mesh.from.bin (bin, alias = "patient", verbose = FALSE)
 #' str (mesh.patient)
 
@@ -75,15 +75,10 @@ mesh.from.bin <- function (bin, alias="", tol = min(abs(bin$dxyz))/2,
                            smooth.delta = 0.1,
                            verbose = FALSE) {
   
-  
-  if (!is (bin, "volume")) {
-    warning ("bin should be a volume class object.")
-    return (NULL)
-  }
-  if ((bin$modality!="binary")) {
-    warning ("bin must be modality binary.")
-    return (NULL)
-  }
+
+  if (!is (bin, "volume")) stop ("bin should be a volume class object.")
+  if ((bin$modality!="binary")) stop ("bin must be modality binary.")
+
   
   vol3D <- bin$vol3D.data
   vol3D[,,1] <- FALSE
@@ -126,7 +121,7 @@ mesh.from.bin <- function (bin, alias="", tol = min(abs(bin$dxyz))/2,
   
   if (verbose) cat ("mesh.from.bin INFO : Basic mesh cleanings\n")
   mesh <- vcgIsolated(mesh, silent = !verbose)
-  mesh <- vcgClean(mesh, sel=c(1:7), tol = tol, iterate = TRUE, silent = !verbose)
+  mesh <- vcgClean(mesh, sel=c(0:4,7), tol = tol, iterate = TRUE, silent = !verbose)
 
   if (smooth.iteration > 0){
     if (verbose) cat ("mesh.from.bin INFO : mesh smoothing\n")

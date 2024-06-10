@@ -20,7 +20,8 @@
 #' S <- patient$rtstruct[[1]]
 #' 
 #' # select the brain in the volume
-#' bin.brain <- bin.from.roi (vol = CT, struct = S, roi.name = "brain")
+#' bin.brain <- bin.from.roi (vol = CT, struct = S, roi.name = "brain",
+#'                            verbose = FALSE)
 #' vol.brain <- vol.from.bin (CT, bin.brain)
 #'# display at the center of gravity of the brain Gz
 #' Gz <- S$roi.info [grep("^brain", S$roi.info$roi.pseudo),]$Gz
@@ -31,25 +32,17 @@
 #' @importFrom methods is
 vol.from.bin <- function (vol, sel.bin, alias = "", description = NULL){
   
-  if (!is (vol, "volume")) {
-    warning ("vol should be a volume class object.")
-    return (NULL)
-  }
-  if (!is (sel.bin, "volume")){
-    warning ("sel.bin should be a volume class object.")
-    return (NULL)
-  }
+  if (is.null (vol)) return (NULL)
+  if (!is (vol, "volume")) stop ("vol should be a volume class object.")
+  if (is.null(vol$vol3D.data)) stop ("empty vol$vol3D.data.")
   
-  if (sel.bin$modality!="binary") {
-    warning ("sel.bin must be modality binary.")
-    return (NULL)
-  }
+  if (!is (sel.bin, "volume"))
+    stop ("sel.bin should be a volume class object.")
+  if (sel.bin$modality!="binary") stop ("sel.bin must be modality binary.")
   
   #verifier que les volumes ont le même support
-  if (!grid.equal (vol, sel.bin)) {
-    warning ("vol and sel.bin must share same grid.")
-    return (NULL)
-  }
+  if (!grid.equal (vol, sel.bin)) stop ("vol and sel.bin must share same grid.")
+
   if (is.null(description)) description = paste (vol$object.alias, "from", sel.bin$object.alias)
   V <- vol.copy (vol, alias = alias, description = description)
   

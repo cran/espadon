@@ -8,6 +8,7 @@ vol.subsampling(
   vol,
   fact.ijk = 2,
   interpolate = TRUE,
+  method = c("NN", "Av"),
   alias = "",
   description = NULL
 )
@@ -17,9 +18,9 @@ vol.subsampling(
 
 \item{fact.ijk}{Strictly positive integer, or a vector of 3 strictly positive integers.}
 
-\item{interpolate}{Boolean, default to \code{TRUE}. If \code{interpolate = TRUE}, a
-trilinear interpolation of the value of the voxels, relative to the values of
-adjacent voxels, is performed.}
+\item{interpolate}{Boolean, default to \code{TRUE}.}
+
+\item{method}{method of interpolation, defaulted to 'NN' ie 'Nearest Neighbor'. See Details.}
 
 \item{alias}{Character string, \code{$alias} of the created object.}
 
@@ -34,6 +35,15 @@ of the volume is invariant.
 \description{
 The \code{vol.subsampling} function sub-samples the grid of a "volume" class
 object.
+}
+\details{
+The interpolation method is chosen from:
+\itemize{
+\item \code{'NN'}: the value of a voxel is calculated from its nearest adajcent neighbors.
+\item \code{'Av'}: the value of a voxel is the weighted average of
+the voxels contained in a box, whose sides are automatically calculated from
+the \code{back.bol$dxyz} steps.
+}
 }
 \examples{
 vol <- vol.create(n.ijk = c(10,10,1),dxyz = c(2,2,2), ref.pseudo = "ref1", 

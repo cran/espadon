@@ -8,13 +8,19 @@
 #' \link[espadon]{load.patient.from.dicom}, \link[espadon]{load.patient.from.Rdcm},
 #' \link[espadon]{load.T.MAT} or \link[espadon]{ref.add}. If \code{T.MAT = NULL}, 
 #' \code{back.vol$ref.pseudo} must be equal to \code{vol$ref.pseudo}.
-#' @param interpolate Boolean, default to \code{TRUE}. If \code{interpolate = TRUE}, a 
-#' trilinear interpolation of the value of the voxels, relative to the values of 
-#' adjacent voxels, is performed.
+#' @param interpolate Boolean, default to \code{TRUE}. 
+#' @param method method of interpolation, defaulted to 'NN' ie 'Nearest Neighbor'. See Details. 
 #' @param alias Character string, \code{$alias} of the created object.
 #' @param description Character string, describing the the created object. 
 #' If \code{description = NULL}, it will be that of \code{vol}.
 #' @param verbose Boolean. if \code{TRUE} (default) a progress bar is displayed.
+#' @details The interpolation method is chosen from:
+#' \itemize{
+#' \item \code{'NN'}: the value of a voxel is calculated from its nearest adajcent neighbors.
+#' \item \code{'Av'}: the value of a voxel is the weighted average of 
+#' the voxels contained in a box, whose sides are automatically calculated from 
+#' the \code{back.bol$dxyz} steps. 
+#' }
 #' @return Returns a copy of \code{vol}, in which grid is that of \code{back.vol}.
 #' @examples
 #' # loading of toy-patient objects (decrease dxyz and increase beam.nb for 
@@ -41,16 +47,21 @@
 #' @importFrom methods is
 #' @export
 #' 
-vol.regrid <- function (vol, back.vol, T.MAT = NULL, interpolate = TRUE, alias = "", 
+vol.regrid <- function (vol, back.vol, T.MAT = NULL, interpolate = TRUE, 
+                        method = c("NN","Av"), alias = "", 
                         description=NULL, verbose = TRUE){
   
+  if (is.null(vol)) return (NULL)
   if (!is (vol, "volume")) stop ( "vol should be a volume class object.")
   if (!is (back.vol, "volume")) stop ("back.vol should be a volume class object.")
+  if (is.null (vol$vol3D.data)) stop("vol should contain vol3D.data. Load voxel data.")
+  if (is.null (back.vol$vol3D.data)) stop("back.vol should contain vol3D.data. Load voxel data.")
   if (!is.logical(interpolate)) stop ("interpolate should be TRUE or FALSE.")
   if (!is.null(T.MAT)){
     if (!is (T.MAT, "t.mat")) stop ("T.MAT should be a t.mat class object or NULL.")
   }
 
+  method <- method[1]
   send <- FALSE
   if (is.null(description)) description<- vol$description
   
@@ -117,12 +128,12 @@ vol.regrid <- function (vol, back.vol, T.MAT = NULL, interpolate = TRUE, alias =
     M.xyz.from.new[which(apply(abs(M.xyz.from.new[1:3,1:3]),2,sum)==0) ,
                    which(apply(abs(M.xyz.from.new[1:3,1:3]),1,sum)==0)]<- 1
     new.cube.idx <- solve(M.xyz.from.new )%*% vol$xyz.from.ijk %*% cube.idx
-    new.cube.idx[abs(new.cube.idx) < 1.0e-6] <- 0
-
+    new.cube.idx[abs(new.cube.idx) < 1.0e-9] <- 0
+  
   } else {
     M.old.from.new <- solve (vol$xyz.from.ijk) %*% M.Tref %*% new.vol$xyz.from.ijk
     new.cube.idx <- solve (M.old.from.new) %*% cube.idx
-    new.cube.idx[abs(new.cube.idx) < 1.0e-6] <- 0
+    new.cube.idx[abs(new.cube.idx) < 1.0e-9] <- 0
   }
   
   
@@ -150,21 +161,30 @@ vol.regrid <- function (vol, back.vol, T.MAT = NULL, interpolate = TRUE, alias =
   k.idx[fna] <- max(vol$k.idx)+1
   
   ijk <-matrix((ijk.selection %*% t(M.old.from.new))[ ,1:3],ncol=3)
+  ijk[abs(ijk)<1e-9] <- 0
   if (verbose) pb$tick()
   vol3D <- as.numeric(vol$vol3D.data)
   vol3D[is.na(vol3D)] <- NaN
+  s_ijk <- c(1,1,1)
+  if (method == "Av"){
+    s_ijk <- c(mean(diff(sort(unique(ijk[,1])))),
+               mean(diff(sort(unique(ijk[,2])))),
+               mean(diff(sort(unique(ijk[,3])))))
+    s_ijk[is.na(s_ijk)] <- 1
+    s_ijk[s_ijk<1] <- 1
+  }
   new.vol$vol3D.data[ijk.Rselection] <- .getvaluefromijkC (vol3D = vol3D,
                                                            interpolate = interpolate,
                                                            i = as.numeric(ijk[ ,1]),
                                                            j = as.numeric(ijk[ ,2]),
                                                            k = as.numeric(ijk[ ,3]),
                                                            k_idx = k.idx,
-                                                           k_loc = k.loc, n_ijk=vol$n.ijk)
+                                                           k_loc = k.loc, n_ijk=vol$n.ijk,s_ijk = s_ijk)
   
   if (verbose) pb$tick()
   new.vol$vol3D.data[is.nan(new.vol$vol3D.data)] <- NA
   new.vol$vol3D.data[abs(new.vol$vol3D.data)<=1e-6] <- 0
-  
+  if (new.vol$modality == "binary") new.vol$vol3D.data <- new.vol$vol3D.data>=0.5
   if (any(!is.na(new.vol$vol3D.data))){
     new.vol$min.pixel <- min ( new.vol$vol3D.data, na.rm=TRUE)
     new.vol$max.pixel <- max ( new.vol$vol3D.data, na.rm=TRUE)

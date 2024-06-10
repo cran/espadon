@@ -73,5 +73,8 @@ dicom.patient.anonymiser (dcm.files = pat.dir, pat.dest.dir = anonymous.pat.dir,
                           reset.private.tag = TRUE)
 lf <- list.files(anonymous.pat.dir, full.names = TRUE)  
 dp <- dicom.parser(lf[1])   
-dp[grep("^[(]0008|^[(]0010", dp$TAG),]                   
+dp[grep("^[(]0008|^[(]0010", dp$TAG),]       
+
+# Cleaning  temporary directory
+unlink (pat.dir, recursive = TRUE)            
 }

@@ -60,7 +60,8 @@
 #'                         description = NULL)
 
 #' # selection of voxels included in the RoI.
-#' roi.bin <- bin.from.roi (vol = CT.on.roi, struct = S, roi.sname = "brain")
+#' roi.bin <- bin.from.roi (vol = CT.on.roi, struct = S, roi.sname = "brain", 
+#'                          verbose = FALSE)
 #' MR.select <- vol.from.bin (MR.on.CT, roi.bin, alias = MR$description)
 #' CT.select <- vol.from.bin (CT.on.roi, roi.bin, alias = CT$description)
 

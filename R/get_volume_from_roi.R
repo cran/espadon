@@ -36,14 +36,12 @@ get.volume.from.roi <- function (struct, roi.name = NULL, roi.sname = NULL,
   #   warning ("multiple names or no names forbidden.")
   #   return (NULL)
   # }
-  if (!is (struct, "struct")) {
-    warning ("struct should be a struct class object.")
-    return (NULL)
-  }
-  if(is.null(struct$roi.data)){
-    warning ("empty roi.data\n")
-    return (NULL)
-  }
+  if (!is (struct, "struct")) 
+    stop ("struct should be a struct class object.")
+ 
+  if(is.null(struct$roi.data))
+    stop ("empty roi.data\n")
+
   
   roi.idx <- select.names (struct$roi.info$roi.pseudo, roi.name, roi.sname, roi.idx)
   

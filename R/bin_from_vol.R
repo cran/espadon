@@ -35,15 +35,10 @@
 #' @importFrom methods is
 bin.from.vol <- function (vol, min=-Inf, max=Inf, in.selection = TRUE,
                           alias="", description = NULL) {
-  if (!is (vol, "volume")) {
-    warning ("vol should be a volume class object.")
-    return (NULL)
-  }
+  if (is.null(vol)) return (NULL)
+  if (!is (vol, "volume")) stop ("vol should be a volume class object.")
+  if(is.null(vol$vol3D.data)) stop ("Empty vol$vol3D.data.")
   
-  if(is.null(vol$vol3D.data)){
-    warning ("Empty vol$vol3D.data.")
-    return (NULL)
-  }
   
   if (is.null(description)) {
     description <-  paste (min, vol$object.alias, max,sep= " <= ")
@@ -57,7 +52,7 @@ bin.from.vol <- function (vol, min=-Inf, max=Inf, in.selection = TRUE,
   Vb$vol3D.data[!na.vox] <- (Vb$vol3D.data[!na.vox] >= min) &  (Vb$vol3D.data[!na.vox] <= max)
   
   if (!in.selection) Vb$vol3D.data <- !Vb$vol3D.data
-
+  if (!is.null(Vb$cluster.info)) Vb$cluster.info <- NULL
   # Vb$vol3D.data[is.na(Vb$vol3D.data)] <- FALSE
   Vb$min.pixel <- min(Vb$vol3D.data, na.rm=T)
   Vb$max.pixel <- max(Vb$vol3D.data, na.rm=T)

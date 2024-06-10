@@ -31,7 +31,9 @@
 #' # Inspect Rdcm raw data
 #' L <- load.Rdcm.raw.data (lf[1])
 #' str (L, max.level =3)
-
+#' 
+#' # Cleaning  temporary directory
+#' unlink (pat.src.dir, recursive = TRUE)  
 #' @export
 load.Rdcm.raw.data <- function (Rdcm.filename, address= TRUE, data=TRUE, 
                                 upgrade.to.latest.version = FALSE) {

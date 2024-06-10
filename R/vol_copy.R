@@ -28,10 +28,9 @@
 #' @importFrom methods is
 vol.copy <- function (vol, alias = "", modality = NULL, description = NULL, 
                       number = NULL)  {
-  if (!is(vol, "volume")) {
-    warning ("vol should be a volume class object.")
-    return (NULL)
-  }
+  if (is.null (vol)) return (NULL)
+  if (!is (vol, "volume")) stop ("vol should be a volume class object.")
+  
   vol_ <- vol
   if (!is.null (modality)) vol$modality <- modality
   if (!is.null (description)) vol$description <- description

@@ -390,7 +390,7 @@ rt.indices.from.roi <- function (vol, struct = NULL, T.MAT = NULL,
       vr <- nesting.roi(vol, struct, roi.idx =roi.idx[idx], xyz.margin=rep(margin,3), 
                         T.MAT = T.MAT, alias = struct$roi.info$name[roi.idx[idx]])
       b <- bin.from.roi(vr, struct, roi.idx = roi.idx[idx], T.MAT = T.MAT, 
-                        alias = struct$roi.info$name[roi.idx[idx]])
+                        alias = struct$roi.info$name[roi.idx[idx]], verbose = FALSE)
       vr <- vol.from.bin(vr, b, alias = struct$roi.info$name[roi.idx[idx]], 
                          description=b$description)
       # h <- histo.vol (vr, breaks = seq (0, D.max, by = 0.001),

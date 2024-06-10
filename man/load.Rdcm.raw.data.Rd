@@ -49,6 +49,9 @@ lf
 # Inspect Rdcm raw data
 L <- load.Rdcm.raw.data (lf[1])
 str (L, max.level =3)
+
+# Cleaning  temporary directory
+unlink (pat.src.dir, recursive = TRUE)  
 }
 \seealso{
 \link[espadon]{dicom.to.Rdcm.converter}, \link[espadon]{load.obj.from.Rdcm}.

@@ -147,7 +147,7 @@ display.plane <- function (bottom = NULL, top = NULL, struct = NULL,
       stop ("bottom should be a volume class object.")
     } else if  (is.null(bottom$vol3D.data)){
         message ("bottom should have vol3D.data.")
-        bottom <- NULL
+        bottom$vol3D.data <- array(NA, dim=bottom$n.ijk)
     }
   }
   if (!is.null(top)) {
@@ -155,7 +155,7 @@ display.plane <- function (bottom = NULL, top = NULL, struct = NULL,
       stop ("top should be a volume class object.")
     } else if  (is.null(top$vol3D.data)){
       message ("top should have vol3D.data.")
-      top <- NULL
+      top$vol3D.data <- array(NA, dim=bottom$n.ijk)
     }
   }
     
@@ -176,13 +176,13 @@ display.plane <- function (bottom = NULL, top = NULL, struct = NULL,
                       top$ref.pseudo, struct$ref.pseudo)))!=1 & 
       is.null(T.MAT)) warning("objects have different ref.pseudo. Load T.MAT for correct display")
   if (!is.null(bottom)) {
-    dum <- suppressWarnings(vol.in.new.ref(bottom, selected.ref, T.MAT))
+    dum <- tryCatch(vol.in.new.ref(bottom, selected.ref, T.MAT), error = function (e) NULL)
     if (is.null(dum)) {
       warning(paste("bottom is displayed in the ref.pseudo", bottom$ref.pseudo, "instead of", selected.ref))
       warn.ref <- TRUE
     } else {bottom <- dum}}
   if (!is.null(top)) {
-    dum <- suppressWarnings(vol.in.new.ref(top, selected.ref, T.MAT))
+    dum <- tryCatch(vol.in.new.ref(top, selected.ref, T.MAT),error = function (e) NULL)
     if (is.null(dum)) {
       warning(paste("top is displayed in the ref.pseudo", top$ref.pseudo, "instead of", selected.ref))
       warn.ref <- TRUE
@@ -194,7 +194,7 @@ display.plane <- function (bottom = NULL, top = NULL, struct = NULL,
   
   
   if (!is.null(list.roi.idx)) {
-    dum <- suppressWarnings(struct.in.new.ref (struct,new.ref.pseudo= selected.ref, T.MAT))
+    dum <- tryCatch(struct.in.new.ref (struct,new.ref.pseudo= selected.ref, T.MAT), error = function (e) NULL)
     if (is.null(dum)) {
       warning(paste("struct is displayed in the ref.pseudo", struct$ref.pseudo, "instead of", selected.ref))
       warn.ref.struct <- TRUE
@@ -229,11 +229,18 @@ display.plane <- function (bottom = NULL, top = NULL, struct = NULL,
       args_[["add"]] <-  add
       args_[["cut.interpolate"]] <- interpolate
       args_[["display.interpolate"]] <- interpolate
-      bottom.p <- suppressMessages(do.call(plot,args_))
+      if (is.null (main)) args_[["main"]] <- ""
+      
+      bottom.p <- tryCatch(suppressMessages(do.call(plot,args_)), error=function(e) NULL)
       if (is.na(bottom.p$max.pixel)) {
         bottom.p <- NULL; 
         message("no bottom view @", coord.lab," = ", round(view.coord[coord.idx],2), " mm")
-        }
+      } else if (is.null (main)) {
+        idx <- which(bottom.p$xyz.from.ijk[,3]!=0)
+        mtext (paste (bottom$modality, " (", bottom$description,") @ ", c("x","y","z")[idx],
+                      " = ",round (bottom.p$xyz0[1,idx],3)," mm",sep=""),
+               side=3, line=par()$cex.main*(1.3),  cex=par()$cex.main, font = par()$font.main)
+      }
     }
     
     if (!is.null(top)) {
@@ -243,8 +250,9 @@ display.plane <- function (bottom = NULL, top = NULL, struct = NULL,
       args_[["breaks"]] <- top.breaks 
       args_[["sat.transp"]] <- sat.transp 
       args_[["add"]] <- !is.null(bottom.p$max.pixel) | add
-
-      top.p <- suppressMessages(do.call(plot,args_))
+      args_[["cut.interpolate"]] <- interpolate
+      args_[["display.interpolate"]] <- interpolate
+      top.p <- tryCatch(suppressMessages(do.call(plot,args_)), error=function(e) NULL)
       if (is.na(top.p$max.pixel)) {
         top.p <- NULL; 
         message("no top view @", coord.lab," = ", round(view.coord[coord.idx],2), " mm")
@@ -272,8 +280,8 @@ display.plane <- function (bottom = NULL, top = NULL, struct = NULL,
       args_[["interpolate"]] <- NULL
       args_[["roi.idx"]] <- list.roi.idx
       args_[["lwd"]] <- struct.lwd
-      args_[["back.dxyz"]] <- 
-      S  <- do.call(plot,args_)
+      args_[["back.dxyz"]] <- struct.dxyz
+      S  <- tryCatch(do.call(plot,args_), error=function(e) NULL)
       
       if (S$nb.of.roi>0){
         legendlabel <- S$roi.info$roi.pseudo

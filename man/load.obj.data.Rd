@@ -33,6 +33,8 @@ rm( patient)
 patient <- load.patient.from.Rdcm (pat.dir, data = FALSE)
 CT <- load.obj.data (patient$ct[[1]])
 str (CT, max.level = 2)
+# Cleaning  temporary directory
+unlink (pat.dir, recursive = TRUE)
 }
 \seealso{
 \link[espadon]{load.obj.from.dicom} and \link[espadon]{load.obj.from.Rdcm}

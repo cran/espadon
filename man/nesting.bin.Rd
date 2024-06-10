@@ -5,16 +5,17 @@
 \title{Restrict volume to a binary selection}
 \usage{
 nesting.bin(
-  vol,
+  obj,
   sel.bin,
   alias = "",
   description = NULL,
   xyz.margin = c(0, 0, 0),
-  vol.restrict = FALSE
+  obj.restrict = FALSE,
+  ...
 )
 }
 \arguments{
-\item{vol}{"volume" class object, containing data to restrict.}
+\item{obj}{"volume" class object, containing data to restrict.}
 
 \item{sel.bin}{"volume" class object, of "binary" modality, specifying the selected voxels.}
 
@@ -22,16 +23,16 @@ nesting.bin(
 
 \item{description}{Character string, describing the the created object.
 If \code{description = NULL}, it will be
-\code{paste (vol$description,"restricted to", sel.bin$description)}.}
+\code{paste (obj$description,"restricted to", sel.bin$description)}.}
 
-\item{xyz.margin}{Vector of length 3, representing the distances in mm to be added
-to the x, y and z directions of the rectangular parallelepiped circumscribed
-to the voxels selected in \code{sel.bin}, in the cutting planes frame of reference.
-By default xyz.margin = c (0, 0, 0).}
+\item{xyz.margin}{Numeric vector of length 3, by default set to \code{c (0, 0, 0)}.
+See details.}
 
-\item{vol.restrict}{Boolean. If \code{vol.restrict = TRUE}, the rectangular
-parallelepiped circumscribed to the selected voxels, enlarged by xyz.margin cannot
-exceed the initial volume.}
+\item{obj.restrict}{Boolean. Used if \code{obj} is of class "volume". If
+\code{obj.restrict = TRUE}, the rectangular parallelepiped circumscribed to
+the selected voxels, enlarged by xyz.margin cannot exceed the initial volume.}
+
+\item{...}{Argument such as T.MAT, or for deprecated arguments}
 }
 \value{
 Returns a "volume" class object, in which 3D volume is limited to the
@@ -41,6 +42,15 @@ requested margins.
 \description{
 The \code{nesting.bin} function restricts a "volume" class
 object to the rectangular parallelepiped circumscribed to the selected voxels.
+}
+\details{
+If \code{obj} is of class "volume", \code{xyz.margin} represents the
+distances in mm to be added to the x, y and z directions of the rectangular
+parallelepiped circumscribed to the voxels selected in \code{sel.bin}, in the
+\code{obj} frame of reference.
+
+If \code{obj} is of class "mesh", \code{sel.bin} will undergo margin
+expansion any operation on the \code{obj}.
 }
 \examples{
 # loading of toy-patient objects (decrease dxyz for  better result)

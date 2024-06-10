@@ -42,7 +42,7 @@ CT <- patient$ct[[1]]
 S <- patient$rtstruct[[1]]
 
 #creation of the patient mesh
-bin <- bin.from.roi (CT, struct = S, roi.name = "patient")
+bin <- bin.from.roi (CT, struct = S, roi.name = "patient", verbose = FALSE)
 mesh.patient <- mesh.from.bin (bin, alias = "patient", verbose = FALSE)
 
 # mesh in the MR frame of reference

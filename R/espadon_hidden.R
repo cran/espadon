@@ -13,7 +13,7 @@
 
 #####################################################################################
 .espadon.version <- function(){
-  return ("1.7.0")
+  return ("1.7.2")
 }
 
 #####################################################################################
@@ -91,7 +91,6 @@
   for (f.idx in 1:length(dcm.filenames)){
     m <- dicom.raw.data.loader(dcm.filenames[f.idx])
     dicom.df <- dicom.browser (m,tag.dictionary = tag.dictionary)
-    
     if (is.null(dicom.df)) {
       L <- NULL
     } else {
@@ -182,7 +181,7 @@
   row.names(object.df) <- NULL
   
   
-  if (any(object.df$ref.label=="")){ #| any(object.df$SOP.label.nb=="")){
+  if (any(object.df$ref.label=="")){ # any(object.df$SOP.label.nb=="")){
     #on cherche le label des referentiel, en utilisant ceux qui existent deja dans le old
     ref.tab <- unique(object.df[,c("ref.label","reference")])
     ref.tab <- ref.tab[order(ref.tab$ref.label, decreasing=TRUE),]
@@ -1631,6 +1630,7 @@
   # if (object.info$temp!= ""){
   #   tempf <- file.path (OUTDIR, paste ("temp", unlist(strsplit(object.info$temp,";")), sep = ""))
   #   data <- lapply(tempf,function(f) qread (f))
+  sep <- "\\"
   address <- lapply(data, function(l) l$address)
   filename <- sapply (data, function(l) l$filename)
   data <- lapply(data, function(l) l$data)
@@ -1787,31 +1787,31 @@
     
     ##espacement des pixels en x, y
     header_$dxyz <- tryCatch (dat[[grep("[(]0028,0030[)]$", name)]],error = function (e) "")
-    if (header_$dxyz =="")  header$error <- c (header$error,"(0028,0030) xy-spacing error")
-    sep <-unique(unlist(strsplit(tolower(header_$dxyz),"[[:digit:]]|[ ]|[.]|[e]|[+]|[-]")))
-    sep <- sep[sep!=""]
-    if (length(sep)==1)  {header_$dxyz <- c(as.numeric (unlist(strsplit(header_$dxyz,sep, fixed=TRUE))),header_$slice.thickness)
-    } else {header_$dxyz <- c (0, 0, header_$slice.thickness)}
+    if (header_$dxyz =="") { 
+      header$error <- c (header$error,"(0028,0030) xy-spacing error")
+      header_$dxyz <- c (0, 0, header_$slice.thickness)
+    } else {
+      header_$dxyz <- c(as.numeric (unlist(strsplit(header_$dxyz,sep, fixed=TRUE))),header_$slice.thickness)
+    }
+
     ## referientiel patient
     header_$orientation <- tryCatch (dat[[grep("[(]0020,0037[)]$", name)]],error = function (e) "")
-    if (header_$orientation =="")  header$error <- c(header$error,"(0020,0037) patient orientation error")
-    sep <-unique(unlist(strsplit(tolower(header_$orientation),"[[:digit:]]|[ ]|[.]|[e]|[+]|[-]")))
-    sep <- sep[sep!=""]
-    ref.machine <- NULL
-    if (length(sep)==1){
+    if (header_$orientation =="")  {
+      header$error <- c(header$error,"(0020,0037) patient orientation error")
+      header_$orientation <- c(1,0,0,0,1,0)
+    } else {
       header_$orientation <- as.numeric (unlist(strsplit(header_$orientation,sep, fixed=TRUE)))
-      ref.machine <-  (.ref.create (header_$orientation))
-    } else {header_$orientation <- c(1,0,0,0,1,0)}
+    } 
     
+    ref.machine <-  (.ref.create (header_$orientation))
     ## z coordinates
     z <- tryCatch (dat[[grep("[(]3004,000C[)]$", name)]],error = function (e) "0")
     if (z == "0" & header_$n.ijk[3]>1)  {
       header$error <- c(header$error,"no (3004,000C) definition")
+      z <- 0
+    } else {
+      z <- as.numeric (unlist(strsplit(z,sep, fixed=TRUE)))
     }
-    sep <-unique(unlist(strsplit(tolower(z),"[[:digit:]]|[ ]|[.]|[e]|[+]|[-]")))
-    sep <- sep[sep!=""]
-    if (length(sep)==1)  {z <- as.numeric (unlist(strsplit(z,sep, fixed=TRUE)))
-    } else {z=0}
     
     if (length(z)>1) {
       dz <- unique(round(diff(z),3))
@@ -1824,14 +1824,12 @@
     
     ## position de l'image dans le référentiel patient
     header_$xyz0 <- tryCatch (dat[[grep("[(]0020,0032[)]$", name)]],error = function (e) "")
-    if (any(header_$xyz0 == "")) header$error <- c(header$error,"(0020,0032) pos. in referentiel error")
-    sep <- unique(unlist(strsplit(tolower(header_$xyz0[1]),"[[:digit:]]|[ ]|[.]|[e]|[+]|[-]")))
-    sep <- sep[sep!=""]
-    if (length(sep)==1) {
-      header_$xyz0 <- as.numeric(unlist(sapply (header_$xyz0, function(st) unlist(strsplit(st,sep,fixed=TRUE)))))
-    } else {
+    if (any(header_$xyz0 == "")) {
+      header$error <- c(header$error,"(0020,0032) pos. in referentiel error")
       header_$xyz0 <- c(0,0,0)
-    }                                                     
+    } else {
+      header_$xyz0 <- as.numeric(unlist(sapply (header_$xyz0, function(st) unlist(strsplit(st,sep,fixed=TRUE)))))
+    }                                                   
     
     header_$xyz0  <-  matrix (rep (header_$xyz0, length(z)), 
                                       ncol= 3, 
@@ -2084,6 +2082,7 @@
   # if (object.info$temp!= ""){
   #   tempf <- file.path (OUTDIR, paste ("temp", unlist(strsplit(object.info$temp,";")), sep = ""))
   #   data <- lapply(tempf,function(f) qread (f))
+  sep <- "\\"
   address <- lapply(data, function(l) l$address)
   filename <- sapply (data, function(l) l$filename)
   data <- lapply(data, function(l) l$data)
@@ -2132,7 +2131,8 @@
     image.nb <- as.numeric(sapply(data, function (d) tryCatch (d[[grep("^[(]0020,9241[)]$",names(d))]],error = function (e) NA)))
     image.nb.label <- "cardiac.phase.percent"
   }
-  if (is.na(image.nb[1])){
+  xyz0 <- sapply(data, function (d) tryCatch (d[[grep("[(]0020,0032[)]$",names(d))]],error = function (e) ""))
+  if (any(duplicated(xyz0)) & is.na(image.nb[1])){
     image.nb <- as.numeric(sapply(data, function (d) tryCatch (d[[grep("^[(]0020,0012[)]$",names(d))]],error = function (e) NA)))
     image.nb.label <- ""
   }
@@ -2224,35 +2224,34 @@
     
     ##espacement des pixels en x, y
     header_$dxyz <- tryCatch (dat[[1]][[grep("[(]0028,0030[)]$",names(dat[[1]]))]],error = function (e) "")
-    if (header_$dxyz =="")  header$error <- c (header$error,"(0028,0030) xy-spacing error")
-    sep <-unique(unlist(strsplit(header_$dxyz,"[[:digit:]]|[ ]|[.]|[e]|[+]|[-]")))
-    sep <- sep[sep!=""]
-    if (length(sep)==1)  {header_$dxyz <- c(as.numeric (unlist(strsplit(header_$dxyz,sep, fixed=TRUE))),header_$slice.thickness)
-    } else { header_$dxyz <- c (0, 0, header_$slice.thickness)}
+    if (header_$dxyz =="")  {
+      header$error <- c (header$error,"(0028,0030) xy-spacing error")
+      header_$dxyz <- c (0, 0, header_$slice.thickness)
+    } else {
+      header_$dxyz <- c(as.numeric (unlist(strsplit(header_$dxyz,sep, fixed=TRUE))),header_$slice.thickness)
+    }
     
     ## referientiel patient
     header_$orientation <- tryCatch (dat[[1]][[grep("[(]0020,0037[)]$",names(dat[[1]]))]],error = function (e) "")
-    if (header_$orientation[1] =="")  header$error <- c (header$error,"(0020,0037) patient orientation error")
-    sep <-unique(unlist(strsplit(tolower(header_$orientation),"[[:digit:]]|[ ]|[.]|[e]|[+]|[-]")))
-    sep <- sep[sep!=""]
-
-    if (length(sep)==1){
+    if (header_$orientation[1] =="")  {
+      header$error <- c (header$error,"(0020,0037) patient orientation error")
+      header_$orientation <- c(1,0,0,0,1,0,0)
+    } else {
       header_$orientation <- as.numeric (unlist(strsplit(header_$orientation,sep, fixed=TRUE)))
-    } else {header_$orientation <- c(1,0,0,0,1,0,0)}
+    }
     
     ref.machine <-  (.ref.create (header_$orientation))
     
     ## position de l'image dans le référentiel patient
-    header_$xyz0 <- sapply(dat, function (d) tryCatch (d[[grep("[(]0020,0032[)]$",names(d))]],error = function (e) ""))
-    if (any(header_$xyz0 == "")) header$error <- c(header$error,"(0020,0032) pos. in referentiel error")
-    sep <- unique(unlist(strsplit(tolower(header_$xyz0[1]),"[[:digit:]]|[ ]|[.]|[e]|[+]|[-]")))
-    sep <- sep[sep!=""]
-    if (length(sep)==1) {
-      header_$xyz0 <- matrix (as.numeric(unlist(sapply (header_$xyz0, 
-                                                                function(st) unlist(strsplit(st,sep,fixed=TRUE))))), 
-                                      ncol= 3, 
-                                      byrow = TRUE,
-                                      dimnames = list(NULL,c("x0","y0","z0")))
+    
+    if (any(xyz0[selection] == "")) {
+      header$error <- c(header$error,"(0020,0032) pos. in referentiel error")
+    }else {
+      header_$xyz0 <- matrix (as.numeric(unlist(sapply (xyz0[selection], 
+                                                        function(st) unlist(strsplit(st,sep,fixed=TRUE))))), 
+                              ncol= 3, 
+                              byrow = TRUE,
+                              dimnames = list(NULL,c("x0","y0","z0")))
       if (!is.null(ref.machine)) {
         machine.xyz0 <- header_$xyz0 %*% t (ref.machine[1:3,1:3])
         if (nrow(machine.xyz0)>1) {
@@ -3373,6 +3372,7 @@
 
 #####################################################################################################
 .kernel <- function(Vb,radius){
+ 
   cut.v <- function (v) {c(v[-(1:(length(v)/2+0.5))], v[1:(length(v)/2+0.5)])}
   i.c <- cut.v (1:Vb$n.ijk[1] -1)
   j.c <- cut.v (1:Vb$n.ijk[2] -1)
@@ -3380,7 +3380,11 @@
   
   gr <- as.matrix (expand.grid (i.c, j.c, k.c, 1)) %*% t(Vb$xyz.from.ijk)
   gc <- (c(mean(i.c) + 1, mean(j.c) + 1, mean(k.c) +1, 1) %*% t(Vb$xyz.from.ijk)) [1,1:3]
-  idx <- which ((gr[,1] - gc[1])^2 + (gr[,2] - gc[2])^2 + (gr[,3] - gc[3])^2 <= radius^2)
+  di <- rep(0, nrow(gr))
+  if (radius[1]>0) di <- ((gr[,1] - gc[1])^2)/ (radius[1])^2 + di
+  if (radius[2]>0) di <- ((gr[,2] - gc[2])^2)/ (radius[2])^2 + di
+  if (radius[3]>0) di <- ((gr[,3] - gc[3])^2)/ (radius[3])^2 + di
+  idx <- which (di <= 1)
   
   kernel <- Vb$vol3D.data
   kernel [,,] <- FALSE

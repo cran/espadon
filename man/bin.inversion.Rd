@@ -33,7 +33,7 @@ CT <- patient$ct[[1]]
 S <- patient$rtstruct[[1]]
 
 bin.patient <- bin.from.roi (CT, struct = S, roi.name = c ("patient"),
-                             alias = "patient")
+                             alias = "patient", verbose = FALSE)
 inverse.patient <- bin.inversion (bin.patient, alias = "inv (patient)")
 
 display.plane(CT, top = inverse.patient, interpolate = FALSE)

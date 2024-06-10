@@ -74,7 +74,7 @@ S <- patient$rtstruct[[1]]
 
 # "optical nerve" binary without inclusions management
 bin <- bin.from.roi (CT, struct = S, roi.sname = "left optical", 
-                     alias = "left_optical_nerve")
+                     alias = "left_optical_nerve", verbose = FALSE)
 display.plane (CT, top = bin, struct = S,
                view.coord = S$roi.info[S$roi.info$roi.pseudo == "leftopticalnerve",]$Gz, 
                legend.shift = -80, interpolate = FALSE, main = "Left nerve selection")
@@ -90,14 +90,16 @@ S <- patient$rtstruct[[1]]
 
 # "optical nerve" binary without inclusions management
 bin <- bin.from.roi (CT, struct = S, roi.sname = "left optical", 
-                     alias = "left_optical_nerve", within = FALSE)
+                     alias = "left_optical_nerve", within = FALSE,
+                     verbose = FALSE)
 display.plane (CT, top = bin, struct = S,
                view.coord = S$roi.info[S$roi.info$roi.pseudo == "leftopticalnerve",]$Gz, 
                legend.shift = -80, interpolate = FALSE, main = "Left nerve selection")
 
 # "optical nerve" binary with inclusions management
 bin <- bin.from.roi (CT, struct = S, roi.sname = "left optical", 
-                     alias = "left_optical_nerve", within = TRUE)
+                     alias = "left_optical_nerve", within = TRUE,
+                     verbose = FALSE)
 display.plane (CT, top = bin, struct = S,
                view.coord = S$roi.info[S$roi.info$roi.pseudo == "leftopticalnerve",]$Gz, 
                legend.shift = -80, interpolate = FALSE, main = "Left nerve selection") 

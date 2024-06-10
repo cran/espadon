@@ -64,7 +64,7 @@ struct.from.mesh <- function(mesh, z, thickness = NULL,
   if (is.null(description)) description <- paste("ROI from mesh",mesh$object.alias)
   if (is.null(thickness)) {
     thickness <- 0
-    if (length(z)>1) thickness <- min(diff(sort(z)))
+    if (length(z)>1) thickness <- min(diff(sort(unique(z))))
   }
   ext.pt <- get.extreme.pt(mesh)
   obj <- obj.create(class="struct")
@@ -398,7 +398,7 @@ struct.from.mesh <- function(mesh, z, thickness = NULL,
                 op <- (pt$pt[1]!=pt$pt[nrow(pt)])
                 pt <- vb[pt$pt,c("x","y","z")]
                 if (clean & nrow(pt)>1) {
-                  if (round(polyg.area(pt),6) == 0) return (NULL)
+                  if (round(polyg.area(pt),6) == 0 & !op) return (NULL)
                   pt <- pt[c(TRUE, !(round(diff(pt[,1]),6)==0 & round(diff(pt[,2]),6)==0)),]
                   if(nrow(pt)>2) {
                     slope.x <- diff(pt[,1])

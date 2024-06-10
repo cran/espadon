@@ -35,10 +35,9 @@
 
 get.ijk.from.xyz <- function (xyz = matrix(c(0,0,0),ncol=3), vol, verbose = FALSE) {
   
-  if (!is (vol, "volume")) {
-    warning ("vol should be a volume class object.")
-    return (NULL)
-  }
+  if (!is (vol, "volume")) 
+    stop ("vol should be a volume class object.")
+ 
   pt_ <- cbind (matrix (xyz, ncol = 3),1)
   ijk <-(pt_  %*%  t(solve(vol$xyz.from.ijk)))[,1:3]
   ijk <-matrix(ijk, ncol=3)

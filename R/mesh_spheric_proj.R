@@ -29,7 +29,7 @@
 #' S <- patient$rtstruct[[1]]
 #'
 #' #creation of the patient mesh
-#' bin <- bin.from.roi (CT, struct = S, roi.name = "patient")
+#' bin <- bin.from.roi (CT, struct = S, roi.name = "patient", verbose = FALSE)
 #' m.patient <- mesh.from.bin (bin)
 #' m.skin <- mesh.repair (m.patient, verbose = FALSE)
 #'
@@ -56,10 +56,9 @@ mesh.spheric.proj <- function (mesh, verbose = TRUE) {
   
 # ○n utilise rvcg et Matrix
   
-  if (!is (mesh, "mesh")) {
-    warning ("mesh should be a mesh class object.")
-    return (NULL)
-  }  
+  if (is.null(mesh)) return(NULL)
+  if (!is (mesh, "mesh")) stop ("mesh should be a mesh class object.")
+  
   
   m <- mesh$mesh
   

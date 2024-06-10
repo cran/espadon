@@ -66,7 +66,7 @@
 #'   vr <- nesting.roi (D, struct, roi.idx = idx, xyz.margin = c (5, 5, 5),
 #'                      T.MAT = T.MAT, alias = struct$roi.info$name[idx])
 #'   b <- bin.from.roi(vr, struct, roi.idx = idx, T.MAT = T.MAT,
-#'                     alias = struct$roi.info$name[idx])
+#'                     alias = struct$roi.info$name[idx], verbose = FALSE)
 #'   })
 #' names (target.bin.list) <- struct$roi.info$name[target.roi.idx]
 #' 
@@ -74,7 +74,7 @@
 #'   vr <- nesting.roi (D, struct, roi.idx = idx, xyz.margin = c (5, 5, 5),
 #'                      T.MAT = T.MAT, alias = struct$roi.info$name[idx])
 #'   b <- bin.from.roi(vr, struct, roi.idx = idx, T.MAT = T.MAT,
-#'                     alias = struct$roi.info$name[idx])
+#'                     alias = struct$roi.info$name[idx], verbose = FALSE)
 #' })
 #' names (healthy.bin.list) <- struct$roi.info$name[healthy.roi.idx]
 #' 

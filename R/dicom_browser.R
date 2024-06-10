@@ -46,10 +46,8 @@
 
 dicom.browser <- function(dicom.raw.data, nbTAG = 0, stop.tag = "", stop.level= 0, 
                           full.info = FALSE, tag.dictionary = dicom.tag.dictionary ()){
-  if (!is.raw(dicom.raw.data)) {
-    warning ("dicom.raw.data should be raw data :).")
-    return (NULL)
-  }
+  if (!is.raw(dicom.raw.data)) stop ("dicom.raw.data should be raw data :).")
+
   L <- .dicombrowser (dicom.raw.data, tag.dictionary, nbTAG = nbTAG,
                          stop_tag=stop.tag, stop_level= stop.level, 
                          full_info = full.info, verbose = FALSE)

@@ -36,7 +36,8 @@ CT <- patient$ct[[1]]
 S <- patient$rtstruct[[1]]
 
 # select the brain in the volume
-bin.brain <- bin.from.roi (vol = CT, struct = S, roi.name = "brain")
+bin.brain <- bin.from.roi (vol = CT, struct = S, roi.name = "brain",
+                           verbose = FALSE)
 vol.brain <- vol.from.bin (CT, bin.brain)
 # display at the center of gravity of the brain Gz
 Gz <- S$roi.info [grep("^brain", S$roi.info$roi.pseudo),]$Gz

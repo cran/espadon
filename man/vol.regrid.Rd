@@ -9,6 +9,7 @@ vol.regrid(
   back.vol,
   T.MAT = NULL,
   interpolate = TRUE,
+  method = c("NN", "Av"),
   alias = "",
   description = NULL,
   verbose = TRUE
@@ -25,9 +26,9 @@ Its \code{$ref.pseudo} must exist in the \code{T.MAT} list.}
 \link[espadon]{load.T.MAT} or \link[espadon]{ref.add}. If \code{T.MAT = NULL},
 \code{back.vol$ref.pseudo} must be equal to \code{vol$ref.pseudo}.}
 
-\item{interpolate}{Boolean, default to \code{TRUE}. If \code{interpolate = TRUE}, a
-trilinear interpolation of the value of the voxels, relative to the values of
-adjacent voxels, is performed.}
+\item{interpolate}{Boolean, default to \code{TRUE}.}
+
+\item{method}{method of interpolation, defaulted to 'NN' ie 'Nearest Neighbor'. See Details.}
 
 \item{alias}{Character string, \code{$alias} of the created object.}
 
@@ -42,6 +43,15 @@ Returns a copy of \code{vol}, in which grid is that of \code{back.vol}.
 \description{
 The \code{vol.regrid} function transforms the grid of a volume
 according to the grid of another.
+}
+\details{
+The interpolation method is chosen from:
+\itemize{
+\item \code{'NN'}: the value of a voxel is calculated from its nearest adajcent neighbors.
+\item \code{'Av'}: the value of a voxel is the weighted average of
+the voxels contained in a box, whose sides are automatically calculated from
+the \code{back.bol$dxyz} steps.
+}
 }
 \examples{
 # loading of toy-patient objects (decrease dxyz and increase beam.nb for 

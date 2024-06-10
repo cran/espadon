@@ -8,7 +8,7 @@ fan.sphere(
   angle = 1,
   method = c("regular", "random"),
   origin = c(0, 0, 0),
-  ref.pseudo = "",
+  ref.pseudo = "ref1",
   frame.of.reference = "",
   alias = "",
   description = "spherical fan"

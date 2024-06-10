@@ -45,18 +45,10 @@ struct.from.bin <- function (vol, roi.name = vol$description, roi.nb = 1,
                              description = paste ("RoI from", vol$object.alias)) {
   
   
-  if (!is (vol, "volume")){
-    warning ("vol should be a volume class object.")
-    return (NULL)
-  }
-  
-  if ((vol$modality!="binary")) {
-    stop ("vol must be of binary modality.")
-  }
-  
+  if (!is (vol, "volume")) stop ("vol should be a volume class object.")
+  if ((vol$modality!="binary")) stop ("vol must be of binary modality.")
+
   t.mat <- ref.cutplane.add(vol,ref.cutplane = "intern", origin = c(0,0,0))
-  
-  
   
   bin_ <- vol.in.new.ref(vol, new.ref.pseudo="intern", t.mat)
   roi.name <- roi.name[1]

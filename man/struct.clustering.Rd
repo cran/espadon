@@ -72,12 +72,16 @@ head (cluster.vol$cluster.info)
 
 # Display
 n = nrow(cluster.vol$cluster.info)
-col = c ("#00000000", rainbow (n))
-breaks <- seq (0, n, length.out = n+2)
-
-display.plane (cluster.vol, main = "RoI clustering", view.coord = 0, 
-               bottom.col = col, bottom.breaks = breaks, interpolate = FALSE)
-
+col = paste0(c ("#000000", rainbow (n-1)),"af")
+breaks <- seq (cluster.vol$min.pixel - 0.5, cluster.vol$max.pixel + 0.5, 
+              length.out = n+1)
+par0 <- par()
+par(mfrow = c(1,2), mar = c(1,15,1,1))
+display.palette(col, factors = cluster.vol$cluster.info$label)
+par(mar = c(1, 1, 1, 1))
+display.plane (MR, cluster.vol, main = "RoI clustering", view.coord = 0,
+               top.col = col, top.breaks = breaks, interpolate = FALSE)
+par(mfrow= par0$mfrow,mar=par0$mar)
 }
 \seealso{
 \link[espadon]{get.roi.connection}

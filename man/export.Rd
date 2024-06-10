@@ -66,7 +66,9 @@ references in the \code{ref.obj.list} argument, in the form of a list of espadon
 objects. If these reference objects have their own identifier and you wish to
 keep them, you must set the \code{use.original.ref.UIs} argument to \code{TRUE}.
 
-
+Otherwise (\code{use.original.ref.UIs=FALSE}), the UIs of the reference
+objects will be regenerated. It is therefore important that the reference objects
+contain all their data such as \code{vol3D.data} or \code{roi.data}.
 
 It may be useful to impose a study number (tag '(0020,000D)'), serial
 number (tag '(0020,000E)'), or your Image Type Attribute (tag '(0008,0008)').

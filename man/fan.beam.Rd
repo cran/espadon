@@ -9,7 +9,7 @@ fan.beam(
   dalpha,
   orientation = c(0, 0, 1, 1, 0, 0),
   origin = c(0, 0, 0),
-  ref.pseudo = "",
+  ref.pseudo = "ref1",
   frame.of.reference = "",
   alias = "",
   description = "beam fan"

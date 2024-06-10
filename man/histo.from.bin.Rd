@@ -35,7 +35,7 @@ step <- 5
 patient <- toy.load.patient (modality = c("ct","rtstruct"), roi.name = "", 
                              dxyz = rep (step, 3))
 bin.patient <- bin.from.roi (patient$ct[[1]], struct = patient$rtstruct[[1]],
-                             roi.name = "patient")
+                             roi.name = "patient", verbose = FALSE)
 # ct histogram in patient  volume
 H <- histo.from.bin (patient$ct[[1]], sel.bin = bin.patient, breaks = NULL, 
                      alias = "patient_hist")
@@ -50,7 +50,7 @@ S <- patient$rtstruct[[1]]
 
 # Creation of the skin contour of 3 mm
 bin.patient <- bin.from.roi (D, struct = S, roi.name = "patient", 
-                             alias = "patient")
+                             alias = "patient", verbose = FALSE)
 inverse.patient <- bin.inversion (bin.patient, alias = "inv (patient)")
 expansion <- bin.dilation (inverse.patient, radius = 3, 
                            alias = "inv (patient) + 3")

@@ -4,7 +4,7 @@
 \alias{get.value.from.ijk}
 \title{Value of the volume at a selection of DICOM indices}
 \usage{
-get.value.from.ijk(ijk, vol, interpolate = TRUE)
+get.value.from.ijk(ijk, vol, interpolate = TRUE, s.ijk = c(1, 1, 1))
 }
 \arguments{
 \item{ijk}{Vector or 3-column matrix of DICOM indices.}
@@ -14,6 +14,9 @@ get.value.from.ijk(ijk, vol, interpolate = TRUE)
 \item{interpolate}{Boolean, default to \code{TRUE}. If \code{interpolate = TRUE}, a
 trilinear interpolation of the value of the voxels, relative to the values of
 adjacent voxels, is performed.}
+
+\item{s.ijk}{Vector of 3 positive numbers greater than or equal to 1,
+representing the new voxel ijk-sizes in which averaging is calculated.}
 }
 \value{
 Returns a vector of the values of the volume at the requested DICOM

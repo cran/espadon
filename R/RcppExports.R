@@ -25,8 +25,8 @@
     .Call('_espadon_getijktfromindexC', PACKAGE = 'espadon', index, k_idx, n_ijk)
 }
 
-.getvaluefromijkC <- function(vol3D, interpolate, i, j, k, k_idx, k_loc, n_ijk) {
-    .Call('_espadon_getvaluefromijkC', PACKAGE = 'espadon', vol3D, interpolate, i, j, k, k_idx, k_loc, n_ijk)
+.getvaluefromijkC <- function(vol3D, interpolate, i, j, k, k_idx, k_loc, n_ijk, s_ijk) {
+    .Call('_espadon_getvaluefromijkC', PACKAGE = 'espadon', vol3D, interpolate, i, j, k, k_idx, k_loc, n_ijk, s_ijk)
 }
 
 .isoclineC <- function(it1, it2) {

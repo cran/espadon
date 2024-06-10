@@ -42,54 +42,35 @@
 #' 
 #' # Display
 #' n = nrow(cluster.vol$cluster.info)
-#' col = c ("#00000000", rainbow (n))
-#' breaks <- seq (0, n, length.out = n+2)
-#' 
-#' display.plane (cluster.vol, main = "RoI clustering", view.coord = 0, 
-#'                bottom.col = col, bottom.breaks = breaks, interpolate = FALSE)
-#' 
+#' col = paste0(c ("#000000", rainbow (n-1)),"af")
+#' breaks <- seq (cluster.vol$min.pixel - 0.5, cluster.vol$max.pixel + 0.5, 
+#'               length.out = n+1)
+#' par0 <- par()
+#' par(mfrow = c(1,2), mar = c(1,15,1,1))
+#' display.palette(col, factors = cluster.vol$cluster.info$label)
+#' par(mar = c(1, 1, 1, 1))
+#' display.plane (MR, cluster.vol, main = "RoI clustering", view.coord = 0,
+#'                top.col = col, top.breaks = breaks, interpolate = FALSE)
+#' par(mfrow= par0$mfrow,mar=par0$mar)
 struct.clustering <- function (vol, struct, roi.name = NULL, roi.sname = NULL, 
                                roi.idx = NULL, T.MAT = NULL, alias = "", 
                                description = NULL, verbose = TRUE) {
   
+  if (is.null (vol)) return (NULL)
+  if (!is (vol, "volume")) stop ("vol should be a volume class object.")
+  
+  if(is.null(vol$vol3D.data)) vol$vol3D.data <- array(0, dim = vol$n.ijk)
+  
+
+  if (!is (struct, "struct")) stop ("struct should be a struct class object.")
+  if(is.null(struct$roi.data)) stop ("empty roi.data.")
+
+  if (is.null (T.MAT) & vol$ref.pseudo!=struct$ref.pseudo) 
+      stop ("different ref.pseudo. Enter T.MAT")
   
   roi.idx <- select.names (names = struct$roi.info$roi.pseudo, roi.name = roi.name, 
                            roi.sname=roi.sname, roi.idx=roi.idx)
-  
-  if (length (roi.idx) == 0) {
-    warning ("no roi selected.")
-    return (NULL)
-  }
-  
-  if (!is (vol, "volume")){
-    warning ("vol should be a volume class object.")
-    return (NULL)
-  }
-  
-  if (!is (struct, "struct")) {
-    warning ("struct should be a struct class object.")
-    return (NULL)
-  }
-  
-
-  if(is.null(vol$vol3D.data)){
-    warning ("empty vol$vol3D.data.")
-    return (NULL)
-  }
-  
-  if(is.null(struct$roi.data)){
-    warning ("empty roi.data.")
-    return (NULL)
-  }
-  
-  if (is.null (T.MAT)){
-    if (vol$ref.pseudo!=struct$ref.pseudo) {
-      warning ("different ref.pseudo. Enter T.MAT")
-      return (NULL)
-    }
-  }
-  
-  o <- order (struct$roi.info$vol[roi.idx], decreasing = TRUE)
+  if (length (roi.idx) == 0) stop ("no roi selected.")
   
   if (is.null(description)) description <- paste (struct$object.alias,"clustering")
   b <- vol.copy(vol, alias = alias, modality = "cluster", 
@@ -97,9 +78,11 @@ struct.clustering <- function (vol, struct, roi.name = NULL, roi.sname = NULL,
   b$modality <- "cluster"
   b$vol3D.data <- array ("0", dim(b$vol3D.data))
   
+
+  o <- order (struct$roi.info$vol[roi.idx], decreasing = TRUE)
   for (i in roi.idx[o]) {
     if (verbose) cat (paste(struct$roi.info$roi.pseudo[i],"\n"))
-    b_ <- bin.from.roi (vol, struct, roi.idx = i, T.MAT = T.MAT)
+    b_ <- bin.from.roi (vol, struct, roi.idx = i, T.MAT = T.MAT, verbose = verbose)
     selected.idx <- which (b_$vol3D.data)
     if (length(selected.idx))
       b$vol3D.data[selected.idx] <- paste (b$vol3D.data[selected.idx], i, sep="|")

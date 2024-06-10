@@ -116,8 +116,8 @@ BEGIN_RCPP
 END_RCPP
 }
 // getvaluefromijkC
-std::vector <double> getvaluefromijkC(std::vector <double> vol3D, bool interpolate, std::vector <double> i, std::vector <double> j, std::vector <double> k, std::vector  <int> k_idx, std::vector  <int> k_loc, std::vector  <int> n_ijk);
-RcppExport SEXP _espadon_getvaluefromijkC(SEXP vol3DSEXP, SEXP interpolateSEXP, SEXP iSEXP, SEXP jSEXP, SEXP kSEXP, SEXP k_idxSEXP, SEXP k_locSEXP, SEXP n_ijkSEXP) {
+std::vector <double> getvaluefromijkC(std::vector <double> vol3D, bool interpolate, std::vector <double> i, std::vector <double> j, std::vector <double> k, std::vector  <int> k_idx, std::vector  <int> k_loc, std::vector  <int> n_ijk, std::vector <double> s_ijk);
+RcppExport SEXP _espadon_getvaluefromijkC(SEXP vol3DSEXP, SEXP interpolateSEXP, SEXP iSEXP, SEXP jSEXP, SEXP kSEXP, SEXP k_idxSEXP, SEXP k_locSEXP, SEXP n_ijkSEXP, SEXP s_ijkSEXP) {
 BEGIN_RCPP
     Rcpp::RObject rcpp_result_gen;
     Rcpp::RNGScope rcpp_rngScope_gen;
@@ -129,7 +129,8 @@ BEGIN_RCPP
     Rcpp::traits::input_parameter< std::vector  <int> >::type k_idx(k_idxSEXP);
     Rcpp::traits::input_parameter< std::vector  <int> >::type k_loc(k_locSEXP);
     Rcpp::traits::input_parameter< std::vector  <int> >::type n_ijk(n_ijkSEXP);
-    rcpp_result_gen = Rcpp::wrap(getvaluefromijkC(vol3D, interpolate, i, j, k, k_idx, k_loc, n_ijk));
+    Rcpp::traits::input_parameter< std::vector <double> >::type s_ijk(s_ijkSEXP);
+    rcpp_result_gen = Rcpp::wrap(getvaluefromijkC(vol3D, interpolate, i, j, k, k_idx, k_loc, n_ijk, s_ijk));
     return rcpp_result_gen;
 END_RCPP
 }
@@ -284,7 +285,7 @@ static const R_CallMethodDef CallEntries[] = {
     {"_espadon_fantovoxelC", (DL_FUNC) &_espadon_fantovoxelC, 9},
     {"_espadon_gammaindex", (DL_FUNC) &_espadon_gammaindex, 14},
     {"_espadon_getijktfromindexC", (DL_FUNC) &_espadon_getijktfromindexC, 3},
-    {"_espadon_getvaluefromijkC", (DL_FUNC) &_espadon_getvaluefromijkC, 8},
+    {"_espadon_getvaluefromijkC", (DL_FUNC) &_espadon_getvaluefromijkC, 9},
     {"_espadon_isoclineC", (DL_FUNC) &_espadon_isoclineC, 2},
     {"_espadon_labelbrowser", (DL_FUNC) &_espadon_labelbrowser, 2},
     {"_espadon_mdcC", (DL_FUNC) &_espadon_mdcC, 6},

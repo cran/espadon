@@ -13,9 +13,9 @@
 #' to the x, y and z directions of the rectangular parallelepiped circumscribed
 #' to the chosen RoI, in the cutting planes frame of reference. By default 
 #' xyz.margin = c (0, 0, 0).
-#' @param vol.restrict Boolean. If \code{vol.restrict = TRUE}, the rectangular
-#' parallelepiped circumscribed to the chosen RoI, enlarged by xyz.margin cannot
-#' exceed the initial volume.
+#' @param obj.restrict Boolean. Used if \code{obj} is of class"volume". If 
+#' \code{obj.restrict = TRUE}, the rectangular parallelepiped circumscribed to 
+#' the selected voxels, enlarged by xyz.margin cannot exceed the initial volume.
 #' @param T.MAT "t.mat" class object, created by 
 #' \link[espadon]{load.patient.from.dicom}, \link[espadon]{load.patient.from.Rdcm} 
 #' or \link[espadon]{load.T.MAT}. If \code{T.MAT = NULL}, \code{struct$ref.pseudo}
@@ -24,7 +24,7 @@
 #' @param description Character string, describing the the created object. 
 #' If \code{description = NULL}, it will be that of the \code{obj}, plus 
 #' "restricted to" the selected RoI.
-#' @param ... Additional arguments \code{vol} (depracated), replaced by \code{obj}.
+#' @param ... Additional arguments such as \code{vol} (depracated), replaced by \code{obj}.
 #' @return Returns a "volume" class object, in which 3D volume is limited to the
 #' rectangular parallelepiped circumscribed to the chosen RoI, increased by the
 #' requested margins.
@@ -59,7 +59,7 @@
 #' @importFrom methods is
 nesting.roi <- function (obj, struct, roi.name = NULL, roi.sname = NULL, 
                          roi.idx = NULL, xyz.margin = c (0, 0, 0),
-                         vol.restrict = FALSE, 
+                         obj.restrict = FALSE, 
                          T.MAT = NULL, alias = "", description = NULL,...) {
   passed <- names(as.list(match.call())[-1])
   args <- list(...)
@@ -67,6 +67,7 @@ nesting.roi <- function (obj, struct, roi.name = NULL, roi.sname = NULL,
     if (is.null(args[['vol']])) stop('argument "obj" is missing, with no default')
     obj <- args[['vol']]
   }
+  if (!is.null(args[['vol.restrict']])) obj.restrict <- args[['vol.restrict']]
   
   roi.idx <- select.names (struct$roi.info$roi.pseudo, roi.name, roi.sname, roi.idx)
   # if (length (roi.idx) != 1) {
@@ -74,36 +75,23 @@ nesting.roi <- function (obj, struct, roi.name = NULL, roi.sname = NULL,
   #   return (NULL)
   # }
   
-  if (!(is (obj, "volume") | is (obj, "mesh"))) {
-    warning ("obj must be an object of class volume or mesh.")
-    return (NULL)
-  }
-  
-  if (!is (struct, "struct")){
-    warning ("struct should be a struct class object.")
-    return (NULL)
-  }
-
-  if(is.null(struct$roi.data)){
-    warning ("empty roi.data.")
-    return (NULL)
-  }
-  if (length (xyz.margin)<3) {
-    warning ("xyz.margin must have a length of 3.")
-    return (NULL)
-  }
+  if (!(is (obj, "volume") | is (obj, "mesh"))) stop ("obj must be an object of class volume or mesh.")
+  if (!is (struct, "struct")) stop ("struct should be a struct class object.")
+  if (is.null(struct$roi.data)) stop ("empty roi.data.")
+  if (all (sapply (roi.idx,function(i) {length(struct$roi.data[[i]])==0}))) stop ("empty roi.data.")
+  if (length (xyz.margin)==1) xyz.margin <- rep(xyz.margin,3)[1:3]
+  if (length (xyz.margin)!=3) stop ("xyz.margin must have a length of 1 or 3.")
+ 
   
   
-  if (all (sapply (roi.idx,function(i) {length(struct$roi.data[[i]])==0}))) return (NULL)
+  
   if (is.null(description)) description<- paste (obj$description,"restricted to", 
                                                  paste (struct$roi.info$roi.pseudo[roi.idx], collapse="|"))
   
   if(is (obj, "volume")){
-    if(is.null(obj$vol3D.data)){
-      warning ("empty vol3D.data.")
-      return (NULL)
-    }
-    
+  #--------------------- 
+    if(is.null(obj$vol3D.data))  stop ("empty vol3D.data.")
+
     if (!is.null(obj$local.gridx)) {
       obj$local.gridx <- NULL
       obj$local.gridy <- NULL
@@ -124,7 +112,7 @@ nesting.roi <- function (obj, struct, roi.name = NULL, roi.sname = NULL,
                  max (S_$roi.info$max.y[roi.idx], na.rm=TRUE) + xyz.margin[2],
                  max (S_$roi.info$max.z[roi.idx], na.rm=TRUE) + xyz.margin[3])
     
-    if (vol.restrict){
+    if (obj.restrict){
       vol.pt <- vol_$xyz.from.ijk %*% vol_$cube.idx[ , c (1,7)]
       pt.min <- c (max(pt.min[1], min(vol.pt [1,])), max(pt.min[2], min(vol.pt [2,])), max(pt.min[3], min(vol.pt [3,])))
       pt.max <- c (min(pt.max[1], max(vol.pt [1,])), min(pt.max[2], max(vol.pt [2,])), min(pt.max[3], max(vol.pt [3,])))
@@ -139,7 +127,7 @@ nesting.roi <- function (obj, struct, roi.name = NULL, roi.sname = NULL,
     }
     
   } else {#mesh
-    
+  ##############  
     ext <- get.extreme.pt (struct,roi.idx = roi.idx, ref.pseudo = obj$ref.pseudo, 
                            T.MAT = T.MAT)
     if (is.null(ext))  return (NULL)

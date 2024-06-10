@@ -28,7 +28,7 @@ CT <- patient$ct[[1]]
 S <- patient$rtstruct[[1]]
 
 # creation of the gizzard mesh
-bin <- bin.from.roi (CT, struct = S, roi.name = "gizzard")
+bin <- bin.from.roi (CT, struct = S, roi.name = "gizzard", verbose = FALSE)
 mesh.gizzard <- mesh.from.bin (bin, alias = "gizzard", verbose = FALSE)
 
 repair.mesh.gizzard <- mesh.repair (mesh.gizzard, verbose = FALSE)

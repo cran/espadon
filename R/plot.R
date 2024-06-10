@@ -165,10 +165,11 @@ plot.volume <- function (x, ..., view.type = "trans",
   
   if (!(length(view.coord) ==1 | length(view.coord)==3)) stop ("view.coord must be of length 1 or 3")
   if (length(view.coord) == 1) {
-    if (view.type=="ij" | view.type=="ji" | view.type=="xy" | view.type=="yx" | view.type == "trans") origin <- c(0,0,view.coord)
-    if (view.type=="ik" | view.type=="ki" | view.type=="xz" | view.type=="zx" | view.type == "front") origin <- c(0,view.coord,0)
-    if (view.type=="jk" | view.type=="kj" | view.type=="yz" | view.type=="zy" | view.type == "sagi") origin <-c(view.coord,0,0)
-  } else {origin=view.coord; origin[coord] = 0}
+    origin = x$xyz0[1,]
+    if (view.type=="ij" | view.type=="ji" | view.type=="xy" | view.type=="yx" | view.type == "trans") origin[3] <- view.coord
+    if (view.type=="ik" | view.type=="ki" | view.type=="xz" | view.type=="zx" | view.type == "front") origin[2] <- view.coord
+    if (view.type=="jk" | view.type=="kj" | view.type=="yz" | view.type=="zy" | view.type == "sagi") origin[1] <- view.coord
+  } else {origin=view.coord; origin[coord] = x$xyz0[1,coord]}
   
   cut.pt <- origin[-coord_]
   coord_ <- coord.label[coord_]
@@ -192,7 +193,10 @@ plot.volume <- function (x, ..., view.type = "trans",
   vol_$local.gridx <- NULL
   vol_$local.gridy <- NULL
   
-  if (is.na(vol_$max.pixel)){return(invisible(vol_))}
+  if (is.na(vol_$max.pixel)){
+    message("No view @", cut.lab," = ", round(cut.pt,2),postfix)
+    return(invisible(vol_))
+    }
   t.mat <- ref.cutplane.add(vol_,ref.cutplane = "display.ref")
   vol_ <- vol.in.new.ref(vol_,"display.ref",t.mat)
   ext.pt <- get.extreme.pt(vol_)
@@ -226,7 +230,7 @@ plot.volume <- function (x, ..., view.type = "trans",
     abs.usr <- par("usr")[1:2]
     ord.usr <- par("usr")[3:4]
     rect(abs.usr[1], ord.usr[1], abs.usr[2], ord.usr[2], col = bg)
-    
+    ext.pt <- ext.pt[1:2,] + c(-0.5,-0.5,0.5,0.5)* vol_$dxyz[c(1:2, 1:2)]
   }else {
     abs.usr <- par("usr")[1:2]
     ord.usr <- par("usr")[3:4]
@@ -291,7 +295,7 @@ plot.volume <- function (x, ..., view.type = "trans",
                  xright = abs.right, ytop = ord.top, interpolate = display.interpolate)
     
   } else{
-    message("No iew @", cut.lab," = ", round(cut.pt,2),postfix)
+    message("No view @", cut.lab," = ", round(cut.pt,2),postfix)
   }
   
 

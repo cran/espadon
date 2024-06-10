@@ -26,21 +26,19 @@
 
 vol.in.new.ref <- function (vol, new.ref.pseudo, T.MAT, alias="",description=NULL) {
   
-  if (!is (vol, "volume")) {
-    warning ("vol should be a volume class object.")
-    return (NULL)
-  }
-  if (new.ref.pseudo!=vol$ref.pseudo){
-    if (!is (T.MAT, "t.mat")) {
-      warning ("T.MAT should be a t.mat class object.")
-      return (NULL)
-    }}
+  if (is.null (vol)) return (NULL)
+  if (!is (vol, "volume")) stop ("vol should be a volume class object.")
   
-  if (is.null(vol$vol3D.data))  {
-    message ("vol$vol3D.data is NULL.")
+  if (new.ref.pseudo!=vol$ref.pseudo){
+    if (!is (T.MAT, "t.mat")) stop ("T.MAT should be a t.mat class object.")
   }
+  
+  if (is.null(vol$vol3D.data)) message ("vol$vol3D.data is NULL.")
+
+  
   M <- get.rigid.M (T.MAT, vol$ref.pseudo, new.ref.pseudo)
-  if (is.null (M)) return (NULL)
+  if (is.null (M)) stop("no transfer matrix between vol$ref.pseudo and new.ref.pseudo")
+  
   V <- vol.copy (vol, alias = alias, description = description)
   V$ref.pseudo <- new.ref.pseudo
   V$frame.of.reference <- T.MAT$ref.info[T.MAT$ref.info$ref.pseudo==new.ref.pseudo, ]$ref

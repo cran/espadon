@@ -40,8 +40,8 @@ polyg.UniformCurvCoord <- function (pol, N = NULL, tol = 0.1) {
     N <- N * 2
   }
   pol_ <-data.frame(x=x.i, y=y.i)
-  if (ncol(pol)==3) pol_$z  <- pol[3,1] 
-  if (closed) pol_ <- pol_[c(1:nrow(pol_),1), ]
+  if (ncol(pol)==3) pol_$z  <- pol[1,3] 
+  if (closed) pol_ <- pol_[c(1:nrow(pol_), 1), ]
   if(m.f) return (as.matrix(pol_))
   return(pol_)
 }
@@ -68,7 +68,7 @@ polyg.UniformCurvCoord <- function (pol, N = NULL, tol = 0.1) {
   y.f <- Re (fft (Y, inverse=TRUE))
   
   pol_ <-data.frame(x=x.f, y=y.f)
-  if (ncol(pol)==3) pol_$z  <- pol[3,1] 
+  if (ncol(pol)==3) pol_$z  <- pol[1,3] 
   if(m.f) return(as.matrix(pol_))
   return(pol_)
 }

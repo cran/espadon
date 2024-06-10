@@ -11,7 +11,8 @@ get.plane(
   alias = "plane.n",
   xgrid = NULL,
   ygrid = NULL,
-  interpolate = TRUE
+  interpolate = TRUE,
+  method = c("NN", "Av")
 )
 }
 \arguments{
@@ -33,9 +34,9 @@ basis of the plane. First vector is x-axis, and second one is y-axis.}
 If \code{ygrid = NULL}, the ordinate is the line intercepting the volume and the
 step is set to the projection of \code{vol$dxyz} onto the ordinate orientation.}
 
-\item{interpolate}{Boolean, default to \code{TRUE}. If \code{interpolate = TRUE}, a
-trilinear interpolation of the value of the voxels, relative to the values of
-adjacent voxels, is performed.}
+\item{interpolate}{Boolean, default to \code{TRUE}.}
+
+\item{method}{method of interpolation, defaulted to 'NN' ie 'Nearest Neighbor'. See Details.}
 }
 \value{
 Returns a "volume" class object, containing only a single plane,
@@ -49,6 +50,15 @@ Returns \code{NULL} if plane doesn't exist.
 \description{
 The \code{get.plane} function extracts a plane from a "volume"
 class object.
+}
+\details{
+The interpolation method is chosen from:
+\itemize{
+\item \code{'NN'}: the value of a voxel is calculated from its nearest adajcent neighbors.
+\item \code{'Av'}: the value of a voxel is the weighted average of
+the voxels contained in a box, whose sides are automatically calculated from
+the \code{back.bol$dxyz} steps.
+}
 }
 \note{
 \emph{Determination of axes} :

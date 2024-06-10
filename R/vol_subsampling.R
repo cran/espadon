@@ -3,12 +3,19 @@
 #' object.
 #' @param vol "volume" class object.
 #' @param fact.ijk Strictly positive integer, or a vector of 3 strictly positive integers.
-#' @param interpolate Boolean, default to \code{TRUE}. If \code{interpolate = TRUE}, a 
-#' trilinear interpolation of the value of the voxels, relative to the values of 
-#' adjacent voxels, is performed.
+#' @param interpolate Boolean, default to \code{TRUE}. 
+#' @param method method of interpolation, defaulted to 'NN' ie 'Nearest Neighbor'. See Details. 
+
 #' @param alias Character string, \code{$alias} of the created object.
 #' @param description Character string, describing the the created object. 
 #' If \code{description = NULL}, it will be \code{paste ("subsampling" ,vol$description)}.
+#' @details The interpolation method is chosen from:
+#' \itemize{
+#' \item \code{'NN'}: the value of a voxel is calculated from its nearest adajcent neighbors.
+#' \item \code{'Av'}: the value of a voxel is the weighted average of 
+#' the voxels contained in a box, whose sides are automatically calculated from 
+#' the \code{back.bol$dxyz} steps. 
+#' }
 #' @return Returns a "volume" class object, in which 3D volume grid is 
 #' subsampled: the voxel size is multiplied by \code{fact.ijk} and the center location 
 #' of the volume is invariant.
@@ -32,8 +39,10 @@
 #' points (mid_ss[1], mid_ss[2], pch=16, col="red")
 #' @export  
 
-vol.subsampling <- function(vol, fact.ijk= 2, interpolate = TRUE, alias = "", description = NULL){
-  
+vol.subsampling <- function(vol, fact.ijk= 2, interpolate = TRUE, 
+                            method = c("NN","Av"),
+                            alias = "", description = NULL){
+  if (is.null (vol)) return (NULL)
   if (!is (vol, "volume")) stop ("vol should be a volume class object.")
   if (is.null(vol$vol3D.data)) stop ("empty vol$vol3D.data.")
   if (!((length(fact.ijk)==1 | length(fact.ijk)==3)) | 
@@ -55,35 +64,13 @@ vol.subsampling <- function(vol, fact.ijk= 2, interpolate = TRUE, alias = "", de
   true.n.ijk <- c(vol$n.ijk[1:2], vol$k.idx[vol$n.ijk[3]]-vol$k.idx[1]+1)
   new.n.ijk <- ceiling(true.n.ijk/fact)
   
-  center.idx <-c(true.n.ijk/2 - 0.5, 0)
+  center.idx <-c(true.n.ijk/2 - 0.5, 1)
   
   if (is.null(description))  description <- paste("subsampling", vol$description)
   back.vol <- vol.create(n.ijk = new.n.ijk, dxyz=new.dxyz,
                          mid.pt = as.numeric(center.idx %*% t(vol_$xyz.from.ijk))[1:3], 
                          ref.pseudo = "rcp", modality = vol_$modality, alias = alias, description = description)
-  ijkt <- as.matrix(expand.grid(0:(back.vol$n.ijk[1]-1),0:(back.vol$n.ijk[2]-1),0:(back.vol$n.ijk[3]-1),0))
-  xyz <-  ijkt %*% t(back.vol$xyz.from.ijk)
-  
-  back.vol$vol3D.data[ijkt[,1:3]+1] <- get.value.from.xyz(xyz[, 1:3],vol_,interpolate =  interpolate)
-  if (any(!is.na(back.vol$vol3D.data))) {
-    back.vol$min.pixel <- min(back.vol$vol3D.data, na.rm = TRUE)
-    back.vol$max.pixel <- max(back.vol$vol3D.data, na.rm = TRUE)
-  } else {
-    back.vol$min.pixel <- NA
-    back.vol$max.pixel <- NA
-  }
-  
-  back.vol$object.alias <- vol$object.alias
-  back.vol$object.info <- vol$object.info
-  
-  if (vol$modality == "binary") back.vol$vol3D.data <- back.vol$vol3D.data >= 0.5
-  if (any(!is.na(back.vol$vol3D.data))) {
-    back.vol$min.pixel <- min(back.vol$vol3D.data, na.rm = TRUE)
-    back.vol$max.pixel <- max(back.vol$vol3D.data, na.rm = TRUE)
-  } else {
-    back.vol$min.pixel <- NA
-    back.vol$max.pixel <- NA
-  }
+  back.vol <- vol.regrid(vol_, back.vol, method=method, interpolate = interpolate)
   
   new.vol <- vol.in.new.ref (back.vol,new.ref.pseudo=vol$ref.pseudo, T.MAT =  t.mat,
                              alias = alias,

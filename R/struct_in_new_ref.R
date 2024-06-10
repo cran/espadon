@@ -23,20 +23,15 @@
 #' @importFrom methods is
 
 struct.in.new.ref <- function (struct, new.ref.pseudo, T.MAT, alias="") {
+  if (is.null (struct)) return (NULL)
+  if (!is (struct, "struct")) stop ("struct should be a struct class object.")
   
-  if (!is (struct, "struct")) {
-    warning ("struct should be a struct class object.")
-    return (NULL)
-  }
   if (new.ref.pseudo!=struct$ref.pseudo){
-    if (!is (T.MAT, "t.mat")) {
-      warning ("T.MAT should be a t.mat class object.")
-      return (NULL)
-    }}
+    if (!is (T.MAT, "t.mat")) stop ("T.MAT should be a t.mat class object.")
+    }
   
   if (is.null(struct$roi.data))  {
     warning ("struct$roi.data is NULL.")
-    
   }
   
   
@@ -45,8 +40,9 @@ struct.in.new.ref <- function (struct, new.ref.pseudo, T.MAT, alias="") {
     return (struct)
   }
   M <- get.rigid.M (T.MAT, struct$ref.pseudo, new.ref.pseudo)
-  if (is.null (M)) return (NULL)
-  if (is.null (M)) stop ("no transfer matrix between ref.pseudo")
+
+  if (is.null (M)) stop("no transfer matrix between struct$ref.pseudo and new.ref.pseudo")
+
   struct_ <- list(object.alias=struct$object.alias,object.info=struct$object.info)
   class(struct_) <- "struct"
   struct$file.basename <- ""

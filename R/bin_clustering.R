@@ -40,16 +40,10 @@
 #' @importFrom methods is
 bin.clustering <- function (vol, alias="", description = NULL ) {
   
-  if (!is (vol, "volume")){
-    warning ("vol should be a volume class object.")
-    return (NULL)
-  }
-  
-  if ((vol$modality!="binary")) {
-    warning ("vol must be of binary modality.")
-    return (NULL)
-  }
-  
+  if (is.null(vol)) return (NULL)
+  if (!is (vol, "volume")) stop ("vol should be a volume class object.")
+  if ((vol$modality!="binary")) stop ("vol must be of binary modality.")
+
   new.vol <- vol.copy (vol,alias = alias, modality = "cluster", description = description)
     
   na.voxel <- is.na(vol$vol3D.data)

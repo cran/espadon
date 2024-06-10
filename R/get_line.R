@@ -46,18 +46,14 @@ get.line <- function (vol, origin = c (0, 0, 0),
                       orientation = c(1, 0, 0),
                       grid = seq (-100, 100, 1), interpolate = TRUE){
   
-  if (!is (vol, "volume")) {
-    warning ("vol should be a volume class object.")
-    return (NULL)
-  }
-  if(is.null(vol$vol3D.data)){
-    warning ("empty vol$vol3D.data.")
-    return (NULL)
-  }
-  if ((length(grid) ==0)| !is.numeric(grid)) {
-    warning ("grid should be a numeric vector.")
-    return (NULL)
-  }
+  if (!is (vol, "volume")) 
+    stop ("vol should be a volume class object.")
+
+  if(is.null(vol$vol3D.data)) stop ("empty vol$vol3D.data.")
+ 
+  if ((length(grid) ==0)| !is.numeric(grid)) 
+    stop ("grid should be a numeric vector.")
+ 
   v1 <-orientation/ as.numeric(sqrt(orientation%*%orientation))
   M.grid <- matrix(rep(grid,3),byrow=F,ncol=3, dimnames = list(NULL,c("x","y","z")))
   pt <-  sweep(sweep(M.grid,2,v1,"*"),2,origin,"+")

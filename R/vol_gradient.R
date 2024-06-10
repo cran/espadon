@@ -22,15 +22,10 @@
 #' @export
 vol.gradient <- function (vol,  alias = "", description = NULL) {
   
-  if (!is (vol, "volume")) {
-    warning ("vol should be a volume class object.")
-    return (NULL)
-  }
+  if (is.null (vol)) return (NULL)
+  if (!is (vol, "volume")) stop ("vol should be a volume class object.")
+  if (is.null(vol$vol3D.data)) stop ("empty vol$vol3D.data.")
   
-  if(is.null(vol$vol3D.data)){
-    warning ("empty vol$vol3D.data.")
-    return (NULL)
-  }
   if (is.null(description)) description <-  paste (vol$object.alias, "gradient")
   Gr <- vol.copy (vol, alias = alias, description = description)
   Gr$vol3D.data[] <- 0

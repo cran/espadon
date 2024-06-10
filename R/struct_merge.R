@@ -51,15 +51,13 @@ struct.merge <- function (ref.struct, add.struct, roi.name = NULL,
                           roi.idx=NULL,
                           suffix = "", alias = "", description = "") {
   
-  if (!is.null(ref.struct) & !is (ref.struct, "struct")) {
-    warning ("ref.struct should be a struct class object.")
-    return (NULL)
-  }
+  if (!is.null(ref.struct) & !is (ref.struct, "struct")) 
+    stop ("ref.struct should be a struct class object.")
   
-  if (!is.null(add.struct) & !is (add.struct, "struct")) {
-    warning ("add.struct should be a struct class object.")
-    return (NULL)
-  }
+  
+  if (!is.null(add.struct) & !is (add.struct, "struct")) 
+    stop ("add.struct should be a struct class object.")
+  
   
   if (is.null(ref.struct) & is.null(add.struct)) return(NULL)
   add.struct_ <- list(object.alias=add.struct$object.alias,object.info=add.struct$object.info)

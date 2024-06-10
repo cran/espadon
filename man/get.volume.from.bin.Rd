@@ -27,7 +27,8 @@ CT <- patient$ct[[1]]
 S <- patient$rtstruct[[1]] 
 
 # creation of a binary object
-bin.brain <- bin.from.roi (vol = CT, struct = S, roi.sname = "bra")
+bin.brain <- bin.from.roi (vol = CT, struct = S, roi.sname = "bra", 
+                           verbose = FALSE)
 # Volume calculation
 get.volume.from.bin (bin.brain)
 }

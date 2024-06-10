@@ -5,7 +5,7 @@
   roi.idx <- select.names (struct$roi.info$roi.pseudo, roi.name, roi.sname, roi.idx)
   ct.ptv <- nesting.roi (vol, struct, roi.idx = roi.idx, 
                          xyz.margin = rep(4 * max(vol$dxyz),3))
-  bin.PTV <- bin.from.roi(ct.ptv,struct, roi.sname = "ptv")
+  bin.PTV <- bin.from.roi(ct.ptv,struct, roi.sname = "ptv", verbose = FALSE)
   bin.PTV.d <- bin.dilation(bin.PTV, radius = 2 * max(abs(vol$dxyz)))
   # PTV.xyz <- get.xyz.from.index(which(bin.PTV$vol3D.data),bin.PTV)
   PTV.G <- as.numeric(struct$roi.info[roi.idx, c ("Gx","Gy","Gz")])

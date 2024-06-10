@@ -46,17 +46,13 @@ get.extreme.pt <- function (obj,ref.pseudo = obj$ref.pseudo, T.MAT = NULL, ...) 
     obj <- args[['vol']]
   }
   
-  if (!(is (obj, "volume") | is (obj, "mesh") | is (obj, "struct"))) {
-    warning ("obj must be an object of class volume or struct or mesh.")
-    return (NULL)
-  }
+  if (!(is (obj, "volume") | is (obj, "mesh") | is (obj, "struct"))) 
+    stop ("obj must be an object of class volume or struct or mesh.")
+
   M_ <- diag(4)
   if (ref.pseudo != obj$ref.pseudo) {
     M_ <- get.rigid.M(T.MAT,obj$ref.pseudo,ref.pseudo)
-    if (is.null(M_)){
-      warning ("different ref.pseudo. Enter T.MAT")
-      return (NULL)
-    }
+    if (is.null(M_)) stop ("different ref.pseudo. Enter T.MAT")
   }
     
   if (is (obj, "volume")){
@@ -83,7 +79,7 @@ get.extreme.pt <- function (obj,ref.pseudo = obj$ref.pseudo, T.MAT = NULL, ...) 
     if(!is.null(args[['roi.idx']])) roi.idx <- args[['roi.idx']]
     
     list.roi.idx <- select.names (obj$roi.info$roi.pseudo, roi.name, roi.sname, roi.idx)
-    if (length(list.roi.idx)==0)   return (NULL)
+    if (length(list.roi.idx)==0)   stop ("No selected ROI")
     obj_ <- obj
     obj_$nb.of.roi <- length(list.roi.idx)
     obj_$roi.info <- obj$roi.info[list.roi.idx,]

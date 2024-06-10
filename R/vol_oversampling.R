@@ -33,7 +33,7 @@
 
 vol.oversampling <- function(vol, fact.ijk = 2, alias = "",interpolate = TRUE, description = NULL){
   
-
+  if (is.null (vol)) return (NULL)
   if (!is (vol, "volume")) stop ("vol should be a volume class object.")
   if (is.null(vol$vol3D.data)) stop ("empty vol$vol3D.data.")
  

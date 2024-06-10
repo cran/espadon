@@ -30,7 +30,7 @@
 #' references in the \code{ref.obj.list} argument, in the form of a list of espadon 
 #' objects. If these reference objects have their own identifier and you wish to 
 #' keep them, you must set the \code{use.original.ref.UIs} argument to \code{TRUE}.
-#' @details Otherwise (\code{use.original.ref.UIs}=FALSE}, the UIs of the reference 
+#' @details Otherwise (\code{use.original.ref.UIs=FALSE}), the UIs of the reference 
 #' objects will be regenerated. It is therefore important that the reference objects 
 #' contain all their data such as \code{vol3D.data} or \code{roi.data}.
 #' @details It may be useful to impose a study number (tag '(0020,000D)'), serial 
@@ -728,6 +728,7 @@ export.rtstruct.to.dicom <- function(obj, ref.obj.list = NULL, use.original.UIs 
                                 as.raw(c(0x00, 0x00)))
   
   description <- unlist(strsplit(obj$description,"[|]")[[1]])
+  if (length(description) == 0) description <-""
   new.raw <-.ascii.to.hex( iconv(description[1], "ISO-IR-100"), VR0008["(0008,1030)"])
   L0008[["(0008,1030)"]]<- c (.tag.to.hex ("(0008,1030)"), charToRaw (VR0008["(0008,1030)"]),  
                               unlist(.value.to.raw (length(new.raw),2,TRUE)), new.raw)

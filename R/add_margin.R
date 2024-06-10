@@ -36,24 +36,16 @@
 #' @importFrom methods is
 add.margin <- function (vol, xyz.margin, alias="", description=NULL) {
   
-  if (!is(vol, "volume")) {
-    warning ("vol should be a volume class object.")
-    return (NULL)
-  }
-  
-  if(is.null(vol$vol3D.data)){
-    warning ("empty vol$vol3D.data.")
-    return (NULL)
-  }
-  
-  if (length (xyz.margin)<3) {
-    warning ("xyz.margin must have a length of 3.")
-    return (NULL)
-  }
+  if (is.null(vol)) return (NULL)
+  if (!is(vol, "volume")) stop ("vol should be a volume class object.")
+  if(is.null(vol$vol3D.data)) stop ("empty vol$vol3D.data.")
+  if (length (xyz.margin)<3)  stop ("xyz.margin must have a length of 3.")
+
   if (!is.null(vol$local.gridx)) {
     vol$local.gridx <- NULL
     vol$local.gridy <- NULL
   }
+  
   t.mat <- ref.cutplane.add(vol)
   vol_ <- vol.in.new.ref(vol, new.ref.pseudo=paste0(vol$ref.pseudo,"m"), t.mat)
   

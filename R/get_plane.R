@@ -13,9 +13,16 @@
 #' @param ygrid Vector, representing the grid of the plane ordinates. See note.
 #' If \code{ygrid = NULL}, the ordinate is the line intercepting the volume and the
 #' step is set to the projection of \code{vol$dxyz} onto the ordinate orientation.
-#' @param interpolate Boolean, default to \code{TRUE}. If \code{interpolate = TRUE}, a
-#' trilinear interpolation of the value of the voxels, relative to the values of
-#' adjacent voxels, is performed.
+#' @param interpolate Boolean, default to \code{TRUE}. 
+#' @param method method of interpolation, defaulted to 'NN' ie 'Nearest Neighbor'. See Details. 
+#' @details The interpolation method is chosen from:
+#' \itemize{
+#' \item \code{'NN'}: the value of a voxel is calculated from its nearest adajcent neighbors.
+#' \item \code{'Av'}: the value of a voxel is the weighted average of 
+#' the voxels contained in a box, whose sides are automatically calculated from 
+#' the \code{back.bol$dxyz} steps. 
+#' }
+
 #' @note \emph{Determination of axes} : 
 #' \itemize{
 #' \item the x-axis has \code{plane.orientation[1:3]} as unit vector. 
@@ -68,27 +75,17 @@
 get.plane <- function(vol, origin = c (0, 0, 0),
                       plane.orientation = c (1, 0, 0, 0, 1, 0), 
                       alias = "plane.n",
-                      xgrid = NULL, ygrid = NULL, interpolate = TRUE){
-  
-  if (!is (vol, "volume")) {
-    warning ("vol should be a volume class object.")
-    return (NULL)
-  }
-  
-  if(is.null(vol$vol3D.data)){
-    warning ("empty vol$vol3D.data.")
-    return (NULL)
-  }
-  
-  plane.ref="plane.ref"
-
+                      xgrid = NULL, ygrid = NULL, interpolate = TRUE,
+                      method = c("NN","Av")){
   
   if (is.null (vol)) return (NULL)
-  
-  if (length (plane.orientation)!=6 & length (plane.orientation)!=9) {
-    warning ("bad plane.orientation length.")
-    return (NULL)
-  }
+  if (!is (vol, "volume")) stop ("vol should be a volume class object.")
+  if(is.null(vol$vol3D.data)) stop ("empty vol$vol3D.data.")
+
+  plane.ref <- "plane.ref"
+  if (length (plane.orientation)!=6 & length (plane.orientation)!=9) 
+    stop ("bad plane.orientation length.")
+ 
   #si pas d'interpolation, on prend le point le plus proche qui existe dans le volume
   real.origin <- origin
   if (!interpolate) {
@@ -171,7 +168,8 @@ get.plane <- function(vol, origin = c (0, 0, 0),
                           ref.pseudo = plane.ref, frame.of.reference = t.mat$ref.info[t.mat$ref.info$ref.pseudo == plane.ref, ]$ref,
                           alias = alias, number = vol$number, modality = vol$modality,  description = vol$description)
   
-  new.vol <- vol.regrid (v, back.vol, T.MAT=t.mat, interpolate = interpolate, alias = alias, verbose = FALSE)
+  new.vol <- vol.regrid (v, back.vol, T.MAT=t.mat, interpolate = interpolate, 
+                         alias = alias, verbose = FALSE, method=method)
   
   new.vol$object.alias <- vol$object.alias
   new.vol$object.info <- vol$object.info

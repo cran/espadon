@@ -128,7 +128,7 @@ display.palette <- function (col, breaks = NULL, factors = NULL,
         
         args_[["side"]] <- 2
         args_[["at"]] <- y
-        args_[["labels "]] <- round (b, 1)
+        args_[["labels"]] <- round (b, 1)
         do.call(axis,args_)
         
         # axis (2, y, round (b, 1), las = 2)
@@ -153,7 +153,7 @@ display.palette <- function (col, breaks = NULL, factors = NULL,
     
     args_[["side"]] <- 2
     args_[["at"]] <-1:length (factors)
-    args_[["labels "]] <- factors
+    args_[["labels"]] <- factors
     do.call(axis,args_)
     # axis (2, 1:length (factors), factors, las=2)
   }

@@ -38,9 +38,9 @@ z.leye<- S$roi.info$Gz[S$roi.info$roi.pseudo == "lefteye"]
 
 # 'left eye' et 'right eye' binaries
 bin.left.eye <- bin.from.roi (CT, struct = S, roi.sname = "lefteye",
-                              alias = "left eye")
+                              alias = "left eye", verbose = FALSE)
 bin.right.eye <- bin.from.roi (CT, struct = S, roi.name = "righteye",
-                               alias = "right eye")
+                               alias = "right eye", verbose = FALSE)
 bin.eyes <- bin.sum (bin.left.eye, bin.right.eye, alias = "eyes")
 
 display.plane (CT, top = bin.eyes, struct = S, roi.sname = "eye",

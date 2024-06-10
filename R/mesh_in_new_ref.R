@@ -19,7 +19,7 @@
 #' S <- patient$rtstruct[[1]]
 #'
 #' #creation of the patient mesh
-#' bin <- bin.from.roi (CT, struct = S, roi.name = "patient")
+#' bin <- bin.from.roi (CT, struct = S, roi.name = "patient", verbose = FALSE)
 #' mesh.patient <- mesh.from.bin (bin, alias = "patient", verbose = FALSE)
 #' 
 #' # mesh in the MR frame of reference
@@ -33,17 +33,16 @@
 
 mesh.in.new.ref <- function (mesh, new.ref.pseudo, T.MAT = NULL, alias="",description=NULL) {
   
-  if (!is (mesh, "mesh")){
-    warning ("mesh should be a mesh class object.")
-    return (NULL)
-  }
+  if (is.null(mesh)) return(NULL)
+  if (!is (mesh, "mesh")) stop ("mesh should be a mesh class object.")
+  
   if (new.ref.pseudo!=mesh$ref.pseudo){
-    if (!is (T.MAT, "t.mat")){
-      warning ("T.MAT should be a t.mat class object.")
-      return (NULL)
-    }}
+    if (!is (T.MAT, "t.mat")) stop ("T.MAT should be a t.mat class object.")
+  }
+  
   M <- get.rigid.M (T.MAT, mesh$ref.pseudo, new.ref.pseudo)
-  if (is.null (M)) return (NULL)
+  if (is.null (M)) stop("no transfer matrix between mesh$ref.pseudo and new.ref.pseudo")
+  
   mesh_ <- list(object.alias=mesh$object.alias,object.info=mesh$object.info)
   class(mesh_) <- "mesh"
   

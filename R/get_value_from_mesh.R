@@ -47,7 +47,8 @@
 #' S <- patient$rtstruct[[1]]
 #' 
 #' # creation of the patient mesh
-#' bin <- bin.from.roi (CT, struct = S, roi.name = "patient")
+#' bin <- bin.from.roi (CT, struct = S, roi.name = "patient", 
+#'                      verbose = FALSE)
 #' mesh.patient <- mesh.from.bin (bin, alias = "patient", verbose = FALSE)
 #' 
 #'# density value on the skin contour, extracted from CT

@@ -36,9 +36,11 @@ z.ptv <- S$roi.info$Gz[S$roi.info$roi.pseudo == "ptv"]
 
 # binaries
 bin.patient <- bin.from.roi (MR, struct = S, roi.name = "patient",
-                           alias = "patient", T.MAT = patient$T.MAT)
+                           alias = "patient", T.MAT = patient$T.MAT,
+                           verbose = FALSE)
 bin.ptv <- bin.from.roi (MR, struct = S, roi.name = "ptv",
-                           alias = "ptv", T.MAT = patient$T.MAT)
+                           alias = "ptv", T.MAT = patient$T.MAT,
+                           verbose = FALSE)
 
 #' calculation of the 'patient - ptv' binary
 bin <- bin.subtraction (bin.patient, bin.ptv, alias = "patient - ptv")

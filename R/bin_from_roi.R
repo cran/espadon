@@ -41,7 +41,7 @@
 #'
 #' # "optical nerve" binary without inclusions management
 #' bin <- bin.from.roi (CT, struct = S, roi.sname = "left optical", 
-#'                      alias = "left_optical_nerve")
+#'                      alias = "left_optical_nerve", verbose = FALSE)
 #' display.plane (CT, top = bin, struct = S,
 #'                view.coord = S$roi.info[S$roi.info$roi.pseudo == "leftopticalnerve",]$Gz, 
 #'                legend.shift = -80, interpolate = FALSE, main = "Left nerve selection")
@@ -57,14 +57,16 @@
 #'
 #' # "optical nerve" binary without inclusions management
 #' bin <- bin.from.roi (CT, struct = S, roi.sname = "left optical", 
-#'                      alias = "left_optical_nerve", within = FALSE)
+#'                      alias = "left_optical_nerve", within = FALSE,
+#'                      verbose = FALSE)
 #' display.plane (CT, top = bin, struct = S,
 #'                view.coord = S$roi.info[S$roi.info$roi.pseudo == "leftopticalnerve",]$Gz, 
 #'                legend.shift = -80, interpolate = FALSE, main = "Left nerve selection")
 #'
 #' # "optical nerve" binary with inclusions management
 #' bin <- bin.from.roi (CT, struct = S, roi.sname = "left optical", 
-#'                      alias = "left_optical_nerve", within = TRUE)
+#'                      alias = "left_optical_nerve", within = TRUE,
+#'                      verbose = FALSE)
 #' display.plane (CT, top = bin, struct = S,
 #'                view.coord = S$roi.info[S$roi.info$roi.pseudo == "leftopticalnerve",]$Gz, 
 #'                legend.shift = -80, interpolate = FALSE, main = "Left nerve selection") 
@@ -78,88 +80,59 @@
 #' @export
 bin.from.roi <- function (vol, struct, roi.name = NULL, roi.sname = NULL, roi.idx = NULL,
                           T.MAT = NULL,  within = TRUE, alias = "", description = NULL,...){
- 
+  if (is.null(vol)) return (NULL)
   args <- tryCatch(list(...), error = function(e)list())
   verbose <- args[["verbose"]]
   eps <- args[["eps"]]
   if (is.null(verbose)) verbose <- TRUE
   if (is.null(eps)) eps <- 1e-9
   
+  if (!is (struct, "struct")) stop ("struct should be a struct class object.")
   roi.idx <- select.names (struct$roi.info$roi.pseudo, roi.name, roi.sname, roi.idx)
+  if (length (roi.idx) > 1) stop ("multiple rois forbidden.")
+  if (!is (vol, "volume")) stop ("vol should be a volume class object.")
+  if(is.null(vol$vol3D.data)) stop ("empty vol$vol3D.data.")
+  if (length (vol$k.idx)>1) {if (!all (diff(vol$k.idx)==1)) stop ("planes must be contiguous.")}
+  if(is.null(struct$roi.data)) stop ("empty roi.data.")
+  transfert.M <- get.rigid.M (T.MAT, src.ref=vol$ref.pseudo, dest.ref = struct$ref.pseudo)
+  if (is.null (transfert.M)){
+    if (vol$ref.pseudo!=struct$ref.pseudo) {stop ("different ref.pseudo. Enter T.MAT")
+    } else {transfert.M  <- diag (4)}
+  }
   
+  warning.f <- FALSE
   if (length (roi.idx) == 0) {
     warning ("no roi selected.")
-    return (NULL)
+    warning.f <- TRUE
   }
-  if (length (roi.idx) > 1) {
-    warning ("multiple rois forbidden.")
-    return (NULL)
-  }
-  
-  
-  if (!is (vol, "volume")){
-    warning ("vol should be a volume class object.")
-    return (NULL)
-  }
-  
-  if (!is (struct, "struct")) {
-    warning ("struct should be a struct class object.")
-    return (NULL)
-  }
-  
   if (length(struct$roi.data[[roi.idx]])==0) {
-    warning ("no cut in roi.")
-    return (NULL)
+    warning ("no cutting plan in roi.")
+    warning.f <- TRUE
   }
   
   type <- castlow.str(sapply(struct$roi.data[[roi.idx]],function(l) l$type))
   if (!all(type =="closedplanar" | type =="point")){
     warning ("roi is not closed_planar or point")
-    return (NULL)
+    warning.f <- TRUE
   }
-    
-  
-  if(is.null(vol$vol3D.data)){
-    warning ("empty vol$vol3D.data.")
-    return (NULL)
-  }
-  if (length (vol$k.idx)>1){
-    if (!all (diff(vol$k.idx)==1)) {
-      warning ("planes must be contiguous.")
-      return (NULL)
-    }
-  }
-  
-  if(is.null(struct$roi.data)){
-    warning ("empty roi.data.")
-    return (NULL)
-  }
-  
-  
-  transfert.M <- get.rigid.M (T.MAT, src.ref=vol$ref.pseudo, dest.ref = struct$ref.pseudo)
-  
-  if (is.null (transfert.M)){
-    if (vol$ref.pseudo!=struct$ref.pseudo) {
-      warning ("different ref.pseudo. Enter T.MAT")
-      return (NULL)
-    } else {
-      transfert.M  <- diag (4)
-    }
-  }
+
   if (is.null(description)) description <- struct$roi.info$roi.pseudo[roi.idx]
   Vb <- vol.copy (vol, alias = alias, modality="binary", description=description, number=roi.idx)
   
-  Vb$min.pixel <- 0
-  Vb$max.pixel <- 1
+  Vb$min.pixel <- FALSE
+  Vb$max.pixel <- FALSE
   Vb$vol3D.data <- array (FALSE, Vb$n.ijk)
   
+  if (warning.f) {
+    if (alias=="") return (Vb)
+    return(.set.ref.obj(Vb,list(struct)))
+  }
+
   dz <- round(struct$thickness,6)
   cont.z <- round(sapply (struct$roi.data[[roi.idx]], function(co) co$pt[1,3]),3)
   # z.corner <- cont.z_[1]-dz/2
   # cont.z <- cont.z_
   # if (dz!=0) cont.z <- floor ((cont.z_-z.corner)/dz  )*dz + cont.z_[1]
-  
-  
   
   l.data <- struct$roi.data[[roi.idx]]
   levels <- as.numeric (sapply (l.data,function(d)d$level))

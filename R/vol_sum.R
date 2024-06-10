@@ -27,34 +27,23 @@
 #' @importFrom methods is
 vol.sum<- function (vol1, vol2, alias = "", description = NULL) {
   
-  if (!is (vol1, "volume")) {
-    warning ("vol1 should be a volume class object.")
-    return (NULL)
+  if ((!is (vol1, "volume") & !is.null(vol1)) | (!is (vol2, "volume") & !is.null(vol1))) 
+    stop ("vol1 or vol2 should be volume class objects.")
+  if (!is.null(vol1)){
+    if (is.null(vol1$vol3D.data)) stop ("empty vol1$vol3D.data.")
   }
-  if (!is (vol2, "volume")) {
-    warning ("vol2 should be a volume class object.")
-    return (NULL)
-  }
-  
-   if (vol1$modality!=vol2$modality) {
-    warning ("both volumes must have same modality.")
-    return (NULL)
+  if (!is.null(vol2)){
+    if (is.null(vol2$vol3D.data)) stop ("empty vol2$vol3D.data.")
   }
   
-  if(is.null(vol1$vol3D.data)){
-    warning ("Check input data : empty vol1$vol3D.data.")
-    return (NULL)
-  }
-  if(is.null(vol2$vol3D.data)){
-    warning ("Check input data : empty vol2$vol3D.data.")
-    return (NULL)
-  }
+  if (is.null(vol1)) return (vol2)
+  if (is.null(vol2)) return (vol1)
   
+  if (vol1$modality!=vol2$modality) warning ("both volumes should have same modality.")
+   
   #verifier que les volumes ont le même support
-  if (!grid.equal (vol1, vol2)) {
-    warning ("both volumes must share same grid.")
-    return (NULL)
-  }
+  if (!grid.equal (vol1, vol2)) stop ("both volumes must share same grid.")
+
   if (is.null(description)) description <-  paste (vol1$object.alias, "+", vol2$object.alias)
   V <- vol.copy (vol1, alias = alias, description = description)
   

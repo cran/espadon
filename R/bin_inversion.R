@@ -20,7 +20,7 @@
 #' S <- patient$rtstruct[[1]]
 #'
 #' bin.patient <- bin.from.roi (CT, struct = S, roi.name = c ("patient"),
-#'                              alias = "patient")
+#'                              alias = "patient", verbose = FALSE)
 #' inverse.patient <- bin.inversion (bin.patient, alias = "inv (patient)")
 #'
 #' display.plane(CT, top = inverse.patient, interpolate = FALSE)
@@ -28,20 +28,11 @@
 #' @export
 #' @importFrom methods is
 bin.inversion <- function (vol, alias = "", description = NULL) {
-  
-  if (!is (vol, "volume")){
-    warning ("vol should be a volume class object.")
-    return (NULL)
-  }
-  if ((vol$modality!="binary")) {
-    warning ("vol must be of binary modality.")
-    return (NULL)
-  }
-  if(is.null(vol$vol3D.data)){
-    warning ("empty vol$vol3D.data.")
-    return (NULL)
-  }
-  
+  if (is.null(vol)) return (NULL)
+  if (!is (vol, "volume")) stop ("vol should be a volume class object.")
+  if ((vol$modality!="binary")) stop ("vol must be of binary modality.")
+  if(is.null(vol$vol3D.data)) stop ("empty vol$vol3D.data.")
+
   if (is.null(description)) description <- paste ("!",vol$object.alias, sep="")
   Vb <- vol.copy (vol, alias = alias, modality = "binary",
                   description = description)

@@ -38,7 +38,8 @@ z.brain <- S$roi.info$Gz[S$roi.info$roi.pseudo == "brain"]
 
 # Try to discriminate the processing unit with binary selections
 bin.brain <- bin.from.roi (MR, struct = S, roi.name = "brain",
-                           alias = "brain", T.MAT = patient$T.MAT)
+                           alias = "brain", T.MAT = patient$T.MAT,
+                           verbose = FALSE)
 bin.pu.density <- bin.from.vol (MR, min = 160)   
    
 display.plane (MR, top = bin.pu.density, display.ref = S$ref.pseudo,

@@ -6,7 +6,7 @@ struct.oversampling <- function (struct, fact.z = 2,
   args <- args[is.na(match(names(args),
                            c("smooth.iteration", "smooth.type", "smooth.lambda", 
                              "smooth.mu", "smooth.delta")))]
-  
+  if (is.null(struct)) return(NULL)
   if (!is (struct, "struct")) {
     stop ("struct should be a struct class object.")
   }

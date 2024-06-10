@@ -11,7 +11,7 @@ nesting.roi(
   roi.sname = NULL,
   roi.idx = NULL,
   xyz.margin = c(0, 0, 0),
-  vol.restrict = FALSE,
+  obj.restrict = FALSE,
   T.MAT = NULL,
   alias = "",
   description = NULL,
@@ -37,9 +37,9 @@ to the x, y and z directions of the rectangular parallelepiped circumscribed
 to the chosen RoI, in the cutting planes frame of reference. By default
 xyz.margin = c (0, 0, 0).}
 
-\item{vol.restrict}{Boolean. If \code{vol.restrict = TRUE}, the rectangular
-parallelepiped circumscribed to the chosen RoI, enlarged by xyz.margin cannot
-exceed the initial volume.}
+\item{obj.restrict}{Boolean. Used if \code{obj} is of class"volume". If
+\code{obj.restrict = TRUE}, the rectangular parallelepiped circumscribed to
+the selected voxels, enlarged by xyz.margin cannot exceed the initial volume.}
 
 \item{T.MAT}{"t.mat" class object, created by
 \link[espadon]{load.patient.from.dicom}, \link[espadon]{load.patient.from.Rdcm}
@@ -52,7 +52,7 @@ must be equal to \code{obj$ref.pseudo}.}
 If \code{description = NULL}, it will be that of the \code{obj}, plus
 "restricted to" the selected RoI.}
 
-\item{...}{Additional arguments \code{vol} (depracated), replaced by \code{obj}.}
+\item{...}{Additional arguments such as \code{vol} (depracated), replaced by \code{obj}.}
 }
 \value{
 Returns a "volume" class object, in which 3D volume is limited to the

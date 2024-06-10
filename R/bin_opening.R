@@ -40,28 +40,25 @@
 #' @importFrom stats fft
 #' @importFrom methods is
 bin.opening <- function (vol, radius=10, alias = "", description = NULL) {
+  if (is.null(vol)) return (NULL)
+  if (!is (vol, "volume")) stop ("vol should be a volume class object.")
+  if ((vol$modality!="binary")) stop ("vol must be of binary modality.")
+  if(is.null(vol$vol3D.data)) stop ("empty vol$vol3D.data.")
   
-  if (!is (vol, "volume")){
-    warning ("vol should be a volume class object.")
-    return (NULL)
-  }
-  if ((vol$modality!="binary")) {
-    warning (" vol must be of binary modality.")
-    return (NULL)
-  }
-  if(is.null(vol$vol3D.data)){
-    warning ("empty vol$vol3D.data.")
-    return (NULL)
-  }
-  
-  if (radius < max(vol$dxyz)) {
-    warning ("radius must be larger than max(vol$dxyz).")
+  radius <- rep(radius,3)[1:3]
+  orientation <- matrix(vol$orientation,ncol=2, byrow=FALSE)
+  M.cut.from.refpseudo <- solve(as.matrix(cbind(orientation[,1], orientation[,2],
+                                                vector.product(orientation[,1], orientation[,2])),
+                                          dimnames = list(NULL,NULL)))
+  radius <- abs(as.vector(radius  %*%t(M.cut.from.refpseudo)))
+  if (all(radius -vol$dxyz<0)) {
+    warning ("At least one radius in the xyz direction must be larger than vol$dxyz.")
     return (vol)
   }
   
   if (!is.null(vol$missing.k.idx)) {if (vol$missing.k.idx) message ("missing k.idx, unpredictable result.")}
   
-  if (is.null(description)) description <-  paste (vol$object.alias, "opening r =", radius)
+  if (is.null(description)) description <-  paste (vol$object.alias, "opening r =", paste(unique(radius), collapse=" "))
   
   Vb <- bin.inversion(vol, alias = alias, description = description)
   

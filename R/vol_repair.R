@@ -43,16 +43,9 @@
 #' }
 #' @export
 vol.repair <- function (vol, alias = "", description = NULL) {
-  
-  if (!is (vol, "volume")) {
-    warning ("vol should be a volume class object.")
-    return (NULL)
-  }
-  
-  if(is.null(vol$vol3D.data)){
-    warning ("empty vol$vol3D.data.")
-    return (NULL)
-  }
+  if (is.null (vol)) return (NULL)
+  if (!is (vol, "volume")) stop ("vol should be a volume class object.")
+  if (is.null(vol$vol3D.data)) stop ("empty vol$vol3D.data.")
   
   if (!vol$missing.k.idx) return(vol)
   
