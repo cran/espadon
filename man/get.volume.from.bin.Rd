@@ -26,11 +26,16 @@ patient <- toy.load.patient (modality = c ("ct", "rtstruct"), roi.name = "brain"
 CT <- patient$ct[[1]]
 S <- patient$rtstruct[[1]] 
 
-# creation of a binary object
-bin.brain <- bin.from.roi (vol = CT, struct = S, roi.sname = "bra", 
+# creation of  weight and binary objects
+bin.brain.w <- bin.from.roi (vol = CT, struct = S, roi.sname = "bra", 
+                           modality = "weight", verbose = FALSE)
+bin.brain.b <- bin.from.roi (vol = CT, struct = S, roi.sname = "bra", 
                            verbose = FALSE)
 # Volume calculation
-get.volume.from.bin (bin.brain)
+get.volume.from.roi (struct = S, roi.sname = "bra")
+get.volume.from.bin (bin.brain.w)
+get.volume.from.bin (bin.brain.b)
+
 }
 \seealso{
 \link[espadon]{get.volume.from.roi}

@@ -77,7 +77,7 @@ mesh.from.bin <- function (bin, alias="", tol = min(abs(bin$dxyz))/2,
   
 
   if (!is (bin, "volume")) stop ("bin should be a volume class object.")
-  if ((bin$modality!="binary")) stop ("bin must be modality binary.")
+  if ((bin$modality!="binary") & (bin$modality!="weight")) stop ("bin must be modality binary or weight.")
 
   
   vol3D <- bin$vol3D.data

@@ -52,9 +52,10 @@
 #' calculated.
 #' @param V.xGy Vector of the minimum dose in Gy, received by the volume to be 
 #' calculated.
-
+#' @param DVH boolean. If \code{TRUE} (default), the function returns the DVHs of 
+#' the target and healthy ROIs.
 #' @param verbose Boolean. if \code{TRUE} (default) a progress bar is displayed.
-
+#' @param ... others parameters such as \code{DVH.step}.
 #' @details If \code{target.roi.name}, \code{target.roi.sname}, and 
 #' \code{target.roi.idx} are all set to \code{NULL}, all RoI containing 'ptv' 
 #' (if they exist) are selected.
@@ -70,7 +71,10 @@
 #' \item the requested \code{$D.x\%} : (Gy) Dose covering x percent of structure volume.
 #' \item the requested \code{$D.xcc} : (Gy) Dose covering x (\mjeqn{cm^3}{ascii})
 #'  of structure volume.
-#' } 
+#' }
+#' All numbers are displayed with a resolution depending on the DVH quantization 
+#' step. The default resolution is 1e-3.
+#'  
 
 #' @return \mjeqn{-~volume}{ascii} : dataframe containing, for all target and 
 #' healthy structures, and isodoses:
@@ -243,9 +247,11 @@
 #' \strong{\[2\]}
 #' \mjdeqn{mGI = \frac{V_{0.5~\cdot~presc.dose}}{V_{target ~\ge~ presc.dose}} = 
 #' \frac{V_{0.5~\cdot~presc.dose}}{V_{target} ~\cap~ V_{presc.dose}}}{ascii}
-
-
 #' }
+#' 
+#' @return \mjeqn{-~DVH}{ascii} : dataframe containing the Dose-Volume histograms of
+#' target and healthy ROIs, in percent. 
+
 
 
 # @return \mjeqn{-~radiobiology}{ascii}: For all target and healthy structures,
@@ -308,7 +314,8 @@
 #'                                 conformity.indices = c("PITV", "PDS", "CI.lomax2003", 
 #'                                                        "CN", "NCI", "DSC","COIN"),
 #'                                 verbose = FALSE)
-#' indices
+#' indices[c("dosimetry","volume", "conformity","homogeneity","gradient")]
+#' head(indices$DVH)
 
 
 
@@ -336,8 +343,14 @@ rt.indices.from.roi <- function (vol, struct = NULL, T.MAT = NULL,
                                                          "HI.heufelder"),
                                  gradient.indices = c("GI.ratio.50", "mGI"),
                                  D.xpc = NULL, D.xcc = NULL, V.xpc = NULL, V.xGy = NULL, 
-                                 verbose = TRUE){
+                                 DVH = TRUE,
+                                 verbose = TRUE,...){
 
+  args <- list(...)
+  DVH.step <- args[['DVH.step']]
+  if (is.null(DVH.step)) DVH.step <-0.001
+  if (DVH.step>0.01) DVH.step <- 0.01
+  
   if (!is (vol, "volume")) stop ("vol should be a volume class object.")
   if (is.null(vol$vol3D.data)) stop ("empty vol$vol3D.data.")
   if (vol$modality !="rtdose") warning ("vol should be of rtdose modality.")
@@ -382,7 +395,7 @@ rt.indices.from.roi <- function (vol, struct = NULL, T.MAT = NULL,
     if (!is.null(healthy.roi.idx))  L.healthy.idx <- match(healthy.roi.idx,roi.idx)
     
     margin <- 5
-    if (verbose) pb <- progress_bar$new(format = " processing [:bar] :percent",
+    if (verbose) pb <- progress_bar$new(format = " ROI map processing [:bar] :percent",
                                         total = length(roi.idx), width= 60)
     vol.L <- list ()
     D.max <- (floor(vol$max.pixel/10) + 1)*10
@@ -390,7 +403,8 @@ rt.indices.from.roi <- function (vol, struct = NULL, T.MAT = NULL,
       vr <- nesting.roi(vol, struct, roi.idx =roi.idx[idx], xyz.margin=rep(margin,3), 
                         T.MAT = T.MAT, alias = struct$roi.info$name[roi.idx[idx]])
       b <- bin.from.roi(vr, struct, roi.idx = roi.idx[idx], T.MAT = T.MAT, 
-                        alias = struct$roi.info$name[roi.idx[idx]], verbose = FALSE)
+                        alias = struct$roi.info$name[roi.idx[idx]], verbose = FALSE,
+                        modality = "weight")
       vr <- vol.from.bin(vr, b, alias = struct$roi.info$name[roi.idx[idx]], 
                          description=b$description)
       # h <- histo.vol (vr, breaks = seq (0, D.max, by = 0.001),
@@ -417,15 +431,18 @@ rt.indices.from.roi <- function (vol, struct = NULL, T.MAT = NULL,
                     homogeneity.indices,
                     gradient.indices,
                     D.xpc, D.xcc, V.xpc, V.xGy, 
-                    healthy.weight, healthy.tol.dose
-                    )
+                    healthy.weight, healthy.tol.dose,DVH,DVH.step)
   
   
   
   
 }
 
-################################################################################
+
+
+
+
+#####################################################
 #' @importFrom Rvcg vcgArea vcgClost
 .indices.from.bin <- function (vol,presc.dose, bin.L,vol.L,vol.names, 
                                L.target.idx, L.healthy.idx,
@@ -435,16 +452,21 @@ rt.indices.from.roi <- function (vol, struct = NULL, T.MAT = NULL,
                                homogeneity.indices,
                                gradient.indices,
                                D.xpc, D.xcc, V.xpc, V.xGy, 
-                               healthy.weight, healthy.tol.dose){#, DVH){
+                               healthy.weight, healthy.tol.dose, DVH,DVH.step){
   
-  vol.over.val.df <- function (vol,val,coln =NULL) {
-    df <- as.data.frame (matrix (sapply (val, function(r) sum (vol$vol3D.data>=r, na.rm=T) * 
-                                           abs (prod(vol$dxyz))/1000), ncol=length (val)))
+
+  resol <- ceiling(abs(log10(DVH.step)))
+  
+  vol.over.val.df <- function (vol,bin = NULL,val,coln =NULL) {
+    df <- as.data.frame (matrix (sapply (val, function(r) {
+      if (is.null(bin)) bin <-list(vol3D.data=1)
+      sum (as.numeric(bin$vol3D.data) * as.numeric(vol$vol3D.data>=r),na.rm = TRUE) * abs (prod(vol$dxyz))/1000
+    }), ncol=length (val)))
+    row.names(df) <- vol$object.alias
     if (is.null(coln)) {colnames(df)   <- val} 
     else {colnames(df) <-  coln }
     return (df)
   }
-
   
   ###################################################################################
   #volume.indices
@@ -455,27 +477,20 @@ rt.indices.from.roi <- function (vol, struct = NULL, T.MAT = NULL,
     if (!is.null (V.xpc) & !is.na(presc.dose)) {
       VxGypc.names <- c(VxGypc.names,paste("V_",V.xpc,"%", sep=""))
       vect <- c(vect,V.xpc*presc.dose/100)
-      }
+    }
     if (!is.null (V.xGy)) {
       VxGypc.names <- c(VxGypc.names,paste("V_",V.xGy,"Gy", sep=""))
       vect <- c(vect,V.xGy)
-      }
+    }
     
-    V.xpcGy.b <- do.call(rbind,lapply(vol.L,function(V)  vol.over.val.df (V, vect, VxGypc.names)))
-    isodose.xGy <- vol.over.val.df (vol, vect,VxGypc.names)
+    V.xpcGy.b <- do.call(rbind,lapply((0:length(vol.L))[-1],function(idx)  
+      vol.over.val.df(vol.L[[idx]],bin.L[[idx]], vect, VxGypc.names)))
+    
+    isodose.xGy <- vol.over.val.df (vol,NULL, vect,VxGypc.names)
     V.xpcGy.b <- rbind (isodose =isodose.xGy,V.xpcGy.b)
-    # dvh.interpol <-function(d , dvh){
-    #   idx <- floor(d/dvh$step) + 1
-    #   dvh$vol[idx] + (dvh$vol[idx+1]-dvh$vol[idx])*(d-dvh$breaks[idx])/dvh$step
-    # }
-    # Vx.Gy_ <- do.call( rbind.data.frame,lapply(vol.names, function(i) sapply(V.xGy, 
-    #                                      function(x) dvh.interpol(x,dvh.L[[i]]))))
-    # rownames (Vx.Gy_) <- vol.names
   }
   
- 
   ##########################
-
   
   V.refdose <- NA
   V.50pc.refdose <- NA
@@ -514,11 +529,34 @@ rt.indices.from.roi <- function (vol, struct = NULL, T.MAT = NULL,
     volume.indices.b<-.reduc.tab(volume.indices.b)
     return(list(volume = volume.indices.b))
   }
-  ###############################################################################
+  
+  
+  ####################################################################################### 
+  
+  V.target <- unlist(sapply(bin.L[L.target.idx],function(V) get.volume.from.bin(V)))
+  V.healthy <- unlist(sapply(bin.L[L.healthy.idx],function(V) get.volume.from.bin(V)))
+  
+  ####################################################################################### 
+  
+    #DVH
+
+  max.vol  <- ceiling(max(sapply(vol.L, function(l) l$max.pixel), na.rm = TRUE))
+  min.vol  <- floor(min(sapply(vol.L, function(l) l$min.pixel), na.rm = TRUE))
+  breaks <- seq(min.vol - DVH.step,max.vol + DVH.step, DVH.step)
+  
+  
+  histo.dataL<- list()
+  for (idx in (0:length(vol.L))[-1]){
+    histo.dataL[[vol.L[[idx]]$object.alias]] <- create.histo(vol3D = vol.L[[idx]]$vol3D.data, weight3D = bin.L[[idx]]$vol3D.data, breaks)
+  }
+  
+  dvh.data <- as.data.frame(cbind( D= breaks[-1],do.call(cbind,lapply(histo.dataL, function(l)  100*rev (cumsum (rev (l$histo)))))))
+  ####################################################################################### 
   dosimetry.names <- c("D.min", "D.max", "D.2%", "D.5%", "D.95%",
                        "D.98%","D.median", "D.mean", "STD")
   dosimetry.probs <- 1-c (1, 0, 0.02, 0.05, 0.95, 0.98, 0.5)
   
+  ####################################################################################### 
   
   Dxpc.names <- NULL
   if (!is.null (D.xpc))  {
@@ -532,38 +570,40 @@ rt.indices.from.roi <- function (vol, struct = NULL, T.MAT = NULL,
       dosimetry.names <- c(dosimetry.names[1:7],Dxpc.names[f], "D.mean", "STD")
     }
   }
-  
-  Dosimetry <- as.data.frame(do.call (rbind, lapply(vol.L,function(V) {
-    D <- matrix(c(quantile (V$vol3D.data, probs=dosimetry.probs, na.rm=TRUE),
-                  mean (V$vol3D.data, na.rm=TRUE), sd (V$vol3D.data, na.rm=TRUE)), ncol=length(dosimetry.names), byrow = T)
-    dimnames(D) <- list(V$object.alias,dosimetry.names)
-    D
+
+  Dosimetry <- as.data.frame(do.call (rbind, lapply(histo.dataL,function(l) {
+    c(weighted_quantile_from_histo (l,breaks[-1],probs=dosimetry.probs),l$dose.pt[3:4])
   })))
+  colnames(Dosimetry)  <- dosimetry.names
+  
   
   
   
   Dxcc.names <- NULL
   if (!is.null (D.xcc))  {
     Dxcc.names <-   paste("D",D.xcc,"cc", sep="")
-    Dosimetry.xcc <- as.data.frame(do.call (rbind, lapply(vol.L,function(V) {
-      probs.Dxcc <-  1-D.xcc/  (sum (V$vol3D.data>=0, na.rm = TRUE) * abs(prod (V$dxyz))/1000)
-      probs.Dxcc [probs.Dxcc>1] <- 1
-      probs.Dxcc [probs.Dxcc<0] <- 0
-      D <- matrix(quantile (V$vol3D.data, probs=probs.Dxcc, na.rm=TRUE),
-                  ncol=length(Dxcc.names), byrow = T)
-      dimnames(D) <- list(V$object.alias,Dxcc.names)
-      D
-    })))  
+    
+    Dosimetry.xcc <- 
+      as.data.frame(do.call (rbind, lapply(1:length(histo.dataL),function(idx) {
+        probs.Dxcc <-  1 - D.xcc/ c(V.target,V.healthy)[idx]
+        probs.Dxcc [probs.Dxcc>1] <- 1
+        probs.Dxcc [probs.Dxcc<0] <- 0
+        matrix(weighted_quantile_from_histo (histo.dataL[[idx]],breaks[-1],probs=probs.Dxcc), ncol=length(Dxcc.names), byrow = T, 
+               dimnames = list(vol.L[[idx]]$object.alias,Dxcc.names))
+        
+      })))  
+    
+    
     Dosimetry <- cbind(Dosimetry[,1:(ncol(Dosimetry)-2)], 
                        Dosimetry.xcc,Dosimetry[,(ncol(Dosimetry)-1):ncol(Dosimetry)])
   }
   
   
-
   
- ####################################################################################### 
-  V.target <- do.call (rbind, lapply(vol.L[L.target.idx],function(V) vol.over.val.df (V, 0)))
-  V.healthy <- do.call (rbind, lapply(vol.L[L.healthy.idx],function(V) vol.over.val.df (V, 0)))
+  
+  ####################################################################################### 
+  if (!is.null(V.target)) {V.target <- data.frame("0" = V.target);colnames(V.target) <- "0"}
+  if (!is.null(V.healthy)) {V.healthy <- data.frame("0" = V.healthy);colnames(V.healthy) <- "0"}
   V.target.over.refdose <- NULL
   V.target.over.refdose.95pc <- NULL
   V.target.over.refdose.105pc <- NULL
@@ -572,14 +612,14 @@ rt.indices.from.roi <- function (vol, struct = NULL, T.MAT = NULL,
   V.healthy.over.refdose <- NULL
   
   
-
+  
   if (!is.na(presc.dose[1]) & !is.null(L.target.idx)){
-    V.target.over.refdose <- do.call (rbind, lapply(vol.L[L.target.idx],function(V) vol.over.val.df (V, presc.dose)))
-    # V.target.under.refdose <- do.call (rbind, lapply(vol.L[L.target.idx],function(V) vol.under.val.df (V, presc.dose)))
+    V.target.over.refdose <- do.call (rbind, lapply(L.target.idx,function(idx) vol.over.val.df (vol.L[[idx]], bin.L[[idx]],presc.dose)))
     V.target.under.refdose <- as.data.frame(-sweep(as.matrix(V.target.over.refdose),1,as.matrix(V.target)))
+    
   }
   if (!is.na(presc.dose[1]) & !is.null(L.healthy.idx)){
-    V.healthy.over.refdose <- do.call (rbind, lapply(vol.L[L.healthy.idx],function(V) vol.over.val.df (V, presc.dose)))
+    V.healthy.over.refdose <- do.call (rbind, lapply(L.healthy.idx,function(idx) vol.over.val.df (vol.L[[idx]], bin.L[[idx]],presc.dose)))
   }
   
   
@@ -590,14 +630,14 @@ rt.indices.from.roi <- function (vol, struct = NULL, T.MAT = NULL,
     mesh.refdose <- lapply (presc.dose, function(r) {
       b <- bin.from.vol(vol, min=r)
       mesh.from.bin(b, alias=r, smooth.iteration = 10, smooth.type ="angWeight")
-      })
+    })
     names(mesh.refdose) <- presc.dose
     
     S.refdose <- matrix(sapply ( mesh.refdose, function (m) {
       if (is.null(m)) return(0)
       vcgArea(m$mesh, perface = FALSE)}), dimnames=list(presc.dose,"area"))/100
   }
- 
+  
   if (!is.null(L.target.idx) &  (f.conformity | "area" %in% volume.indices)){   
     mesh.target <-lapply(bin.L[L.target.idx], function (b) 
       mesh.from.bin(b, alias=b$object.alias, smooth.iteration = 10, smooth.type ="angWeight")) 
@@ -616,12 +656,17 @@ rt.indices.from.roi <- function (vol, struct = NULL, T.MAT = NULL,
       if (is.null(m)) return(0)
       vcgArea(m$mesh, perface = FALSE)}), dimnames=list(vol.names[L.healthy.idx],"area"))/100
   }
-
-
+  
+  
   if ((("CI.distance" %in% conformity.indices) |  ("CI.abs_distance" %in% conformity.indices)) 
       & !is.na(presc.dose[1]) & !is.null(L.target.idx)) {
     dist.fct<- function(vect) {sqrt(sum(vect^2))}
-    G.target <- lapply(bin.L[L.target.idx], function (b)apply(get.xyz.from.index(which(b$vol3D.data), b),2, mean))
+    G.target <- lapply((0:length(L.target.idx))[-1], function (idx){
+      rgidx <- which(bin.L[[L.target.idx[idx]]]$vol3D.data>0)
+      xyz <- get.xyz.from.index(rgidx, bin.L[[L.target.idx[idx]]])
+      weight <- bin.L[[L.target.idx[idx]]]$vol3D.data[rgidx]/ V.target[idx,1] / 1000
+      apply(sweep(xyz ,1, weight,"*"),2,sum)})
+    names(G.target) <- row.names(V.target)
     
     unit.vector <-  matrix(.fansphereC(1),ncol=5, byrow=TRUE)[,1:3]
     
@@ -632,30 +677,31 @@ rt.indices.from.roi <- function (vol, struct = NULL, T.MAT = NULL,
         dist <- matrix(NA, ncol=length(G.target), nrow= nrow(unit.vector), 
                        dimnames = list(NULL,names(G.target)))
         for (col in colnames(dist)){
-          if (!is.null (mesh.refdose[[pd.idx]]))
-          # if (get.value.from.xyz(G.target[[col]],vol,interpolate = TRUE) > presc.dose[pd.idx])
-          if(vcgClost(matrix(G.target[[col]],ncol=3), mesh.refdose[[pd.idx]]$mesh)$quality>=0)
-            dist[ ,col] <- .mesh.pt.distance(mesh.refdose[[pd.idx]]$mesh, 
-                                           xyz.pt=G.target[[col]], unit.vector)
+          if (!is.null (mesh.refdose[[pd.idx]])){
+            tol <- sqrt(sum(apply((get.extreme.pt(mesh.refdose[[pd.idx]]) - G.target[[col]])^2,1,max)))
+            # if (get.value.from.xyz(G.target[[col]],vol,interpolate = TRUE) > presc.dose[pd.idx])
+            if(vcgClost(matrix(G.target[[col]],ncol=3), mesh.refdose[[pd.idx]]$mesh, tol = tol)$quality>=0)
+              dist[ ,col] <- .mesh.pt.distance(mesh.refdose[[pd.idx]]$mesh, 
+                                               xyz.pt=G.target[[col]], unit.vector)
+          }
           # open3d()
-          # par3d(windowRect=wr)
-          # shade3d(mesh.refdose[[pd.idx]]$mesh)
+          # wire3d(mesh.refdose[[pd.idx]]$mesh)
           # points3d(matrix(G.target[[col]], ncol=3), col="red")
-          # points3d(sweep(unit.vector*dist[,col],2,G.target[[col]],"+"), col="yellow")
+          # points3d(sweep(unit.vector*dist[,col],2,G.target[[col]],"+"), col="red", size = 5)
         }
         dist
       })
     names(Isodose.to.G.dist) <- presc.dose
     
     Target.to.G.dist <- matrix(NA,ncol=length(G.target), nrow= nrow(unit.vector), 
-                   dimnames = list(NULL,names(G.target)))
+                               dimnames = list(NULL,names(G.target)))
     for (col in colnames(Target.to.G.dist)){
       if (!is.null (mesh.target[[col]]))
-      if (vcgClost(matrix(G.target[[col]],ncol=3), mesh.target[[col]]$mesh)$quality>=0)
-        Target.to.G.dist[,col] <- .mesh.pt.distance(mesh.target[[col]]$mesh, 
-                                       xyz.pt=G.target[[col]], unit.vector)
-  
-     
+        if (vcgClost(matrix(G.target[[col]],ncol=3), mesh.target[[col]]$mesh)$quality>=0)
+          Target.to.G.dist[,col] <- .mesh.pt.distance(mesh.target[[col]]$mesh, 
+                                                      xyz.pt=G.target[[col]], unit.vector)
+      
+      
       # open3d()
       # par3d(windowRect=wr)
       # wire3d(mesh.target[[col]]$mesh,col="black")
@@ -663,11 +709,11 @@ rt.indices.from.roi <- function (vol, struct = NULL, T.MAT = NULL,
       # points3d(pt[na.idx,], col="yellow")
       # points3d(sweep(unit.vector*Target.to.G.dist[,col],2,G.target[[col]],"+"), col="yellow")
     }
-  
-
+    
+    
   }
-
-
+  
+  
   
   ################################################
   
@@ -690,7 +736,7 @@ rt.indices.from.roi <- function (vol, struct = NULL, T.MAT = NULL,
       
       V.healthy.over.toldose <- do.call (rbind, 
                                          lapply(1:length(L.healthy.idx),function(idx) {
-                                           df <-vol.over.val.df (vol.L[[L.healthy.idx [idx]]],
+                                           df <-vol.over.val.df (vol.L[[L.healthy.idx [idx]]],bin.L[[L.healthy.idx [idx]]],
                                                                  tol.dose_[idx])
                                            colnames(df) <- "toldose"
                                            df
@@ -714,7 +760,7 @@ rt.indices.from.roi <- function (vol, struct = NULL, T.MAT = NULL,
     cn <- conformity.indices[!is.na(m)]
     conformity.b <- data.frame (matrix(NA, ncol =length(cn), nrow =length(L.target.idx),
                                        dimnames = list(vol.names[L.target.idx], cn)))
-
+    
     if (ncol(conformity.b)>0){
       
       conformity.b$target <- vol.names[L.target.idx]
@@ -769,13 +815,13 @@ rt.indices.from.roi <- function (vol, struct = NULL, T.MAT = NULL,
         if (!is.null(L.healthy.idx)){
           if ("COIN" %in% colnames(df)) 
             df$COIN <- as.numeric(((apply(1 - (V.healthy.over.refdose[,col.idx] /V.healthy),2,prod) *
-                                     (V.target.over.refdose[,col.idx]^2) /V.target / 
-                                     V.refdose[rep(1,nrow(V.target)),col.idx])[,1]))
+                                      (V.target.over.refdose[,col.idx]^2) /V.target / 
+                                      V.refdose[rep(1,nrow(V.target)),col.idx])[,1]))
           
           if ("G_COSI" %in% colnames(df) & !is.na(healthy.tol.dose[1])) {
             df$G_COSI <- 1- apply (as.matrix(COSI[COSI$presc.dose==col.idx, 3:ncol(COSI)], ncol=ncol(healthy.weight_))* 
-                                    matrix(healthy.weight_[rep(1,nrow(V.target)),], ncol=ncol(healthy.weight_)),1,sum)
-            }
+                                     matrix(healthy.weight_[rep(1,nrow(V.target)),], ncol=ncol(healthy.weight_)),1,sum)
+          }
         }
         df
         
@@ -798,7 +844,7 @@ rt.indices.from.roi <- function (vol, struct = NULL, T.MAT = NULL,
     COSI <- NULL
     COSI.info <- NULL
   }
-
+  
   ################################################ 
   homogeneity <- NULL
   if (!is.null(L.target.idx)){
@@ -838,7 +884,7 @@ rt.indices.from.roi <- function (vol, struct = NULL, T.MAT = NULL,
     rownames(homogeneity) <- NULL
   }
   ################################################ 
-
+  
   ### gradient
   gradient <- NULL
   if (!is.null(L.target.idx)){
@@ -866,63 +912,12 @@ rt.indices.from.roi <- function (vol, struct = NULL, T.MAT = NULL,
       gradient <- .reduc.tab(gradient)
       rownames(gradient) <- NULL
     } 
-    }
-    
- 
-  
-  ###################################################################################
-  
-  # 
-  # dvh.l <- NULL
-  # if (DVH)
-  #   dvh.l <- lapply(histo.L,function(l) histo.DVH(l, alias= l$alias))
-  # 
-  # m <- match(radiobiology.indices, c("gEUD", "TCP","NTCP"))
-  # cn <- radiobiology.indices[!is.na(m)]
-  # biology.b <- data.frame (matrix(NA, ncol =length(cn), nrow = length(bin.L),
-  #                                    dimnames = list(vol.names, cn)))
-  # 
-  # if (ncol(biology.b)>0){
-  # 
-  #   if ("gEUD" %in% radiobiology.indices ){
-  #     target.a_ <- rep(rev(target.a)[1],length(L.target.idx))
-  #     target.a_ [1:length(target.a)] <- target.a 
-  #     healthy.a_ <- NULL
-  #     if (!is.null(L.healthy.idx)){
-  #       healthy.a_ <- rep(rev(healthy.a)[1],length(L.healthy.idx))
-  #       healthy.a_ [1:length(healthy.a)] <- healthy.a  
-  #     }
-  #     a <- c(target.a_, healthy.a_)
-  #     biology.b$a <- a
-  #     geud.col <-which(colnames(biology.b)=="gEUD")
-  #     if (geud.col>1) {
-  #       biology.b <- biology.b[,c(1:(geud.col-1),ncol(biology.b),geud.col:(ncol(biology.b)-1))]
-  #     } else {
-  #       biology.b <- biology.b[,c(ncol(biology.b),geud.col:(ncol(biology.b)-1))]
-  #     }
-  #     # Dosimetry$gEUD <- sapply(1:length(a), function(idx) {
-  #     #   N <- sum (histo.L[[idx]]$counts)
-  #     #   (sum (histo.L[[idx]]$counts * (histo.L[[idx]]$mids)^a[idx])/N)^(1/a[idx])
-  #     #   })
-  #     # # geud <- sapply(1:length(a), function(idx) sum (histo.L[[idx]]$counts / 
-  #     #                                                  sum (histo.L[[idx]]$counts) * 
-  #     #                                                  (histo.L[[idx]]$mids)^a[idx])^(1/a[idx]))
-  #     
-  #     biology.b$gEUD <-  sapply(1:length(a), function(idx) 
-  #       (sum(vol.L[[idx]]$vol3D.data^a[idx],na.rm = T)/sum(bin.L[[idx]]$vol3D.data,na.rm = T))^(1/a[idx]))
-  #     
-  #     biology.b <- .reduc.tab(biology.b)
-  #   }
-  # 
-  # } else {biology.b=NULL}
-  # 
-  # 
-
+  }
   
   #volume.indices suite
   m <- match (volume.indices, c("V.tot","area","V.prescdose"))
   volume.indices.b <- data.frame(matrix(ncol= 0,nrow=length(vol.names)+1,
-                                   dimnames= list(c("isodose",vol.names),NULL)))
+                                        dimnames= list(c("isodose",vol.names),NULL)))
   if (any (!is.na(m))) {
     volume.indices.b <- lapply( volume.indices[!is.na(m)], function(i) NULL)
     names(volume.indices.b) <-  volume.indices[!is.na(m)]
@@ -957,7 +952,7 @@ rt.indices.from.roi <- function (vol, struct = NULL, T.MAT = NULL,
     volume.indices.b <- NULL
   } else {volume.indices.b <- .reduc.tab(volume.indices.b)}
   
-
+  
   ###################################################################################
   #dosimetry suite
   dosimetry.name <- c(dosimetry,Dxpc.names,Dxcc.names)
@@ -965,13 +960,548 @@ rt.indices.from.roi <- function (vol, struct = NULL, T.MAT = NULL,
   m <- m[!is.na(m)]
   dosimetry.b <- NULL
   if(length(m)>0) dosimetry.b  <- Dosimetry[,m]
-
+  if (!DVH) dvh.data<-NULL
+  if (!is.null(dosimetry.b)) dosimetry.b <- round(dosimetry.b, resol)
   L <- list( dosimetry = dosimetry.b, volume = volume.indices.b, conformity = conformity,
              COSI = COSI, COSI.info = COSI.info, 
-             homogeneity = homogeneity, gradient = gradient)#, DVH=dvh.l)
+             homogeneity = homogeneity, gradient = gradient, DVH=dvh.data)
   return (L[!sapply(L,is.null)])
 }
 
 
 
+########################################################################
+create.histo <- function(vol3D, weight3D, breaks){
+  keep <- !is.na(vol3D)
+  if (!is.null(weight3D))  keep <- keep &  !is.na(weight3D)
+  vol3D <- vol3D[keep]
+  if (!is.null(weight3D)) {weight3D <- weight3D[keep]
+  }else {weight3D <- rep(1, length(vol3D))}
+  # keep <- (vol3D>= breaks[1]) & (vol3D< rev(breaks)[1])
+  tot <- sum(weight3D)
+  tab <- data.frame(D=cut(vol3D, breaks = breaks, include.lowest=FALSE,ordered_result = TRUE),
+                    weight = weight3D/tot)
+  
+  
+  mean.d <- sum(vol3D*tab$weight)
+  mean_sd.vect <- c(mean = mean.d,std= sqrt(tot / (tot-1) * sum(tab$weight*(vol3D  - mean.d)^2)))
+  dose.pt <- c(min = min(vol3D), max = max(vol3D),mean_sd.vect)
+  
+  byC <- as.numeric(by(tab,tab$D,function(v) sum(v$weight)))
+  byC[is.na(byC)] <- 0
+  
+  return(list(histo = byC, dose.pt=dose.pt ))
+}
+########################################################################
+weighted_quantile_from_histo <- function(histol,D,probs){
+  result <- rep(NA, length(probs))
+  w <- cumsum (histol$histo)
+  restrict <- w>0 & w<1
+  D_ <- c(histol$dose.pt[1],D[restrict],histol$dose.pt[2], use.names = FALSE)
+  w <- c(0,w[restrict],1)
+  
+  result<-sapply(probs,function(q) {
+    idx <- min(which(q<=w))
+    return(D_[idx])
+  })
+  names(result) <- probs
+  result
+}
 
+
+# .indices.from.bin_old <- function (vol,presc.dose, bin.L,vol.L,vol.names,
+#                                L.target.idx, L.healthy.idx,
+#                                dosimetry,
+#                                volume.indices,
+#                                conformity.indices,
+#                                homogeneity.indices,
+#                                gradient.indices,
+#                                D.xpc, D.xcc, V.xpc, V.xGy,
+#                                healthy.weight, healthy.tol.dose, DVH=TRUE){#, DVH){
+#   
+#   vol.over.val.df <- function (vol,val,coln =NULL) {
+#     df <- as.data.frame (matrix (sapply (val, function(r) sum (vol$vol3D.data>=r, na.rm=T) *
+#                                            abs (prod(vol$dxyz))/1000), ncol=length (val)))
+#     if (is.null(coln)) {colnames(df)   <- val}
+#     else {colnames(df) <-  coln }
+#     return (df)
+#   }
+#   
+#   
+#   ###################################################################################
+#   #volume.indices
+#   
+#   V.xpcGy.b <- data.frame(matrix(ncol= 0,nrow=length(vol.names)+1,dimnames= list(c("isodose",vol.names),NULL)))
+#   if (!is.null (V.xGy) | (!is.null (V.xpc) & !is.na(presc.dose)))  {
+#     VxGypc.names <- vect <- c()
+#     if (!is.null (V.xpc) & !is.na(presc.dose)) {
+#       VxGypc.names <- c(VxGypc.names,paste("V_",V.xpc,"%", sep=""))
+#       vect <- c(vect,V.xpc*presc.dose/100)
+#     }
+#     if (!is.null (V.xGy)) {
+#       VxGypc.names <- c(VxGypc.names,paste("V_",V.xGy,"Gy", sep=""))
+#       vect <- c(vect,V.xGy)
+#     }
+#     
+#     V.xpcGy.b <- do.call(rbind,lapply(vol.L,function(V)  vol.over.val.df (V, vect, VxGypc.names)))
+#     isodose.xGy <- vol.over.val.df (vol, vect,VxGypc.names)
+#     V.xpcGy.b <- rbind (isodose =isodose.xGy,V.xpcGy.b)
+#     # dvh.interpol <-function(d , dvh){
+#     #   idx <- floor(d/dvh$step) + 1
+#     #   dvh$vol[idx] + (dvh$vol[idx+1]-dvh$vol[idx])*(d-dvh$breaks[idx])/dvh$step
+#     # }
+#     # Vx.Gy_ <- do.call( rbind.data.frame,lapply(vol.names, function(i) sapply(V.xGy,
+#     #                                      function(x) dvh.interpol(x,dvh.L[[i]]))))
+#     # rownames (Vx.Gy_) <- vol.names
+#   }
+#   
+#   
+#   ##########################
+#   
+#   
+#   V.refdose <- NA
+#   V.50pc.refdose <- NA
+#   V.95pc.refdose <- NA
+#   V.105pc.refdose <- NA
+#   if (!is.na(presc.dose[1]))  {
+#     V.refdose <- as.data.frame (matrix (sapply (presc.dose, function(r)
+#       sum (vol$vol3D.data>=r, na.rm=T) * abs (prod(vol$dxyz))/1000),
+#       ncol = length (presc.dose), dimnames=list("V.refdose",presc.dose)))
+#     V.50pc.refdose <- as.data.frame (matrix (sapply (0.5*presc.dose, function(r)
+#       sum (vol$vol3D.data>=r, na.rm=T) * abs (prod(vol$dxyz))/1000),
+#       ncol = length (presc.dose), dimnames=list("V.refdose",0.5*presc.dose)))
+#     if ("CS3" %in% conformity.indices)
+#       V.95pc.refdose <- as.data.frame (matrix (sapply (0.95*presc.dose, function(r)
+#         sum (vol$vol3D.data>=r, na.rm=T) * abs (prod(vol$dxyz))/1000),
+#         ncol = length (presc.dose), dimnames=list("V.refdose",0.95*presc.dose)))
+#     if ("CS3" %in% conformity.indices)
+#       V.105pc.refdose <- as.data.frame (matrix (sapply (1.05*presc.dose, function(r)
+#         sum (vol$vol3D.data>=r, na.rm=T) * abs (prod(vol$dxyz))/1000),
+#         ncol = length (presc.dose), dimnames=list("V.refdose",1.05*presc.dose)))
+#   }
+#   
+#   if (is.null(bin.L)) {
+#     if (is.na(presc.dose[1]) & ncol(V.xpcGy.b)==0) return(NULL)
+#     if (is.na(presc.dose[1])) return(list(volume.indices=V.xpcGy.b))
+#     volume.indices.b <- V.refdose
+#     colnames(volume.indices.b) <- paste0("V_",presc.dose,"Gy")
+#     if (ncol(volume.indices.b)>0 & ncol(V.xpcGy.b)>0){
+#       m <- match(colnames(volume.indices.b), colnames(V.xpcGy.b))
+#       m <- m[!is.na(m)]
+#       if (length(m)>0) V.xpcGy.b <- V.xpcGy.b[-m]
+#     }
+#     
+#     volume.indices.b <- cbind (volume.indices.b, V.xpcGy.b)
+#     rownames(volume.indices.b) <- "isodose"
+#     volume.indices.b<-.reduc.tab(volume.indices.b)
+#     return(list(volume = volume.indices.b))
+#   }
+#   ###############################################################################
+#   dosimetry.names <- c("D.min", "D.max", "D.2%", "D.5%", "D.95%",
+#                        "D.98%","D.median", "D.mean", "STD")
+#   dosimetry.probs <- 1-c (1, 0, 0.02, 0.05, 0.95, 0.98, 0.5)
+#   
+#   
+#   Dxpc.names <- NULL
+#   if (!is.null (D.xpc))  {
+#     Dxpc.names <-  paste("D.",D.xpc,"%", sep="")
+#     probs.Dxpc <-  1- D.xpc/100
+#     probs.Dxpc [probs.Dxpc>1] <- 1
+#     probs.Dxpc [probs.Dxpc<0] <- 0
+#     f <- is.na(match(Dxpc.names,dosimetry.names))
+#     if (any(f)){
+#       dosimetry.probs <- c(dosimetry.probs,probs.Dxpc[f])
+#       dosimetry.names <- c(dosimetry.names[1:7],Dxpc.names[f], "D.mean", "STD")
+#     }
+#   }
+#   
+#   Dosimetry <- as.data.frame(do.call (rbind, lapply(vol.L,function(V) {
+#     D <- matrix(c(quantile (V$vol3D.data, probs=dosimetry.probs, na.rm=TRUE),
+#                   mean (V$vol3D.data, na.rm=TRUE), sd (V$vol3D.data, na.rm=TRUE)), ncol=length(dosimetry.names), byrow = T)
+#     dimnames(D) <- list(V$object.alias,dosimetry.names)
+#     D
+#   })))
+#   
+#   
+#   
+#   Dxcc.names <- NULL
+#   if (!is.null (D.xcc))  {
+#     Dxcc.names <-   paste("D",D.xcc,"cc", sep="")
+#     Dosimetry.xcc <- as.data.frame(do.call (rbind, lapply(vol.L,function(V) {
+#       probs.Dxcc <-  1-D.xcc/  (sum (V$vol3D.data>=0, na.rm = TRUE) * abs(prod (V$dxyz))/1000)
+#       probs.Dxcc [probs.Dxcc>1] <- 1
+#       probs.Dxcc [probs.Dxcc<0] <- 0
+#       D <- matrix(quantile (V$vol3D.data, probs=probs.Dxcc, na.rm=TRUE),
+#                   ncol=length(Dxcc.names), byrow = T)
+#       dimnames(D) <- list(V$object.alias,Dxcc.names)
+#       D
+#     })))
+#     Dosimetry <- cbind(Dosimetry[,1:(ncol(Dosimetry)-2)],
+#                        Dosimetry.xcc,Dosimetry[,(ncol(Dosimetry)-1):ncol(Dosimetry)])
+#   }
+#   
+#   
+#   
+#   
+#   #######################################################################################
+#   V.target <- do.call (rbind, lapply(vol.L[L.target.idx],function(V) vol.over.val.df (V, 0)))
+#   V.healthy <- do.call (rbind, lapply(vol.L[L.healthy.idx],function(V) vol.over.val.df (V, 0)))
+#   V.target.over.refdose <- NULL
+#   V.target.over.refdose.95pc <- NULL
+#   V.target.over.refdose.105pc <- NULL
+#   
+#   V.target.under.refdose <- NULL
+#   V.healthy.over.refdose <- NULL
+#   
+#   
+#   
+#   if (!is.na(presc.dose[1]) & !is.null(L.target.idx)){
+#     V.target.over.refdose <- do.call (rbind, lapply(vol.L[L.target.idx],function(V) vol.over.val.df (V, presc.dose)))
+#     # V.target.under.refdose <- do.call (rbind, lapply(vol.L[L.target.idx],function(V) vol.under.val.df (V, presc.dose)))
+#     V.target.under.refdose <- as.data.frame(-sweep(as.matrix(V.target.over.refdose),1,as.matrix(V.target)))
+#   }
+#   if (!is.na(presc.dose[1]) & !is.null(L.healthy.idx)){
+#     V.healthy.over.refdose <- do.call (rbind, lapply(vol.L[L.healthy.idx],function(V) vol.over.val.df (V, presc.dose)))
+#   }
+#   
+#   
+#   ##########################
+#   f.conformity <- any (!is.na (match (conformity.indices, c("CI.distance","CI.abs_distance","CDI"))))
+#   S.refdose <- NA
+#   if (f.conformity & !is.na(presc.dose[1])) {
+#     mesh.refdose <- lapply (presc.dose, function(r) {
+#       b <- bin.from.vol(vol, min=r)
+#       mesh.from.bin(b, alias=r, smooth.iteration = 10, smooth.type ="angWeight")
+#     })
+#     names(mesh.refdose) <- presc.dose
+#     
+#     S.refdose <- matrix(sapply ( mesh.refdose, function (m) {
+#       if (is.null(m)) return(0)
+#       vcgArea(m$mesh, perface = FALSE)}), dimnames=list(presc.dose,"area"))/100
+#   }
+#   
+#   if (!is.null(L.target.idx) &  (f.conformity | "area" %in% volume.indices)){
+#     mesh.target <-lapply(bin.L[L.target.idx], function (b)
+#       mesh.from.bin(b, alias=b$object.alias, smooth.iteration = 10, smooth.type ="angWeight"))
+#     names(mesh.target) <- names (bin.L[L.target.idx])
+#     S.target <- matrix(sapply ( mesh.target, function (m) {
+#       if (is.null(m)) return(0)
+#       vcgArea(m$mesh, perface = FALSE)}), dimnames=list(vol.names[L.target.idx],"area"))/100
+#   }
+#   
+#   S.healthy <- NULL
+#   if ("area" %in% volume.indices  & !is.null(L.healthy.idx)){
+#     mesh.healthy <-lapply(bin.L[L.healthy.idx], function (b)
+#       mesh.from.bin(b, alias=b$object.alias, smooth.iteration = 10, smooth.type ="angWeight"))
+#     names(mesh.healthy) <- names (bin.L[L.healthy.idx])
+#     S.healthy <- matrix(sapply ( mesh.healthy, function (m) {
+#       if (is.null(m)) return(0)
+#       vcgArea(m$mesh, perface = FALSE)}), dimnames=list(vol.names[L.healthy.idx],"area"))/100
+#   }
+#   
+#   
+#   if ((("CI.distance" %in% conformity.indices) |  ("CI.abs_distance" %in% conformity.indices))
+#       & !is.na(presc.dose[1]) & !is.null(L.target.idx)) {
+#     dist.fct<- function(vect) {sqrt(sum(vect^2))}
+#     G.target <- lapply(bin.L[L.target.idx], function (b)apply(get.xyz.from.index(which(b$vol3D.data), b),2, mean))
+#     
+#     unit.vector <-  matrix(.fansphereC(1),ncol=5, byrow=TRUE)[,1:3]
+#     
+#     ##### prec.dose
+#     Isodose.to.G.dist <- NULL
+#     if (length(presc.dose)>0)
+#       Isodose.to.G.dist <- lapply(1:length(presc.dose), function(pd.idx){
+#         dist <- matrix(NA, ncol=length(G.target), nrow= nrow(unit.vector),
+#                        dimnames = list(NULL,names(G.target)))
+#         for (col in colnames(dist)){
+#           if (!is.null (mesh.refdose[[pd.idx]]))
+#             # if (get.value.from.xyz(G.target[[col]],vol,interpolate = TRUE) > presc.dose[pd.idx])
+#             if(vcgClost(matrix(G.target[[col]],ncol=3), mesh.refdose[[pd.idx]]$mesh)$quality>=0)
+#               dist[ ,col] <- .mesh.pt.distance(mesh.refdose[[pd.idx]]$mesh,
+#                                                xyz.pt=G.target[[col]], unit.vector)
+#           # open3d()
+#           # par3d(windowRect=wr)
+#           # shade3d(mesh.refdose[[pd.idx]]$mesh)
+#           # points3d(matrix(G.target[[col]], ncol=3), col="red")
+#           # points3d(sweep(unit.vector*dist[,col],2,G.target[[col]],"+"), col="yellow")
+#         }
+#         dist
+#       })
+#     names(Isodose.to.G.dist) <- presc.dose
+#     
+#     Target.to.G.dist <- matrix(NA,ncol=length(G.target), nrow= nrow(unit.vector),
+#                                dimnames = list(NULL,names(G.target)))
+#     for (col in colnames(Target.to.G.dist)){
+#       if (!is.null (mesh.target[[col]]))
+#         if (vcgClost(matrix(G.target[[col]],ncol=3), mesh.target[[col]]$mesh)$quality>=0)
+#           Target.to.G.dist[,col] <- .mesh.pt.distance(mesh.target[[col]]$mesh,
+#                                                       xyz.pt=G.target[[col]], unit.vector)
+#       
+#       
+#       # open3d()
+#       # par3d(windowRect=wr)
+#       # wire3d(mesh.target[[col]]$mesh,col="black")
+#       # points3d(matrix(G.target[[col]], ncol=3), col="red")
+#       # points3d(pt[na.idx,], col="yellow")
+#       # points3d(sweep(unit.vector*Target.to.G.dist[,col],2,G.target[[col]],"+"), col="yellow")
+#     }
+#     
+#     
+#   }
+#   
+#   
+#   
+#   ################################################
+#   
+#   if (!is.na(presc.dose[1]) & !is.null(L.target.idx)){
+#     tol.dose_ <- NULL
+#     healthy.weight_ <- NULL
+#     COSI.info <- NULL
+#     if (any(!is.na (match(c("COSI","G_COSI"),conformity.indices))) & !is.null(L.healthy.idx)) {
+#       
+#       tol.dose_ <- rep(rev(healthy.tol.dose)[1],length(L.healthy.idx))
+#       tol.dose_ [1:length(healthy.tol.dose)] <- healthy.tol.dose
+#       healthy.weight_ <-  matrix(rep(rev(healthy.weight)[1],length(L.healthy.idx)), nrow=1)
+#       healthy.weight_ [1,1:length(healthy.weight)] <- healthy.weight
+#       
+#       COSI.info <- data.frame (matrix(NA, ncol =2, nrow =length(L.healthy.idx),
+#                                       dimnames = list(vol.names[L.healthy.idx], c("weight","tol.dose"))))
+#       
+#       COSI.info$weight <- healthy.weight_[1,]
+#       COSI.info$tol.dose <- tol.dose_
+#       
+#       V.healthy.over.toldose <- do.call (rbind,
+#                                          lapply(1:length(L.healthy.idx),function(idx) {
+#                                            df <-vol.over.val.df (vol.L[[L.healthy.idx [idx]]],
+#                                                                  tol.dose_[idx])
+#                                            colnames(df) <- "toldose"
+#                                            df
+#                                          }))
+#       row.names(V.healthy.over.toldose) <- names(vol.L[L.healthy.idx])
+#       frac.healthy <- t(V.healthy.over.toldose/V.healthy)[1,]
+#       COSI <- as.data.frame(do.call (rbind, lapply (1:length(presc.dose), function(col.idx) {
+#         do.call (rbind, lapply(1:nrow(V.target), function (target.idx)
+#           c (col.idx,target.idx,
+#              frac.healthy/(V.target.over.refdose[target.idx, col.idx]/V.target[target.idx,1]))))
+#       })))
+#       colnames(COSI) <- c("presc.dose", "target", vol.names[L.healthy.idx])
+#     }
+#     
+#     m <- match(conformity.indices, c("PITV","PDS", "CI.lomax2003", "CN",
+#                                      "NCI", "DSC", "CI.distance",
+#                                      "CI.abs_distance", "CDI", "CS3",
+#                                      "ULF","OHTF", "gCI",
+#                                      "COIN", "G_COSI"))
+#     
+#     cn <- conformity.indices[!is.na(m)]
+#     conformity.b <- data.frame (matrix(NA, ncol =length(cn), nrow =length(L.target.idx),
+#                                        dimnames = list(vol.names[L.target.idx], cn)))
+#     
+#     if (ncol(conformity.b)>0){
+#       
+#       conformity.b$target <- vol.names[L.target.idx]
+#       conformity.b$presc.dose <- NA
+#       conformity.b <- conformity.b[, c(ncol(conformity.b):(ncol(conformity.b)-1), 1:(ncol(conformity.b)-2))]
+#       
+#       conformity <- do.call (rbind, lapply(1:length(presc.dose), function(col.idx) {
+#         # CI.RTOG <- V.refdose[rep(1,nrow(V.target)),col.idx]/V.target
+#         # colnames(CI.RTOG) <- "CI.RTOG"
+#         df <- conformity.b
+#         df$presc.dose <- presc.dose[col.idx]
+#         if ("PITV" %in% colnames(df)) df$PITV <- as.numeric ((V.refdose[rep(1,nrow(V.target)),col.idx]/V.target)[,1])
+#         if ("PDS" %in% colnames(df)) df$PDS <- V.refdose[rep(1,nrow(V.target)),col.idx]/V.target.over.refdose[ ,col.idx]
+#         if ("CI.lomax2003" %in% colnames(df)) df$CI.lomax2003  <- as.numeric ((V.target.over.refdose[,col.idx]/
+#                                                                                  V.refdose[rep(1,nrow(V.target)),col.idx]))#[,1])
+#         CN  <- as.numeric (((V.target.over.refdose[,col.idx]^2) /
+#                               V.target /
+#                               V.refdose[rep(1,nrow(V.target)),col.idx])[,1])
+#         if ("CN" %in% colnames(df)) df$CN <- CN
+#         if ("NCI" %in% colnames(df)) df$NCI  <- as.numeric (1/ CN)
+#         if ("DSC" %in% colnames(df)) df$DSC  <- as.numeric ((2 * V.target.over.refdose[,col.idx] /
+#                                                                (V.target + V.refdose[rep(1,nrow(V.target)),col.idx]))[,1])
+#         
+#         
+#         if ("CI.distance" %in% colnames(df)) df$CI.distance  <- 100 *
+#           as.numeric (apply((Isodose.to.G.dist[[col.idx]]-Target.to.G.dist)/Target.to.G.dist,2,mean, na.rm = TRUE))
+#         
+#         if ("CI.abs_distance" %in% colnames(df)) df$CI.abs_distance  <- 100 *
+#           as.numeric (apply(abs((Isodose.to.G.dist[[col.idx]]-Target.to.G.dist)/Target.to.G.dist),2,mean, na.rm = TRUE))
+#         
+#         
+#         if ("CDI" %in% colnames(df)) df$CDI <-as.numeric ((2* (V.refdose[rep(1,nrow(V.target)),col.idx] +
+#                                                                  V.target - 2* V.target.over.refdose[,col.idx]) /
+#                                                              (S.refdose[col.idx,rep(1,nrow(V.target))] + S.target))[,1])
+#         
+#         
+#         if ("CS3" %in% colnames(df)) df$CS3  <- as.numeric (((V.95pc.refdose[rep(1,nrow(V.target)),col.idx] + V.refdose[rep(1,nrow(V.target)),col.idx] +
+#                                                                 V.105pc.refdose[rep(1,nrow(V.target)),col.idx])/
+#                                                                (3*V.target))[,1])
+#         
+#         
+#         if (any (!is.na(match (colnames(df),c("ULF","OHTF","gCI"))))){
+#           ULF<- as.numeric ((V.target.under.refdose[,col.idx] / V.target) [,1])
+#           OHTF <- rep(NA,length(L.target.idx))
+#           if (!is.null(V.healthy.over.refdose))
+#             OHTF <- as.numeric((sum(V.healthy.over.refdose[,col.idx]) / V.target)[,1])
+#           if ("ULF" %in% colnames(df)) df$ULF  <- ULF
+#           if ("OHTF" %in% colnames(df)) df$OHTF <- OHTF
+#           if ("gCI" %in% colnames(df)) df$gCI <- ULF + OHTF
+#         }
+#         
+#         if (!is.null(L.healthy.idx)){
+#           if ("COIN" %in% colnames(df))
+#             df$COIN <- as.numeric(((apply(1 - (V.healthy.over.refdose[,col.idx] /V.healthy),2,prod) *
+#                                       (V.target.over.refdose[,col.idx]^2) /V.target /
+#                                       V.refdose[rep(1,nrow(V.target)),col.idx])[,1]))
+#           
+#           if ("G_COSI" %in% colnames(df) & !is.na(healthy.tol.dose[1])) {
+#             df$G_COSI <- 1- apply (as.matrix(COSI[COSI$presc.dose==col.idx, 3:ncol(COSI)], ncol=ncol(healthy.weight_))*
+#                                      matrix(healthy.weight_[rep(1,nrow(V.target)),], ncol=ncol(healthy.weight_)),1,sum)
+#           }
+#         }
+#         df
+#         
+#       }))
+#       rownames(conformity) <- NULL
+#       conformity <- .reduc.tab(conformity)
+#       rownames(conformity) <- NULL
+#     }else {
+#       conformity <- NULL
+#     }
+#     
+#     
+#     if ("COSI" %in% conformity.indices & !is.null(L.healthy.idx) & !is.na(healthy.tol.dose[1])) {
+#       COSI[ , 3:ncol(COSI)] <- 1-COSI[ , 3:ncol(COSI)]
+#       COSI$presc.dose <- presc.dose [COSI$presc.dose]
+#       COSI$target <- vol.names[COSI$target]
+#     }else COSI <- NULL
+#   } else {
+#     conformity <- NULL
+#     COSI <- NULL
+#     COSI.info <- NULL
+#   }
+#   
+#   ################################################
+#   homogeneity <- NULL
+#   if (!is.null(L.target.idx)){
+#     m <- match(homogeneity.indices,  c("HI.RTOG.max_ref", "HI.RTOG.5_95",
+#                                        "HI.ICRU.max_min", #"HI.ICRU.max_ref",
+#                                        "HI.ICRU.2.98_ref", "HI.ICRU.2.98_50",
+#                                        "HI.ICRU.5.95_ref", "HI.mayo2010",
+#                                        "HI.heufelder"))
+#     cn <- homogeneity.indices[!is.na(m)]
+#     homogeneity.b <- data.frame (matrix(NA, ncol =length(cn), nrow =length(L.target.idx),
+#                                         dimnames = list(vol.names[L.target.idx], cn)))
+#     
+#     if (ncol(homogeneity.b)>0){
+#       homogeneity.b$target <- vol.names[L.target.idx]
+#       homogeneity.b$presc.dose <- NA
+#       homogeneity.b <- homogeneity.b[, c(ncol(homogeneity.b):(ncol(homogeneity.b)-1), 1:(ncol(homogeneity.b)-2))]
+#       
+#       
+#       homogeneity <- as.data.frame(do.call (rbind, lapply (1:length(presc.dose), function(col.idx) {
+#         df <- homogeneity.b
+#         df$presc.dose <- presc.dose[col.idx]
+#         if ("HI.RTOG.max_ref" %in% colnames(df)) df$HI.RTOG.max_ref = Dosimetry[L.target.idx, "D.max"]/presc.dose[col.idx]
+#         if ("HI.RTOG.5_95" %in% colnames(df)) df$HI.RTOG.5_95 = Dosimetry[L.target.idx, "D.5%"] / Dosimetry[L.target.idx, "D.95%"]
+#         if ("HI.ICRU.max_min" %in% colnames(df)) df$HI.ICRU.max_min = Dosimetry[L.target.idx, "D.max"] / Dosimetry[L.target.idx, "D.min"]
+#         # if ("HI.ICRU.max_ref" %in% colnames(df)) df$HI.ICRU.max_ref = Dosimetry[L.target.idx, "D.max"] / presc.dose[col.idx]
+#         if ("HI.ICRU.2.98_ref" %in% colnames(df)) df$HI.ICRU.2.98_ref = 100 * (Dosimetry[L.target.idx, "D.2%"] - Dosimetry[L.target.idx, "D.98%"])/presc.dose[col.idx]
+#         if ("HI.ICRU.2.98_50" %in% colnames(df)) df$HI.ICRU.2.98_50 = 100 * (Dosimetry[L.target.idx, "D.2%"] - Dosimetry[L.target.idx, "D.98%"])/ Dosimetry[L.target.idx, "D.median"]
+#         if ("HI.ICRU.5.95_ref" %in% colnames(df)) df$HI.ICRU.5.95_ref = 100 * (Dosimetry[L.target.idx, "D.5%"] - Dosimetry[L.target.idx, "D.95%"])/presc.dose[col.idx]
+#         if ("HI.mayo2010" %in% colnames(df)) df$HI.mayo2010 = sqrt ((Dosimetry[L.target.idx, "D.max"] / presc.dose[col.idx])*(1+ Dosimetry[L.target.idx, "STD"]/presc.dose[col.idx]))
+#         if ("HI.heufelder" %in% colnames(df)) df$ HI.heufelder = exp (-0.01 *  ((1 - (Dosimetry[L.target.idx, "D.mean"] / presc.dose[col.idx]))^2 + (Dosimetry[L.target.idx, "STD"]/presc.dose[col.idx])^2))
+#         # if ("D.STD" %in% colnames(df)) df$D.STD= Dosimetry[, "STD"]
+#         df
+#       })))
+#       rownames(homogeneity) <- NULL
+#     }
+#     homogeneity <- .reduc.tab(homogeneity)
+#     rownames(homogeneity) <- NULL
+#   }
+#   ################################################
+#   
+#   ### gradient
+#   gradient <- NULL
+#   if (!is.null(L.target.idx)){
+#     m <- match(gradient.indices, c("GI.ratio.50", "mGI"))
+#     cn <- gradient.indices[!is.na(m)]
+#     gradient.b <- data.frame (matrix(NA, ncol =length(cn), nrow =length(L.target.idx),
+#                                      dimnames = list(vol.names[L.target.idx], cn)))
+#     
+#     
+#     if (!is.na(presc.dose[1]) & ncol(gradient.b)>0){
+#       gradient.b$target <- vol.names[L.target.idx]
+#       gradient.b$presc.dose <- NA
+#       gradient.b <- gradient.b[, c(ncol(gradient.b):(ncol(gradient.b)-1), 1:(ncol(gradient.b)-2))]
+#       gradient <- as.data.frame(do.call (rbind, lapply (1:length(presc.dose), function(col.idx) {
+#         df <- gradient.b
+#         df$presc.dose <- presc.dose[col.idx]
+#         if ("GI.ratio.50" %in% colnames(df))
+#           df$GI.ratio.50 = (V.50pc.refdose[rep(1,nrow(V.target)),col.idx]/ V.refdose[rep(1,nrow(V.target)),col.idx])
+#         
+#         if ("mGI" %in% colnames(df) & all(!is.na (V.target.over.refdose)))
+#           df$mGI = (V.50pc.refdose[rep(1,nrow(V.target)),col.idx]/ V.target.over.refdose[,col.idx])
+#         df
+#       })))
+#       rownames(gradient) <- NULL
+#       gradient <- .reduc.tab(gradient)
+#       rownames(gradient) <- NULL
+#     }
+#   }
+#   
+# 
+#   
+#   
+#   #volume.indices suite
+#   m <- match (volume.indices, c("V.tot","area","V.prescdose"))
+#   volume.indices.b <- data.frame(matrix(ncol= 0,nrow=length(vol.names)+1,
+#                                         dimnames= list(c("isodose",vol.names),NULL)))
+#   if (any (!is.na(m))) {
+#     volume.indices.b <- lapply( volume.indices[!is.na(m)], function(i) NULL)
+#     names(volume.indices.b) <-  volume.indices[!is.na(m)]
+#     cn <-volume.indices.b
+#     if ("V.tot" %in% volume.indices) {
+#       volume.indices.b[["V.tot"]] <- rbind(isodose=NA, V.target,V.healthy)
+#       cn[["V.tot"]] <- "V_tot"
+#     }
+#     if ("V.prescdose" %in% volume.indices & !is.na(presc.dose[1]))  {
+#       volume.indices.b[["V.prescdose"]] <-rbind(isodose=V.refdose, V.target.over.refdose,V.healthy.over.refdose)
+#       cn[["V.prescdose"]] <- paste0("V_",colnames( volume.indices.b[["V.prescdose"]]),"Gy")
+#     }
+#     
+#     if ("area" %in% volume.indices) {
+#       volume.indices.b[["area"]] <-rbind(isodose=NA,S.target, S.healthy)
+#       cn[["area"]] <-"area"
+#     }
+#     
+#     volume.indices.b <- do.call(cbind, volume.indices.b[!sapply(volume.indices.b,is.null)])
+#     cn <- as.character(do.call(c, cn[!sapply(cn,is.null)]))
+#     colnames(volume.indices.b) <- cn
+#   }
+#   
+#   if (ncol(volume.indices.b)>0 & ncol(V.xpcGy.b)>0){
+#     m <- match(colnames(volume.indices.b), colnames(V.xpcGy.b))
+#     m <- m[!is.na(m)]
+#     if (length(m)>0) V.xpcGy.b <- V.xpcGy.b[,-m]
+#   }
+#   
+#   volume.indices.b <- cbind (volume.indices.b, V.xpcGy.b)
+#   if (ncol(volume.indices.b)==0) {
+#     volume.indices.b <- NULL
+#   } else {volume.indices.b <- .reduc.tab(volume.indices.b)}
+#   
+#   
+#   ###################################################################################
+#   #dosimetry suite
+#   dosimetry.name <- c(dosimetry,Dxpc.names,Dxcc.names)
+#   m <- match(c(dosimetry.name), colnames(Dosimetry))
+#   m <- m[!is.na(m)]
+#   dosimetry.b <- NULL
+#   if(length(m)>0) dosimetry.b  <- Dosimetry[,m]
+#   
+#   L <- list( dosimetry = dosimetry.b, volume = volume.indices.b, conformity = conformity,
+#              COSI = COSI, COSI.info = COSI.info,
+#              homogeneity = homogeneity, gradient = gradient)#, DVH=dvh.l)
+#   return (L[!sapply(L,is.null)])
+# }

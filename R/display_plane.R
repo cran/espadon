@@ -231,7 +231,7 @@ display.plane <- function (bottom = NULL, top = NULL, struct = NULL,
       args_[["display.interpolate"]] <- interpolate
       if (is.null (main)) args_[["main"]] <- ""
       
-      bottom.p <- tryCatch(suppressMessages(do.call(plot,args_)), error=function(e) NULL)
+      bottom.p <- tryCatch(suppressMessages(do.call(plot,args_)), error=function(e) list(max.pixel=NA))
       if (is.na(bottom.p$max.pixel)) {
         bottom.p <- NULL; 
         message("no bottom view @", coord.lab," = ", round(view.coord[coord.idx],2), " mm")
@@ -252,7 +252,7 @@ display.plane <- function (bottom = NULL, top = NULL, struct = NULL,
       args_[["add"]] <- !is.null(bottom.p$max.pixel) | add
       args_[["cut.interpolate"]] <- interpolate
       args_[["display.interpolate"]] <- interpolate
-      top.p <- tryCatch(suppressMessages(do.call(plot,args_)), error=function(e) NULL)
+      top.p <- tryCatch(suppressMessages(do.call(plot,args_)), error=function(e) list(max.pixel=NA))
       if (is.na(top.p$max.pixel)) {
         top.p <- NULL; 
         message("no top view @", coord.lab," = ", round(view.coord[coord.idx],2), " mm")
@@ -281,7 +281,7 @@ display.plane <- function (bottom = NULL, top = NULL, struct = NULL,
       args_[["roi.idx"]] <- list.roi.idx
       args_[["lwd"]] <- struct.lwd
       args_[["back.dxyz"]] <- struct.dxyz
-      S  <- tryCatch(do.call(plot,args_), error=function(e) NULL)
+      S  <- tryCatch(do.call(plot,args_), error=function(e) list(nb.of.roi=0))
       
       if (S$nb.of.roi>0){
         legendlabel <- S$roi.info$roi.pseudo

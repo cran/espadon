@@ -22,8 +22,8 @@
 #' parallelepiped circumscribed to the voxels selected in \code{sel.bin}, in the 
 #' \code{obj} frame of reference.
 #' 
-#' @details If \code{obj} is of class "mesh", \code{sel.bin} will undergo margin 
-#' expansion any operation on the \code{obj}.
+#' @details If \code{obj} is of class “mesh”, \code{sel.bin} will undergo a 
+#' margin expansion \code{xyz.margin} before the mesh points are selected..
 
 #' @seealso \link[espadon]{add.margin}, \link[espadon]{nesting.cube} and  
 #' \link[espadon]{nesting.roi}.
@@ -52,7 +52,8 @@ nesting.bin <- function (obj, sel.bin, alias = "", description = NULL,
   }
 
   if (!is.null(args[['vol.restrict']])) obj.restrict <- args[['vol.restrict']]
-
+  eps <- args[["eps"]]
+  if (is.null(eps)) eps <- 1e-9
   
   T.MAT <- args[['T.MAT']]
   
@@ -65,12 +66,13 @@ nesting.bin <- function (obj, sel.bin, alias = "", description = NULL,
   
   alias.sel <- sel.bin$object.alias
   sel.bin <- vol.in.new.ref(sel.bin,obj$ref.pseudo, T.MAT)
+  sel.bin$object.alias <- alias.sel
   
   if (is (obj, "volume")) {
   #-------------------------
     if(is.null(obj$vol3D.data)) stop ("empty obj$vol3D.data.")
   
-    ext.pt <- get.extreme.pt(sel.bin, pt.min = 1)
+    ext.pt <- get.extreme.pt(sel.bin, pt.min = eps)
     ext.pt[1,] <- ext.pt[1,] + abs(xyz.margin[1])*c(-1,1)
     ext.pt[2,] <- ext.pt[2,] + abs(xyz.margin[2])*c(-1,1)
     ext.pt[3,] <- ext.pt[3,] + abs(xyz.margin[3])*c(-1,1)
@@ -134,8 +136,8 @@ nesting.bin <- function (obj, sel.bin, alias = "", description = NULL,
     
     #on aggrandit sel.bin de la marge: 
   
-    if (any(abs(xyz.margin)!=0)) sel.bin <- bin.dilation(sel.bin)
-    sel.bin$object.alias <- alias
+    if (any(abs(xyz.margin)!=0)) sel.bin <- bin.dilation(sel.bin, radius =abs(xyz.margin))
+    sel.bin$object.alias <- alias.sel
     
     obj_ <- obj
     obj_$description <- description

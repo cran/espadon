@@ -9,7 +9,8 @@ bin.dilation(vol, radius = 10, alias = "", description = NULL)
 \arguments{
 \item{vol}{"volume" class object, of \code{"binary"} modality}
 
-\item{radius}{Positive number, in millimeters. By default, radius = 10.}
+\item{radius}{Positive number, or xyzvector of 3 positive numbers (), in millimeters.
+By default, radius = 10.}
 
 \item{alias}{Character string, \code{$object.alias} of the created object.}
 

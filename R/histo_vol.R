@@ -10,6 +10,8 @@
 #' are not taken into account.
 #' @param alias Character string, \code{$alias} of the created object.
 #' @param description Character string, describing the the created object. If the 
+#' @param weight espadon object of the volume class, where \code{weight$vol3D.data} 
+#' represents the weight of \code{vol$vol3D.data}.
 #' \code{description = NULL} (default value), it will be set to \code{vol$description}.
 
 
@@ -56,7 +58,7 @@
 #' @export
 #' @importFrom graphics hist
 #' @importFrom methods is
-histo.vol  <- function (vol, breaks = NULL, alias = "", description = NULL){
+histo.vol  <- function (vol, breaks = NULL, alias = "", description = NULL, weight = NULL){
 
   if (!is (vol, "volume")) {
     warning ("vol should be a volume class object.")
@@ -66,13 +68,40 @@ histo.vol  <- function (vol, breaks = NULL, alias = "", description = NULL){
     warning ("empty vol$vol3D.data.")
     return (NULL)
   }
+  # 
+  # if (is.null(breaks)) {
+  #   H <- hist(vol$vol3D.data, plot=FALSE)
+  # } else {
+  #   keep <- (vol$vol3D.data >= breaks[1]) & (vol$vol3D.data < rev(breaks)[1])
+  #   H <- hist(vol$vol3D.data[keep], breaks=breaks, include.lowest=TRUE, plot=FALSE)
+  # }
+  
+  
+  
+  keep <- !is.na(vol$vol3D.data)
+  vol3D <- vol$vol3D.data[keep]
+  if (!is.null(weight)) {weight3D <- weight$vol3D.data[keep]} 
+  else {weight3D = rep(1, length(vol3D))}
   
   if (is.null(breaks)) {
-    H <- hist(vol$vol3D.data, plot=FALSE)
+    breaks <- seq(vol$min.pixel,vol$max.pixel, length.out = 30)
+    step  <- ceiling(breaks[2]-breaks[1])
+    breaks <- floor(vol$min.pixel/step)*step + (0:29) * step
+    breaks <- breaks[breaks - 2*step <vol$max.pixel]
+    tab <- data.frame(D=cut(vol3D, breaks = breaks, include.lowest=TRUE),
+                      weight = weight3D)
   } else {
-    keep <- (vol$vol3D.data >= breaks[1]) & (vol$vol3D.data < rev(breaks)[1])
-    H <- hist(vol$vol3D.data[keep], breaks=breaks, include.lowest=TRUE, plot=FALSE)
+    keep <- (vol3D>= breaks[1]) & (vol3D< rev(breaks)[1])
+    tab <- data.frame(D=cut(vol3D[keep], breaks = breaks, include.lowest=TRUE),
+                      weight = weight3D[keep])
   }
+  
+  diff_step <- diff(breaks)
+  byC <- as.numeric(by(tab,tab$D,function(v) sum(v$weight)))
+  byC[is.na(byC)] <- 0
+  tot <- sum(byC * diff_step)
+  
+  
   if (is.null(description)) description <- vol$description
   r <- list ()
   
@@ -94,14 +123,16 @@ histo.vol  <- function (vol, breaks = NULL, alias = "", description = NULL){
   # r$acq.date <- ""
   # r$study.date <- ""
   r$creation.date <- format(Sys.Date(), "%Y%m%d")
-  
+
+
+  # r$dV_dx=H$counts /diff(H$breaks) * abs(prod (vol$dxyz))/1000
   r$nb.MC <- 0
-  r$step <- H$breaks[2]-H$breaks[1]
-  r$breaks=H$breaks
-  r$mids=H$mids
-  r$mids.unit=vol$unit
-  r$counts=H$counts
-  r$dV_dx=H$counts /diff(H$breaks) * abs(prod (vol$dxyz))/1000
+  r$step <- step
+  r$breaks <- breaks
+  r$mids <- breaks[1:(length(breaks)-1)] + diff_step/2
+  r$mids.unit <- vol$unit
+  r$counts <- byC
+  r$dV_dx <- byC /diff_step * abs(prod (vol$dxyz))/1000
   
   class(r) <- "histo"
   if (alias=="") return(r)

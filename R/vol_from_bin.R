@@ -38,7 +38,7 @@ vol.from.bin <- function (vol, sel.bin, alias = "", description = NULL){
   
   if (!is (sel.bin, "volume"))
     stop ("sel.bin should be a volume class object.")
-  if (sel.bin$modality!="binary") stop ("sel.bin must be modality binary.")
+  if (sel.bin$modality!="binary" & sel.bin$modality!="weight") stop ("sel.bin must be modality binary or weight.")
   
   #verifier que les volumes ont le même support
   if (!grid.equal (vol, sel.bin)) stop ("vol and sel.bin must share same grid.")
@@ -47,9 +47,11 @@ vol.from.bin <- function (vol, sel.bin, alias = "", description = NULL){
   V <- vol.copy (vol, alias = alias, description = description)
   
   V$vol3D.data[] <- NA
-  keep <- which(sel.bin$vol3D.data==TRUE)
-  
-  V$vol3D.data[keep] <- vol$vol3D.data[keep]
+  keep = array(FALSE, dim = sel.bin$n.ijk)
+  f <- !is.na(sel.bin$vol3D.data)
+  keep[f] <-sel.bin$vol3D.data[f]!=0
+
+  V$vol3D.data[keep] <- vol$vol3D.data[keep] 
   if (any(!is.na(V$vol3D.data))){
     V$min.pixel <- min ( V$vol3D.data, na.rm=TRUE)
     V$max.pixel <- max ( V$vol3D.data, na.rm=TRUE)

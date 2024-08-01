@@ -101,16 +101,14 @@ export.img3Dplan.to.dicom <- function(obj, ref.obj.list = NULL, use.original.UIs
   patient.position <- .ascii.to.hex (args[["(0018,5100)"]], tag.dictionary["(0018,5100)","VR"])
   NAvalue <- args[["NAvalue"]]
  
-  
+  study.vect <- c("patient","frame.of.reference")
+  serie.vect <- c("patient","frame.of.reference","modality", "description", "study.date", "study.time")
   if (!is.null(obj$object.info) &  use.original.UIs){
     if (length(study.UID)==0) study.UID <- .ascii.to.hex (obj$object.info$study.UID, tag.dictionary["(0020,000D)","VR"])
     if (length(serie.UID)==0) serie.UID <- .ascii.to.hex (obj$object.info$serie.UID, tag.dictionary["(0020,000E)","VR"])
     if (length(sop.type)==0) sop.type <- .ascii.to.hex (obj$object.info$SOP.type, tag.dictionary["(0008,0008)","VR"])
   } else {
-    
-    study.vect <- c("patient","frame.of.reference")
     if (length(study.UID)==0) study.UID <- create.UID(obj,study.vect,size = 50)
-    serie.vect <- c("patient","frame.of.reference","modality", "description", "study.date", "study.time")
     if (length(serie.UID)==0) serie.UID <- create.UID(obj,serie.vect,size =50)
     if (length(sop.type)==0) sop.type <- .ascii.to.hex ('ORIGINAL\\PRIMARY', tag.dictionary["(0008,0008)","VR"])
   }
@@ -182,12 +180,13 @@ export.img3Dplan.to.dicom <- function(obj, ref.obj.list = NULL, use.original.UIs
   #     if (length(.ascii.to.hex(obj_$frame.of.reference, "UI"))==0) 
   #       obj_$frame.of.reference <-  rawToChar(create.UID (obj_,c("patient", "ref.pseudo"), size =44))
   #     if (!is.null(obj_$object.info) & use.original.ref.UIs) {
-  #       l1155 <- obj_$object.info$SOP.label
-  #       ncl.f<- cumsum(nchar(l1155))
-  #       ncl.d <- c(1,ncl.f[-length(ncl.f)] -1)
-  #       l1155 <- charToRaw(paste(l1155,collapse=""))
-  #       l1155 <- lapply(1:length(ncl.f), function(i) {
-  #         new.raw <- c(l1155[ncl.d[i]:ncl.f[i]] ,as.raw(0x00));  new.raw[1:(2 * floor(length(new.raw)/2))]})
+  # # l1155 <- obj_$object.info$SOP.label
+  # # ncl.f<- cumsum(nchar(l1155))
+  # # ncl.d <- c(1,ncl.f[-length(ncl.f)] -1)
+  # # l1155 <- charToRaw(paste(l1155,collapse=""))
+  # # l1155 <- lapply(1:length(ncl.f), function(i) {
+  # #   new.raw <- c(l1155[ncl.d[i]:ncl.f[i]] ,as.raw(0x00));  new.raw[1:(2 * floor(length(new.raw)/2))]})
+  # l1155 <- lapply(obj_$object.info$SOP.label, function(uid) .ascii.to.hex(uid,"UI"))
   #       l1150 <- .ascii.to.hex(obj_$object.info$SOP.ID,"UI")
   #       l1150 <- lapply(l1155,function(i) l1155)
   #       return(list(l1150=l1150,l1150=l1155))
@@ -289,8 +288,7 @@ export.img3Dplan.to.dicom <- function(obj, ref.obj.list = NULL, use.original.UIs
                                unlist (.value.to.raw (length (sop.type), 2, TRUE)), sop.type)
   
   if (obj$creation.date!=""){
-    new.raw <- charToRaw (obj$creation.date)
-    new.raw <- .ascii.to.hex (obj$study.date, tag.dictionary["(0008,0012)","VR"])
+    new.raw <- .ascii.to.hex (obj$creation.date, tag.dictionary["(0008,0012)","VR"])
     m <- match(new.raw[1:8], as.raw(48:57))
     L0008[["(0008,0012)"]]<-  c (.tag.to.hex ("(0008,0012)"), charToRaw (tag.dictionary["(0008,0012)","VR"]),
                                  as.raw (c (0x08,0x00)), new.raw[1:8])
@@ -299,9 +297,8 @@ export.img3Dplan.to.dicom <- function(obj, ref.obj.list = NULL, use.original.UIs
                                  as.raw (c(0x08,0x00)),charToRaw (format (Sys.Date (), "%Y%m%d"))) # devient la date d'assignation de SOP_UID
   }
   
-  new.raw <- charToRaw (obj$study.date)
+
   new.raw <- .ascii.to.hex (obj$study.date, tag.dictionary["(0008,0020)","VR"])
-  m <- match(new.raw[1:8], as.raw(48:57))
   L0008[["(0008,0020)"]]<-  c (.tag.to.hex ("(0008,0020)"), charToRaw (tag.dictionary["(0008,0020)","VR"]),
                                as.raw (c (0x08,0x00)), new.raw[1:8])
   
@@ -544,16 +541,14 @@ export.rtstruct.to.dicom <- function(obj, ref.obj.list = NULL, use.original.UIs 
   sop.type <- .ascii.to.hex (args[["(0008,0008)"]], tag.dictionary["(0008,0008)","VR"])
   # NAvalue <- args[["NAvalue"]]
   # if (is.null(NAvalue)) NAvalue <- 0
-  
+  study.vect <- c("patient","frame.of.reference")
+  serie.vect <- c("patient","frame.of.reference","modality", "description", "study.date", "study.time")
   if (!is.null(obj$object.info) &  use.original.UIs){
     if (length(study.UID)==0) study.UID <- .ascii.to.hex (obj$object.info$study.UID, tag.dictionary["(0020,000D)","VR"])
     if (length(serie.UID)==0) serie.UID <- .ascii.to.hex (obj$object.info$serie.UID, tag.dictionary["(0020,000E)","VR"])
     if (length(sop.type)==0) sop.type <- .ascii.to.hex (obj$object.info$SOP.type, tag.dictionary["(0008,0008)","VR"])
   } else {
-    
-    study.vect <- c("patient","frame.of.reference")
     if (length(study.UID)==0) study.UID <- create.UID(obj,study.vect,size = 50)
-    serie.vect <- c("patient","frame.of.reference","modality", "description", "study.date", "study.time")
     if (length(serie.UID)==0) serie.UID <- create.UID(obj,serie.vect,size =50)
     if (length(sop.type)==0) sop.type <- .ascii.to.hex ('ORIGINAL\\PRIMARY', tag.dictionary["(0008,0008)","VR"])
     
@@ -567,9 +562,12 @@ export.rtstruct.to.dicom <- function(obj, ref.obj.list = NULL, use.original.UIs 
   
   ref.SOP_UID.1150 <- NULL
   ref.SOP_UID.1155 <- NULL
+  z.ref <- NULL
   if (!is.null(ref.obj.list)){
-    ref.serie<- do.call(rbind, lapply(ref.obj.list,function(obj_)
-      create.UID(obj_,serie.vect,size =50)))
+    ref.serie<- do.call(rbind, lapply(ref.obj.list,function(obj_){
+      if (!is.null(obj_$object.info) & use.original.ref.UIs) return(.ascii.to.hex (obj_$object.info$serie.UID, "UI"))
+      create.UID(obj_,serie.vect,size =50)})) 
+
     f <- !duplicated.array(ref.serie)
     ref.obj.list <- ref.obj.list[f]
     ref.serie <- ref.serie[f,, drop = FALSE]
@@ -578,12 +576,13 @@ export.rtstruct.to.dicom <- function(obj, ref.obj.list = NULL, use.original.UIs 
       if (length(.ascii.to.hex(obj_$frame.of.reference, "UI"))==0) 
         obj_$frame.of.reference <-  rawToChar(create.UID (obj_,c("patient", "ref.pseudo"), size =44))
       if (!is.null(obj_$object.info) & use.original.ref.UIs) {
-        l1155 <- obj_$object.info$SOP.label
-        ncl.f<- cumsum(nchar(l1155))
-        ncl.d <- c(1,ncl.f[-length(ncl.f)] -1)
-        l1155 <- charToRaw(paste(l1155,collapse=""))
-        l1155 <- lapply(1:length(ncl.f), function(i) {
-          new.raw <- c(l1155[ncl.d[i]:ncl.f[i]] ,as.raw(0x00));  new.raw[1:(2 * floor(length(new.raw)/2))]})
+        # l1155 <- obj_$object.info$SOP.label
+        # ncl.f<- cumsum(nchar(l1155))
+        # ncl.d <- c(1,ncl.f[-length(ncl.f)] -1)
+        # l1155 <- charToRaw(paste(l1155,collapse=""))
+        # l1155 <- lapply(1:length(ncl.f), function(i) {
+        #   new.raw <- c(l1155[ncl.d[i]:ncl.f[i]] ,as.raw(0x00));  new.raw[1:(2 * floor(length(new.raw)/2))]})
+        l1155 <- lapply(obj_$object.info$SOP.label, function(uid) .ascii.to.hex(uid,"UI"))
         l1150 <- .ascii.to.hex(obj_$object.info$SOP.ID,"UI")
         l1150 <- lapply(l1155,function(i) l1150)
         return(list(l1150=l1150,l1155=l1155))
@@ -591,6 +590,12 @@ export.rtstruct.to.dicom <- function(obj, ref.obj.list = NULL, use.original.UIs 
       }
       return(create.SOPUID(obj_))
     }) 
+    z.ref <- lapply(ref.obj.list, function(obj_) {
+      if(obj_$modality!="ct" & obj_$modality!="mr") return(NULL)
+      t.mat <- ref.cutplane.add(obj_)
+      (as.matrix(cbind(obj_$xyz0,1)) %*% t(get.rigid.M(t.mat, obj_$ref.pseudo,paste0(obj_$ref.pseudo, "m"))))[,3]
+    })
+    
     ref.SOP_UID.1150 <- lapply(SOP.L, function(l )l$l1150)
     ref.SOP_UID.1155 <- lapply(SOP.L, function(l )l$l1155)
     ref.SOP_UID.1150 <- lapply(ref.SOP_UID.1150,function(l) lapply(l, function (uid)
@@ -685,9 +690,7 @@ export.rtstruct.to.dicom <- function(obj, ref.obj.list = NULL, use.original.UIs 
                                as.raw (c(0x0A,0x00)), charToRaw ("ISO_IR 100"))
   
   if (obj$creation.date!=""){
-    new.raw <- charToRaw (obj$creation.date)
-    new.raw <- .ascii.to.hex (obj$study.date, VR0008["(0008,0012)"])
-    m <- match(new.raw[1:8], as.raw(48:57))
+    new.raw <- .ascii.to.hex (obj$creation.date, VR0008["(0008,0012)"])
     L0008[["(0008,0012)"]]<-  c (.tag.to.hex ("(0008,0012)"), charToRaw (VR0008["(0008,0012)"]),
                                  as.raw (c (0x08,0x00)), new.raw[1:8])
   } else {
@@ -697,7 +700,6 @@ export.rtstruct.to.dicom <- function(obj, ref.obj.list = NULL, use.original.UIs 
   L0008[["(0008,0016)"]] <- c (.tag.to.hex ("(0008,0016)"), charToRaw (VR0008["(0008,0016)"]), SOP_UID.1150[sop.idx])
   L0008[["(0008,0018)"]] <- c (.tag.to.hex ("(0008,0018)"), charToRaw (VR0008["(0008,0018)"]), SOP_UID.1155[sop.idx])
   
-  new.raw <- charToRaw (obj$study.date)
   new.raw <- .ascii.to.hex (obj$study.date, VR0008["(0008,0020)"])
   m <- match(new.raw[1:8], as.raw(48:57))
   L0008[["(0008,0020)"]]<-  c (.tag.to.hex ("(0008,0020)"), charToRaw (VR0008["(0008,0020)"]),
@@ -915,46 +917,76 @@ export.rtstruct.to.dicom <- function(obj, ref.obj.list = NULL, use.original.UIs 
                       unlist(.value.to.raw (length(L30060020loop),4,TRUE)), L30060020loop)
   
   ####################################
-  tag30060040 <- c( "(3006,0040)", "(3006,0084)",  "(3006,002A)")
+  tag30060040 <- c( "(3006,002A)", "(3006,0040)", "(3006,0084)")
   VR30060040 <- tag.dictionary[tag30060040,"VR"]
-  tag30060040loop <- c( "(3006,0048)","(3006,0042)","(3006,0046)","(3006,0050)")
+  tag30060040loop <- c("(3006,0016)", "(3006,0042)","(3006,0046)","(3006,0048)", "(3006,0050)")
   VR30060040loop <- tag.dictionary[tag30060040loop,"VR"]
   
   L30060039loop <- unlist(lapply(1:nrow(obj$roi.info), function(i) {
     tot <- raw(0)
     if (!is.null(obj$roi.data[[i]])){
       L30060040loop <- unlist(lapply( 1:length(obj$roi.data[[i]]), function(j){
-        v <- .ascii.to.hex(as.character(j),VR30060040loop[1])
-        tot_ <- c(.tag.to.hex(tag30060040loop[1]), charToRaw(VR30060040loop[1]),
-                  unlist(.value.to.raw (length(v),2,TRUE)),v)
-        v <- .ascii.to.hex(toupper(obj$roi.data[[i]][[j]]$type), VR30060040loop[2])
-        tot_ <- c(tot_, .tag.to.hex(tag30060040loop[2]), charToRaw(VR30060040loop[2]),
-                  unlist(.value.to.raw (length(v),2,TRUE)),v)
         pt <- as.matrix(obj$roi.data[[i]][[j]]$pt)
         le.pt <- nrow(pt)
         if (all(pt[1,]==pt[le.pt,])) {pt <- pt[-le.pt, ]; le.pt <- le.pt-1}
+        tot_ <- NULL
+        if (!is.null(ref.obj.list) & length(z.ref)>0){
+          refz.L <- lapply (1:length(z.ref),function(ref.idx) {
+            if (is.null(z.ref[[ref.idx]])) return(NULL)
+            flag <- round(z.ref[[ref.idx]],6) == round(pt[1,3],6)
+            if (all(!flag)){
+              warning(paste(obj$roi.info$name[i],": Check Reference object at z=",
+                            round(pt[1,3],6),"mm."),call. = FALSE)
+              return(NULL)
+            }
+            tot <- c(.tag.to.hex("(0008,1150)"),charToRaw(tag.dictionary["(0008,1150)","VR"]),
+                     ref.SOP_UID.1150[[ref.idx]][flag][[1]],
+                     .tag.to.hex("(0008,1155)"),charToRaw(tag.dictionary["(0008,1155)","VR"]),
+                     ref.SOP_UID.1155[[ref.idx]][flag][[1]])
+            return(c (as.raw(c(0xfe, 0xff, 0x00, 0xe0)), unlist(.value.to.raw (length(tot),4,TRUE)), tot))
+          })
+          refz.L <- refz.L[ !sapply(refz.L,is.null)]
+          if (length(refz.L)) 
+            tot_ <- c(.tag.to.hex(tag30060040loop[1]),charToRaw(VR30060040loop[1]) , as.raw(c(0x00,0x00)), 
+                                        unlist(.value.to.raw (length(refz.L[[1]]),4,TRUE)), refz.L[[1]])
+            
+        }
+        
+        
+
+        v <- .ascii.to.hex(toupper(obj$roi.data[[i]][[j]]$type), VR30060040loop[2])
+        tot_ <- c(tot_, .tag.to.hex(tag30060040loop[2]), charToRaw(VR30060040loop[2]),
+                  unlist(.value.to.raw (length(v),2,TRUE)),v)
+
         v <- .ascii.to.hex(as.character(le.pt),VR30060040loop[3])
         tot_ <- c(tot_, .tag.to.hex(tag30060040loop[3]), charToRaw(VR30060040loop[3]),
                   unlist(.value.to.raw (length(v),2,TRUE)),v)
-        v <- .ascii.to.hex(paste(as.numeric(t(pt)),collapse="\\"),VR30060040loop[4])
+        
+        v <- .ascii.to.hex(as.character(j-1),VR30060040loop[4])
         tot_ <- c(tot_, .tag.to.hex(tag30060040loop[4]), charToRaw(VR30060040loop[4]),
+                  unlist(.value.to.raw (length(v),2,TRUE)),v)
+        
+        v <- .ascii.to.hex(paste(as.numeric(t(pt)),collapse="\\"),VR30060040loop[5])
+        tot_ <- c(tot_, .tag.to.hex(tag30060040loop[5]), charToRaw(VR30060040loop[5]),
                   unlist(.value.to.raw (length(v),2,TRUE)),v)
         c (as.raw(c(0xfe, 0xff, 0x00, 0xe0)), 
            unlist(.value.to.raw (length(tot_),4,TRUE)), tot_)
       }))
-      tot <- c(.tag.to.hex(tag30060040[1]),charToRaw(VR30060040[1]) , as.raw(c(0x00,0x00)), 
+      tot <- c(.tag.to.hex(tag30060040[2]),charToRaw(VR30060040[2]) , as.raw(c(0x00,0x00)), 
                unlist(.value.to.raw (length(L30060040loop),4,TRUE)), L30060040loop)
     }
     
-    v <- .ascii.to.hex(as.character(as.integer(obj$roi.info$number[i])),VR30060040[2])
-    tot <- c(tot, .tag.to.hex(tag30060040[2]), charToRaw(VR30060040[2]),
-             unlist(.value.to.raw (length(v),2,TRUE)),v)
+    v <-.ascii.to.hex(paste(as.numeric(col2rgb(obj$roi.info$color[i])),collapse="\\"),VR30060040[1])
+    tot <- c(.tag.to.hex(tag30060040[1]), charToRaw(VR30060040[1]),
+             unlist(.value.to.raw (length(v),2,TRUE)),v, tot)
     
-    
-    
-    v <-.ascii.to.hex(paste(as.numeric(col2rgb(obj$roi.info$color[i])),collapse="\\"),VR30060040[3])
+    v <- .ascii.to.hex(as.character(as.integer(obj$roi.info$number[i])),VR30060040[3])
     tot <- c(tot, .tag.to.hex(tag30060040[3]), charToRaw(VR30060040[3]),
              unlist(.value.to.raw (length(v),2,TRUE)),v)
+    
+    
+    
+
     c (as.raw(c(0xfe, 0xff, 0x00, 0xe0)), 
        unlist(.value.to.raw (length(tot),4,TRUE)), tot)
   }))
@@ -1054,17 +1086,15 @@ export.rtdose.to.dicom <- function(obj, ref.obj.list = NULL, use.original.UIs = 
   sop.type <- .ascii.to.hex (args[["(0008,0008)"]], tag.dictionary["(0008,0008)","VR"])
   NAvalue <- args[["NAvalue"]]
   
-  
+  study.vect <- c("patient","frame.of.reference")
+  serie.vect <- c("patient","frame.of.reference","modality", "description", "study.date", "study.time")
   
   if (!is.null(obj$object.info) &  use.original.UIs){
     if (length(study.UID)==0) study.UID <- .ascii.to.hex (obj$object.info$study.UID, tag.dictionary["(0020,000D)","VR"])
     if (length(serie.UID)==0) serie.UID <- .ascii.to.hex (obj$object.info$serie.UID, tag.dictionary["(0020,000E)","VR"])
     if (length(sop.type)==0) sop.type <- .ascii.to.hex (obj$object.info$SOP.type, tag.dictionary["(0008,0008)","VR"])
   } else {
-    
-    study.vect <- c("patient","frame.of.reference")
     if (length(study.UID)==0) study.UID <- create.UID(obj,study.vect,size = 50)
-    serie.vect <- c("patient","frame.of.reference","modality", "description", "study.date", "study.time")
     if (length(serie.UID)==0) serie.UID <- create.UID(obj,serie.vect,size =50)
     if (length(sop.type)==0) sop.type <- .ascii.to.hex ('ORIGINAL\\PRIMARY', tag.dictionary["(0008,0008)","VR"])
     
@@ -1083,8 +1113,9 @@ export.rtdose.to.dicom <- function(obj, ref.obj.list = NULL, use.original.UIs = 
   
   L300C0060 <- c()# voir la référence pour chaque plan
   if (!is.null(ref.obj.list)){
-    ref.serie<- do.call(rbind, lapply(ref.obj.list,function(obj_)
-      create.UID(obj_,serie.vect,size =50)))
+    ref.serie<- do.call(rbind, lapply(ref.obj.list,function(obj_){
+      if (!is.null(obj_$object.info) & use.original.ref.UIs) return(.ascii.to.hex (obj_$object.info$serie.UID, "UI"))
+      create.UID(obj_,serie.vect,size =50)}))
     f <- !duplicated.array(ref.serie)
     ref.obj.list <- ref.obj.list[f]
     ref.serie <- ref.serie[f,, drop = FALSE]
@@ -1093,12 +1124,13 @@ export.rtdose.to.dicom <- function(obj, ref.obj.list = NULL, use.original.UIs = 
       if (length(.ascii.to.hex(obj_$frame.of.reference, "UI"))==0)
         obj_$frame.of.reference <-  rawToChar(create.UID (obj_,c("patient", "ref.pseudo"), size =44))
       if (!is.null(obj_$object.info) & use.original.ref.UIs) {
-        l1155 <- obj_$object.info$SOP.label
-        ncl.f<- cumsum(nchar(l1155))
-        ncl.d <- c(1,ncl.f[-length(ncl.f)] -1)
-        l1155 <- charToRaw(paste(l1155,collapse=""))
-        l1155 <- lapply(1:length(ncl.f), function(i) {
-          new.raw <- c(l1155[ncl.d[i]:ncl.f[i]] ,as.raw(0x00));  new.raw[1:(2 * floor(length(new.raw)/2))]})
+        # l1155 <- obj_$object.info$SOP.label
+        # ncl.f<- cumsum(nchar(l1155))
+        # ncl.d <- c(1,ncl.f[-length(ncl.f)] -1)
+        # l1155 <- charToRaw(paste(l1155,collapse=""))
+        # l1155 <- lapply(1:length(ncl.f), function(i) {
+        #   new.raw <- c(l1155[ncl.d[i]:ncl.f[i]] ,as.raw(0x00));  new.raw[1:(2 * floor(length(new.raw)/2))]})
+        l1155 <- lapply(obj_$object.info$SOP.label, function(uid) .ascii.to.hex(uid,"UI"))
         l1150 <- .ascii.to.hex(obj_$object.info$SOP.ID,"UI")
         l1150 <- lapply(l1155,function(i) l1150)
         return(list(l1150=l1150,l1155=l1155))
@@ -1106,6 +1138,13 @@ export.rtdose.to.dicom <- function(obj, ref.obj.list = NULL, use.original.UIs = 
       }
       return(create.SOPUID(obj_))
     })
+    
+    z.ref <- lapply(ref.obj.list, function(obj_) {
+      if(obj_$modality!="ct" & obj_$modality!="mr") return(NULL)
+      t.mat <- ref.cutplane.add(obj_)
+      (as.matrix(cbind(obj_$xyz0,1)) %*% t(get.rigid.M(t.mat, obj_$ref.pseudo,paste0(obj_$ref.pseudo, "m"))))[,3]
+    })
+    
     ref.SOP_UID.1150 <- lapply(SOP.L, function(l )l$l1150)
     ref.SOP_UID.1155 <- lapply(SOP.L, function(l )l$l1155)
     ref.SOP_UID.1150 <- lapply(ref.SOP_UID.1150,function(l) lapply(l, function (uid)
@@ -1205,9 +1244,7 @@ export.rtdose.to.dicom <- function(obj, ref.obj.list = NULL, use.original.UIs = 
                                as.raw (c(0x0A,0x00)), charToRaw ("ISO_IR 100"))
   
   if (obj$creation.date!=""){
-    new.raw <- charToRaw (obj$creation.date)
-    new.raw <- .ascii.to.hex (obj$study.date, tag.dictionary["(0008,0012)","VR"])
-    m <- match(new.raw[1:8], as.raw(48:57))
+    new.raw <- .ascii.to.hex (obj$creation.date, tag.dictionary["(0008,0012)","VR"])
     L0008[["(0008,0012)"]]<-  c (.tag.to.hex ("(0008,0012)"), charToRaw (tag.dictionary["(0008,0012)","VR"]),
                                  as.raw (c (0x08,0x00)), new.raw[1:8])
   } else {
@@ -1217,7 +1254,6 @@ export.rtdose.to.dicom <- function(obj, ref.obj.list = NULL, use.original.UIs = 
   L0008[["(0008,0016)"]] <- c (.tag.to.hex ("(0008,0016)"), charToRaw (tag.dictionary["(0008,0016)","VR"]), SOP_UID.1150[[sop.idx]])
   L0008[["(0008,0018)"]] <- c (.tag.to.hex ("(0008,0018)"), charToRaw (tag.dictionary["(0008,0018)","VR"]), SOP_UID.1155[[sop.idx]])
   
-  new.raw <- charToRaw (obj$study.date)
   new.raw <- .ascii.to.hex (obj$study.date, tag.dictionary["(0008,0020)","VR"])
   m <- match(new.raw[1:8], as.raw(48:57))
   L0008[["(0008,0020)"]]<-  c (.tag.to.hex ("(0008,0020)"), charToRaw (tag.dictionary["(0008,0020)","VR"]),
@@ -1510,8 +1546,9 @@ export.rtdose.to.dicom <- function(obj, ref.obj.list = NULL, use.original.UIs = 
 #' @importFrom sodium hash
 .ascii.to.hex <- function(str,VR){
   if (length(str)==0) return(raw(0))
-  if (nchar(str)==0) return(raw(0))
   if (is.na(str)) return(raw(0))
+  if (nchar(str)==0) return(raw(0))
+
   
   switch(VR,
          "AE" = {

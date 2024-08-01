@@ -11,7 +11,8 @@
 #' \item turning  peninsulas into islands. 
 #' }
 #' @param vol "volume" class object, of \code{"binary"} modality
-#' @param radius Positive number, in millimeters. By default, radius = 10.
+#' @param radius Positive number, or xyzvector of 3 positive numbers (), in millimeters.
+#'  By default, radius = 10.
 #' @param alias Character string, \code{$object.alias} of the created object.
 #' @param description Character string, describing the created object. If 
 #' \code{description = NULL} (default value), it will be set to 

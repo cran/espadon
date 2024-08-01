@@ -480,7 +480,8 @@ plot.struct <- function(x, ..., view.type = "trans",
 
   if (length(list.roi.idx)==0) {
     message("no ROI to display @", cut.lab," = ", round(cut.pt,2),postfix, ", with ",
-            coord_[1], "in [",ext.pt[1, ],"] and ",coord_[2], "in [",ext.pt[2, ],"]")
+            coord_[1], " in [",paste(round(ext.pt[1, ],2), collapse=","),"] and ",coord_[2], 
+            " in [", paste(round(ext.pt[2, ],2), collapse=","),"]")
     return(invisible(x))
   }
 
@@ -494,11 +495,14 @@ plot.struct <- function(x, ..., view.type = "trans",
       rgy <-.range.intersection(pt[,2], ext.pt[2,], egal = c(TRUE,TRUE))
       if (is.na(rgx[1]) | is.na(rgy[1])){
         obj_$roi.data[[j]] <- list()
-      } else {
-        back.vol <- vol.create(n.ijk=ceiling(c(diff(rgx)/dxyz[1]+2,diff(rgy)/dxyz[2]+2,1)), dxyz = dxyz,
-                               mid.pt =c(mean(rgx),mean(rgy),0),
+      } else if(nrow(pt)>1){
+        pt.max <- c(rgx[length(rgx)]+ dxyz[1],rgy[length(rgy)]+dxyz[2],0)
+        pt000 =c(rgx[1]-dxyz[1],rgy[1]-dxyz[2],0)
+        back.vol <- vol.create(n.ijk=ceiling((pt.max-pt000)/dxyz)+1, dxyz = dxyz,
+                               pt000 =pt000,
                                ref.pseudo = "display.ref",default.value = FALSE)
-        b <- bin.from.roi(back.vol,obj_,roi.idx =j, verbose = FALSE)
+        b <- bin.from.roi(back.vol,obj_,roi.idx =j, verbose = FALSE, 
+                          description = paste0(obj_$roi.info$roi.pseudo[j],"@", cut.lab," = ", round(cut.pt,2)))
         if (any(b$vol3D.data)) {
           obj_$roi.data[[j]] <- .display.roi.data.from.bin(b)
           
@@ -509,6 +513,12 @@ plot.struct <- function(x, ..., view.type = "trans",
     le.f <- sapply(obj_$roi.data, length) != 0
     obj_ <- .suppress.roi(obj_,le.f)
     list.roi.idx <- (0:sum(le.f))[-1]
+    
+    if (length(list.roi.idx)==0) {
+      message("no ROI to display @", cut.lab," = ", round(cut.pt,2),postfix)
+      return(invisible(x))
+    }
+    
     
     obj_$ref.from.contour <- diag(4)
     obj_$thickness <- dxyz[3]
@@ -566,6 +576,8 @@ plot.struct <- function(x, ..., view.type = "trans",
     
   }
   
+  # col <- args[["col"]];
+  # if (!is.null(col)) obj_$roi.info$color <- c(col,rep(col[length(col)], nrow(obj_$roi.info)-length(col)))
   if (is.null(args[['lwd']])) args[['lwd']] <- 1
   for (j in list.roi.idx) {
     
@@ -576,7 +588,7 @@ plot.struct <- function(x, ..., view.type = "trans",
         lines (pt[,1], pt[,2], 
                col= obj_$roi.info$color[j], lwd=args[['lwd']])
       } else if ((type=="point") &
-                 (round(obj_$roi.data[[j]][[nb]]$pt$z[1],6) == cut.pt)) {
+                 (round(obj_$roi.data[[j]][[nb]]$pt$z[1],6) == 0)) {
         points(pt[,1], pt[,2], 
                col= obj_$roi.info$color[j], pch="+",cex=1)
       }
@@ -709,7 +721,7 @@ plot.mesh <- function (x,..., view.type = "trans",
              obj_$roi.data[[1]][[nb]]$pt$y, 
              col= obj_$roi.info$color[1], lwd=args[['lwd']])
     } else if ((type=="point") &
-               (round(obj_$roi.data[[1]][[nb]]$pt[1,3],6) == cut.pt)) {
+               (round(obj_$roi.data[[1]][[nb]]$pt[1,3],6) == 0)) {
       points(obj_$roi.data[[1]][[nb]]$pt$x, 
              obj_$roi.data[[1]][[nb]]$pt$y, 
              col= obj_$roi.data$roi.info$color[1], pch="+",cex=1)

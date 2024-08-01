@@ -40,7 +40,7 @@ std::vector <double> getvaluefromijkC (
     round_j[0] = (int) (j[idx] +  0.5);
     round_k[0] = (int) (k[idx] +  0.5);
     // Rcout<<std::to_string(round_i)<<" "<<std::to_string(round_j)<<" "<<std::to_string(round_k)<<"\n";
-    if (!interpolate){
+    if ((!interpolate) || (s_ijk[0]==0) || (s_ijk[1]==0)|| (s_ijk[2]==0)){
       if ((round_i[0] >= 0) && (round_j[0] >= 0) && (round_k[0] >= k_idx[0]) && 
           (round_i[0] < n_ijk[0]) && (round_j[0] < n_ijk[1]) && 
           (round_k[0] <= k_idx[le_k-1])){
@@ -55,9 +55,12 @@ std::vector <double> getvaluefromijkC (
       round_j[0] = (int) (rg_j[0] +  0.5); round_j[1] = (int) (rg_j[1] +  0.5);
       round_k[0] = (int) (rg_k[0] +  0.5); round_k[1] = (int) (rg_k[1] +  0.5);
       
-      pi[0] = (double)round_i[0] + 0.5 - rg_i[0]; pi[1] = rg_i[1] - (double)round_i[1] + 0.5;
-      pj[0] = (double)round_j[0] + 0.5 - rg_j[0]; pj[1] = rg_j[1] - (double)round_j[1] + 0.5;
-      pk[0] = (double)round_k[0] + 0.5 - rg_k[0]; pk[1] = rg_k[1] - (double)round_k[1] + 0.5;
+      pi[0] = s_ijk[0]; pj[0] = s_ijk[1]; pk[0] = s_ijk[2];
+      pi[1] = 0.0; pj[1] = 0.0; pk[1] = 0.0;
+      if (round_i[0]!=round_i[1]) {pi[0] = (double)round_i[0] + 0.5 - rg_i[0]; pi[1] = rg_i[1] - (double)round_i[1] + 0.5;}
+      if (round_j[0]!=round_j[1]) {pj[0] = (double)round_j[0] + 0.5 - rg_j[0]; pj[1] = rg_j[1] - (double)round_j[1] + 0.5;}
+      if (round_k[0]!=round_k[1]) {pk[0] = (double)round_k[0] + 0.5 - rg_k[0]; pk[1] = rg_k[1] - (double)round_k[1] + 0.5;}
+      
       
       testi = (rg_i[0] >= -0.5) && (rg_i[1]<= n_ijk[0]-0.5);
       testj = (rg_j[0] >= -0.5) && (rg_j[1]<= n_ijk[1]-0.5);

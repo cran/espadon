@@ -63,7 +63,19 @@ fan.to.voxel <- function (vol, fan, restrict = FALSE, vol.value = 1){
     #                    l.in=numeric(0), dl=numeric(0)))
   }
    
-  Mat <-solve (vol$xyz.from.ijk) 
+  #2D
+  idx.c <- which(apply(abs(vol$xyz.from.ijk[1:3,1:3]),2,sum)==0) 
+  idx.r <-  which(apply(abs(vol$xyz.from.ijk[1:3,1:3]),1,sum)==0)
+  if (length(idx.c)>0) {
+    if (abs(vol$xyz0[1,idx.r])>1e-6) return(NULL)
+    u <- vol$xyz.from.ijk 
+    u[idx.r,idx.c]<- 1
+    Mat <- solve(u)
+    Mat[idx.r,idx.c] <- 0
+  } else {#3D
+    Mat <- solve(vol$xyz.from.ijk)}
+  
+  
   u_ijk <- (cbind(fan$xyz,0) %*% t(Mat))[,1:3]
   O_ijk <-  as.numeric((c(fan$origin,1) %*% t(Mat))[,1:3])
   k_idx<- match(0:max(vol$k.idx),vol$k.idx)

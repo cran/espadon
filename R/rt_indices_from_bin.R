@@ -44,8 +44,10 @@
 #' calculated.
 #' @param V.xGy Vector of the minimum dose in Gy, received by the volume to be 
 #' calculated.
-
+#' @param DVH boolean. If \code{TRUE} (default), the function returns the DVHs of 
+#' the target and healthy ROIs.
 #' @param verbose Boolean. if \code{TRUE} (default) a progress bar is displayed.
+#' @param ... others parameters such as \code{DVH.step}.
 #' @return Return  a list of  indices dataframe. For details, see 
 #' \link[espadon]{rt.indices.from.roi}.
 #' @seealso \link[espadon]{rt.indices.from.roi}.
@@ -83,7 +85,8 @@
 #'                                 conformity.indices = c("PITV", "PDS", "CI.lomax2003", 
 #'                                                        "CN", "NCI", "DSC","COIN"),
 #'                                 verbose = FALSE)
-#' indices
+#' indices[c("dosimetry","volume", "conformity","homogeneity","gradient")]
+#' head(indices$DVH)
 
 #' @import progress
 #' @importFrom methods is
@@ -110,7 +113,12 @@ rt.indices.from.bin <- function (vol,
                                                          "HI.heufelder"),
                                  gradient.indices = c("GI.ratio.50"),
                                  D.xpc = NULL, D.xcc = NULL, V.xpc = NULL, V.xGy = NULL, 
-                                 verbose = TRUE){
+                                 DVH = TRUE,
+                                 verbose = TRUE,...){
+  args <- list(...)
+  DVH.step <- args[['DVH.step']]
+  if (is.null(DVH.step)) DVH.step <-0.001
+  if (DVH.step>0.01) DVH.step <- 0.01
   
   if (!is (vol, "volume")) stop ("vol should be a volume class object.")
   if (is.null(vol$vol3D.data)) stop ("empty vol$vol3D.data.")
@@ -184,7 +192,6 @@ rt.indices.from.bin <- function (vol,
                     homogeneity.indices,
                     gradient.indices,
                     D.xpc, D.xcc, V.xpc, V.xGy, 
-                    healthy.weight, healthy.tol.dose
-  )
+                    healthy.weight, healthy.tol.dose,DVH,DVH.step)
   
 }

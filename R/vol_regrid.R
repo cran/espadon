@@ -160,31 +160,29 @@ vol.regrid <- function (vol, back.vol, T.MAT = NULL, interpolate = TRUE,
   k.loc[fna] <- max(vol$k.idx)+1
   k.idx[fna] <- max(vol$k.idx)+1
   
-  ijk <-matrix((ijk.selection %*% t(M.old.from.new))[ ,1:3],ncol=3)
+  ijk <-matrix((ijk.selection %*% t(M.old.from.new))[ ,1:3, drop = FALSE],ncol=3)
   ijk[abs(ijk)<1e-9] <- 0
   if (verbose) pb$tick()
   vol3D <- as.numeric(vol$vol3D.data)
   vol3D[is.na(vol3D)] <- NaN
   s_ijk <- c(1,1,1)
   if (method == "Av"){
-    s_ijk <- c(mean(diff(sort(unique(ijk[,1])))),
-               mean(diff(sort(unique(ijk[,2])))),
-               mean(diff(sort(unique(ijk[,3])))))
-    s_ijk[is.na(s_ijk)] <- 1
-    s_ijk[s_ijk<1] <- 1
+    s_ijk <-apply(abs(rbind(c(1,0,0,0),c(0,1,0,0), c(0,0,1,0)) %*% t(M.old.from.new))[,1:3, drop =FALSE],1,max)
   }
-  new.vol$vol3D.data[ijk.Rselection] <- .getvaluefromijkC (vol3D = vol3D,
+  new.vol$vol3D.data[ijk.Rselection] <- round(.getvaluefromijkC (vol3D = vol3D,
                                                            interpolate = interpolate,
                                                            i = as.numeric(ijk[ ,1]),
                                                            j = as.numeric(ijk[ ,2]),
                                                            k = as.numeric(ijk[ ,3]),
                                                            k_idx = k.idx,
-                                                           k_loc = k.loc, n_ijk=vol$n.ijk,s_ijk = s_ijk)
+                                                           k_loc = k.loc, n_ijk=vol$n.ijk,s_ijk = s_ijk),9)
   
   if (verbose) pb$tick()
   new.vol$vol3D.data[is.nan(new.vol$vol3D.data)] <- NA
-  new.vol$vol3D.data[abs(new.vol$vol3D.data)<=1e-6] <- 0
-  if (new.vol$modality == "binary") new.vol$vol3D.data <- new.vol$vol3D.data>=0.5
+  # new.vol$vol3D.data[abs(new.vol$vol3D.data)<=1e-9] <- 0
+  if (new.vol$modality == "binary") {
+    new.vol$vol3D.data <- new.vol$vol3D.data>=0.5
+  } 
   if (any(!is.na(new.vol$vol3D.data))){
     new.vol$min.pixel <- min ( new.vol$vol3D.data, na.rm=TRUE)
     new.vol$max.pixel <- max ( new.vol$vol3D.data, na.rm=TRUE)

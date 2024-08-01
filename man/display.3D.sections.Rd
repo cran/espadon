@@ -5,9 +5,9 @@
 \title{Display 3D sections of a patient}
 \usage{
 display.3D.sections(
-  vol,
+  obj,
   cross.pt = c(0, 0, 0),
-  display.ref = vol$ref.pseudo,
+  display.ref = obj$ref.pseudo,
   T.MAT = NULL,
   col = grey.colors(10, start = 0, end = 1, alpha = c(rep(0, 1), rep(1, 9))),
   breaks = NULL,
@@ -15,27 +15,28 @@ display.3D.sections(
   sagi = TRUE,
   front = TRUE,
   border = TRUE,
-  border.col = "#379DA2"
+  border.col = "#379DA2",
+  ...
 )
 }
 \arguments{
-\item{vol}{"volume" class object to display. See \link[espadon]{espadon.class} for
+\item{obj}{"volume" class object to display. See \link[espadon]{espadon.class} for
 class definitions.}
 
-\item{cross.pt}{Vector of x, y, z coordinates, representing the cross point of the 3 planes.}
+\item{cross.pt}{Vector of x, y, z coordinates, representing the cross point of the 3 planes in display.plane.}
 
 \item{display.ref}{Character string. Pseudonym of the frame of reference used for display.}
 
 \item{T.MAT}{"t.mat" class object, created by \link[espadon]{load.patient.from.Rdcm} or
-\link[espadon]{load.T.MAT}. If \code{T.MAT} is \code{NULL}, \code{vol} must be
-displayed in \code{display.ref = vol$ref.pseudo}.}
+\link[espadon]{load.T.MAT}. If \code{T.MAT} is \code{NULL}, \code{obj} must be
+displayed in \code{display.ref = obj$ref.pseudo}.}
 
 \item{col}{Vector, representing the color palette of the image. Transparent
 colors are not represented.}
 
 \item{breaks}{One of :
 \itemize{
-\item \code{NULL} : the minimum and the maximum value of the \code{vol} define the range.
+\item \code{NULL} : the minimum and the maximum value of the \code{obj} define the range.
 \item Vector giving the breakpoints of each color.
 }}
 
@@ -48,9 +49,11 @@ colors are not represented.}
 \item{border}{Boolean. If \code{TRUE} (default), the borders of the planes are displayed}
 
 \item{border.col}{Color of planes borders}
+
+\item{...}{Argument for deprecated arguments}
 }
 \value{
-Returns a display of transverse, sagittal and frontal views of \code{vol}
+Returns a display of transverse, sagittal and frontal views of \code{obj}
 at \code{cross.pt}  in the current \pkg{RGL} window if it exists, in a new
 window otherwise. Palette colors are managed by \code{col} and \code{breaks}.
 }

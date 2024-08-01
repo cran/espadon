@@ -124,7 +124,7 @@ histo.from.roi  <- function (vol, struct, roi.name = NULL, roi.sname = NULL,
 
   vol_o$object.alias <- vol.alias
   vol_o$object.info <- vol.info
-  bin.vol <- bin.from.roi (vol_o, struct, roi.idx=roi.idx, T.MAT=T.MAT)
+  bin.vol <- bin.from.roi (vol_o, struct, roi.idx=roi.idx, T.MAT=T.MAT, modality ="weight", verbose = FALSE)
   if (is.null(bin.vol)){
     warning ("no RoI in volume.")
     return (NULL)
@@ -156,7 +156,7 @@ histo.from.roi  <- function (vol, struct, roi.name = NULL, roi.sname = NULL,
                                               cont$pt <-  data.frame (t (t (cont$pt) + H$MC.dxyz [MC.idx, ]))
                                               return (cont)
                                             })
-    bin.vol <- bin.from.roi (vol_o, struct=contour_, roi.idx=roi.idx, T.MAT=T.MAT)
+    bin.vol <- bin.from.roi (vol_o, struct=contour_, roi.idx=roi.idx, T.MAT=T.MAT, modality = "weight", verbose = FALSE)
     h<- histo.from.bin (vol_o, bin.vol, breaks=H$breaks)
     H$MC.counts[MC.idx, ] <- h$counts
     H$MC.dV_dx[MC.idx, ] <- h$dV_dx

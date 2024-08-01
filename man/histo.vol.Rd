@@ -5,7 +5,7 @@
 \title{Histogram of a volume
 \loadmathjax}
 \usage{
-histo.vol(vol, breaks = NULL, alias = "", description = NULL)
+histo.vol(vol, breaks = NULL, alias = "", description = NULL, weight = NULL)
 }
 \arguments{
 \item{vol}{"volume" class object.}
@@ -18,7 +18,10 @@ are not taken into account.}
 
 \item{alias}{Character string, \code{$alias} of the created object.}
 
-\item{description}{Character string, describing the the created object. If the
+\item{description}{Character string, describing the the created object. If the}
+
+\item{weight}{espadon object of the volume class, where \code{weight$vol3D.data}
+represents the weight of \code{vol$vol3D.data}.
 \code{description = NULL} (default value), it will be set to \code{vol$description}.}
 }
 \value{

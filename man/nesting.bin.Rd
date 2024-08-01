@@ -49,8 +49,8 @@ distances in mm to be added to the x, y and z directions of the rectangular
 parallelepiped circumscribed to the voxels selected in \code{sel.bin}, in the
 \code{obj} frame of reference.
 
-If \code{obj} is of class "mesh", \code{sel.bin} will undergo margin
-expansion any operation on the \code{obj}.
+If \code{obj} is of class “mesh”, \code{sel.bin} will undergo a
+margin expansion \code{xyz.margin} before the mesh points are selected..
 }
 \examples{
 # loading of toy-patient objects (decrease dxyz for  better result)

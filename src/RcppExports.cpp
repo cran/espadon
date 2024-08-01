@@ -227,6 +227,39 @@ BEGIN_RCPP
     return rcpp_result_gen;
 END_RCPP
 }
+// ouline2voxC
+std::vector <double> ouline2voxC(std::vector <double> p, std::vector  <int> n_ijk, std::vector  <int> k_idx, std::vector  <int> k_loc, std::vector <double> O_ijk, std::vector <double> lambda_max, int ntab);
+RcppExport SEXP _espadon_ouline2voxC(SEXP pSEXP, SEXP n_ijkSEXP, SEXP k_idxSEXP, SEXP k_locSEXP, SEXP O_ijkSEXP, SEXP lambda_maxSEXP, SEXP ntabSEXP) {
+BEGIN_RCPP
+    Rcpp::RObject rcpp_result_gen;
+    Rcpp::RNGScope rcpp_rngScope_gen;
+    Rcpp::traits::input_parameter< std::vector <double> >::type p(pSEXP);
+    Rcpp::traits::input_parameter< std::vector  <int> >::type n_ijk(n_ijkSEXP);
+    Rcpp::traits::input_parameter< std::vector  <int> >::type k_idx(k_idxSEXP);
+    Rcpp::traits::input_parameter< std::vector  <int> >::type k_loc(k_locSEXP);
+    Rcpp::traits::input_parameter< std::vector <double> >::type O_ijk(O_ijkSEXP);
+    Rcpp::traits::input_parameter< std::vector <double> >::type lambda_max(lambda_maxSEXP);
+    Rcpp::traits::input_parameter< int >::type ntab(ntabSEXP);
+    rcpp_result_gen = Rcpp::wrap(ouline2voxC(p, n_ijk, k_idx, k_loc, O_ijk, lambda_max, ntab));
+    return rcpp_result_gen;
+END_RCPP
+}
+// polygcleanC
+std::vector <double> polygcleanC(std::vector <double> pol, int ncol, int compare, bool clockwise, double eps, bool sort);
+RcppExport SEXP _espadon_polygcleanC(SEXP polSEXP, SEXP ncolSEXP, SEXP compareSEXP, SEXP clockwiseSEXP, SEXP epsSEXP, SEXP sortSEXP) {
+BEGIN_RCPP
+    Rcpp::RObject rcpp_result_gen;
+    Rcpp::RNGScope rcpp_rngScope_gen;
+    Rcpp::traits::input_parameter< std::vector <double> >::type pol(polSEXP);
+    Rcpp::traits::input_parameter< int >::type ncol(ncolSEXP);
+    Rcpp::traits::input_parameter< int >::type compare(compareSEXP);
+    Rcpp::traits::input_parameter< bool >::type clockwise(clockwiseSEXP);
+    Rcpp::traits::input_parameter< double >::type eps(epsSEXP);
+    Rcpp::traits::input_parameter< bool >::type sort(sortSEXP);
+    rcpp_result_gen = Rcpp::wrap(polygcleanC(pol, ncol, compare, clockwise, eps, sort));
+    return rcpp_result_gen;
+END_RCPP
+}
 // ptinpolygonC
 std::vector <int> ptinpolygonC(std::vector <double> point_x, std::vector <double> point_y, std::vector <double> pol_x, std::vector <double> pol_y, double eps);
 RcppExport SEXP _espadon_ptinpolygonC(SEXP point_xSEXP, SEXP point_ySEXP, SEXP pol_xSEXP, SEXP pol_ySEXP, SEXP epsSEXP) {
@@ -259,24 +292,6 @@ BEGIN_RCPP
     return rcpp_result_gen;
 END_RCPP
 }
-// roiinterC
-std::vector <double> roiinterC(std::vector <double> pt1_x, std::vector <double> pt1_y, double u1_x, double u1_y, double d1, std::vector <double> pt2_x, std::vector <double> pt2_y, double eps);
-RcppExport SEXP _espadon_roiinterC(SEXP pt1_xSEXP, SEXP pt1_ySEXP, SEXP u1_xSEXP, SEXP u1_ySEXP, SEXP d1SEXP, SEXP pt2_xSEXP, SEXP pt2_ySEXP, SEXP epsSEXP) {
-BEGIN_RCPP
-    Rcpp::RObject rcpp_result_gen;
-    Rcpp::RNGScope rcpp_rngScope_gen;
-    Rcpp::traits::input_parameter< std::vector <double> >::type pt1_x(pt1_xSEXP);
-    Rcpp::traits::input_parameter< std::vector <double> >::type pt1_y(pt1_ySEXP);
-    Rcpp::traits::input_parameter< double >::type u1_x(u1_xSEXP);
-    Rcpp::traits::input_parameter< double >::type u1_y(u1_ySEXP);
-    Rcpp::traits::input_parameter< double >::type d1(d1SEXP);
-    Rcpp::traits::input_parameter< std::vector <double> >::type pt2_x(pt2_xSEXP);
-    Rcpp::traits::input_parameter< std::vector <double> >::type pt2_y(pt2_ySEXP);
-    Rcpp::traits::input_parameter< double >::type eps(epsSEXP);
-    rcpp_result_gen = Rcpp::wrap(roiinterC(pt1_x, pt1_y, u1_x, u1_y, d1, pt2_x, pt2_y, eps));
-    return rcpp_result_gen;
-END_RCPP
-}
 
 static const R_CallMethodDef CallEntries[] = {
     {"_espadon_addcommonptC", (DL_FUNC) &_espadon_addcommonptC, 11},
@@ -292,9 +307,10 @@ static const R_CallMethodDef CallEntries[] = {
     {"_espadon_mean_voxC", (DL_FUNC) &_espadon_mean_voxC, 5},
     {"_espadon_medianfilterC", (DL_FUNC) &_espadon_medianfilterC, 6},
     {"_espadon_meshinfront", (DL_FUNC) &_espadon_meshinfront, 12},
+    {"_espadon_ouline2voxC", (DL_FUNC) &_espadon_ouline2voxC, 7},
+    {"_espadon_polygcleanC", (DL_FUNC) &_espadon_polygcleanC, 6},
     {"_espadon_ptinpolygonC", (DL_FUNC) &_espadon_ptinpolygonC, 5},
     {"_espadon_ptnearestC", (DL_FUNC) &_espadon_ptnearestC, 7},
-    {"_espadon_roiinterC", (DL_FUNC) &_espadon_roiinterC, 8},
     {NULL, NULL, 0}
 };
 

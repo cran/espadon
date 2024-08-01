@@ -104,21 +104,33 @@ polyg.simplify <- function (pol, tol = 0.5) {
 ################################################################################
 
 polyg.sort <- function(pol, clockwise = TRUE){
-  le <- nrow(pol)
-  if (le ==0) return(pol)
-  if (!(ncol(pol)==2|ncol(pol)==3)) stop("pol must have 2 or 3 columns")
-
-  if (!all(round(pol[1,],6)==round(pol[le,],6))) return (pol)
+  mf <- is.matrix(pol)
+  df <- is.data.frame(pol)
+  if (!(mf|df)) stop("must be a matrix or dataframe with 2 or 3 column")
+  ncol_pol <- ncol(pol)
+  if (ncol_pol>3 & ncol_pol<2) stop("must be a matrix or dataframe with 2 or 3 column")
+  pt <- matrix(.polygcleanC(as.vector(t(as.matrix(pol))),ncol=ncol_pol, 
+                                      sort = TRUE,clockwise=clockwise), byrow = TRUE,
+               ncol=ncol_pol,
+               dimnames=list(NULL,c("x","y","z")[1:ncol_pol]))
   
-  m.f <- is.matrix(pol)
-  pol <- as.data.frame(pol)
-  first <- order(pol[1:(le-1),2],pol[1:(le-1),1])[1]
-  pol <- rbind(pol[first:(le-1),], pol[-(first:le),], pol[first[1],])
-  
-  if (polyg.is.clockwise(pol)!= clockwise) pol <- pol[le:1, ]
-  rownames(pol) <- NULL
-  if (m.f) return(as.matrix(pol))
-  return(pol)
+  if (mf) return(pt)
+  return(as.data.frame(pt))
+#   le <- nrow(pol)
+#   if (le ==0) return(pol)
+#   if (!(ncol(pol)==2|ncol(pol)==3)) stop("pol must have 2 or 3 columns")
+# 
+#   if (!all(round(pol[1,],6)==round(pol[le,],6))) return (pol)
+#   
+#   m.f <- is.matrix(pol)
+#   pol <- as.data.frame(pol)
+#   first <- order(pol[1:(le-1),1],pol[1:(le-1),2])[1]
+#   pol <- rbind(pol[first:(le-1),], pol[-(first:le),], pol[first[1],])
+#   
+#   if (polyg.is.clockwise(pol)!= clockwise) pol <- pol[le:1, ]
+#   rownames(pol) <- NULL
+#   if (m.f) return(as.matrix(pol))
+#   return(pol)
 }
 
 ################################################################################
@@ -128,7 +140,7 @@ polyg.is.clockwise <- function(pol) {
   if (le==0) return(FALSE)
   pol <- round(pol,6)
   pol <- pol[c(TRUE, !((diff(pol[,1])==0) & (diff(pol[,2])==0))),]
-  first <- order(pol[1:(le-1),2],pol[1:(le-1),1])[1]
+  first <- order(pol[1:(le-1),1],pol[1:(le-1),2])[1]
   pol <- rbind(pol[first:(le-1),], pol[-(first:le),])
   if(ncol(pol)==2) pol <- cbind(pol,rep(0,le-1))
   r <- vector.product(pol[1,]-pol[le-1,],pol[2,]-pol[1,])
@@ -136,7 +148,7 @@ polyg.is.clockwise <- function(pol) {
     pol <- pol[-1,]
     le <- length(pol)
     if (length(pol)==0) return(FALSE)
-    first <- order(pol[,2],pol[,1])[1]
+    first <- order(pol[,1],pol[,2])[1]
     pol <- rbind(pol[first:le,], pol[-(first:le),])
     r <- vector.product(pol[1,]-pol[le-1,],pol[2,]-pol[1,])
   }

@@ -13,7 +13,7 @@
 
 #####################################################################################
 .espadon.version <- function(){
-  return ("1.7.2")
+  return ("1.7.4")
 }
 
 #####################################################################################
@@ -2924,7 +2924,7 @@
                 ptk <- L$roi.data[[i]][[k]]$pt
                 keep <- .pt.in.polygon (ptj[ ,1], ptj[ ,2],
                                               ptk[ ,1], ptk[ ,2]) > 0.5
-                return (ifelse (any(keep), k,NA))}))
+                return (ifelse (all(keep), k,NA))}))
               r <- r[!is.na (r)]
               L$roi.data[[i]][[j]]$level <- ifelse (length(r)!=0, length(r), 0)
             } #else L$roi.data[[i]][[j]]$level <- 0

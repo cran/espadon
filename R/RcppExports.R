@@ -53,15 +53,19 @@
     .Call('_espadon_meshinfront', PACKAGE = 'espadon', pt_x, pt_y, pt_z, p2_x, p2_y, p2_z, u_x, u_y, u_z, n_A, n_B, n_C)
 }
 
+.ouline2voxC <- function(p, n_ijk, k_idx, k_loc, O_ijk, lambda_max, ntab) {
+    .Call('_espadon_ouline2voxC', PACKAGE = 'espadon', p, n_ijk, k_idx, k_loc, O_ijk, lambda_max, ntab)
+}
+
+.polygcleanC <- function(pol, ncol = 3L, compare = 2L, clockwise = TRUE, eps = 1.0e-6, sort = TRUE) {
+    .Call('_espadon_polygcleanC', PACKAGE = 'espadon', pol, ncol, compare, clockwise, eps, sort)
+}
+
 .ptinpolygonC <- function(point_x, point_y, pol_x, pol_y, eps = 1.0e-9) {
     .Call('_espadon_ptinpolygonC', PACKAGE = 'espadon', point_x, point_y, pol_x, pol_y, eps)
 }
 
 .ptnearestC <- function(pt1_x, pt1_y, pt1_z, pt2_x, pt2_y, pt2_z, full_info) {
     .Call('_espadon_ptnearestC', PACKAGE = 'espadon', pt1_x, pt1_y, pt1_z, pt2_x, pt2_y, pt2_z, full_info)
-}
-
-.roiinterC <- function(pt1_x, pt1_y, u1_x, u1_y, d1, pt2_x, pt2_y, eps = 1e-9) {
-    .Call('_espadon_roiinterC', PACKAGE = 'espadon', pt1_x, pt1_y, u1_x, u1_y, d1, pt2_x, pt2_y, eps)
 }
 

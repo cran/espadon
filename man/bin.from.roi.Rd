@@ -14,6 +14,7 @@ bin.from.roi(
   within = TRUE,
   alias = "",
   description = NULL,
+  modality = c("binary", "weight"),
   ...
 )
 }
@@ -48,12 +49,20 @@ depending on their \code{$level} field. If \code{within = FALSE}, only the
 \code{description = NULL}
 (default value), it will be set to \code{struct$roi.info$roi.pseudo[roi.idx]}.}
 
+\item{modality}{modality ("binary" or "weight") of the generated object.}
+
 \item{...}{additional argument such as verbose}
 }
 \value{
-Returns a "volume" class object of "binary" modality (see
+Returns a "volume" class object of "binary" or "weight" modality (see
 \link[espadon]{espadon.class} for class definitions), with the same grid as
-\code{vol}, in which the voxels in the RoI are set to TRUE.
+\code{vol}.
+\itemize{
+\item In the “binary” modality, voxels with 50 percent of their volume within
+the ROI are set to \code{TRUE}.
+\item In the “weight” modality, the value of each voxel is its volume fraction
+included in the ROI.
+}
 }
 \description{
 The \code{bin.from.roi} function creates a "volume" class
@@ -72,12 +81,23 @@ patient <- toy.load.patient (modality = c("ct", "rtstruct"),
 CT <- patient$ct[[1]]
 S <- patient$rtstruct[[1]]
 
-# "optical nerve" binary without inclusions management
-bin <- bin.from.roi (CT, struct = S, roi.sname = "left optical", 
-                     alias = "left_optical_nerve", verbose = FALSE)
-display.plane (CT, top = bin, struct = S,
-               view.coord = S$roi.info[S$roi.info$roi.pseudo == "leftopticalnerve",]$Gz, 
-               legend.shift = -80, interpolate = FALSE, main = "Left nerve selection")
+# "optical nerve" binary, with  modality "binary" and "weight"
+binl <- bin.from.roi (CT, struct = S, roi.sname = "left optical",
+                      alias = "left_optical_nerve", verbose = FALSE,
+                      modality = "binary")
+binr <- bin.from.roi (CT, struct = S, roi.sname = "right optical",
+                      alias = "right_optical_nerve", verbose = FALSE,
+                      modality = "weight")
+
+view.coord <- S$roi.info[S$roi.info$roi.pseudo == "leftopticalnerve",]$Gz
+palette <- grey.colors(100, start = 0, end = 1, 
+                       alpha = c(0, rep(1,99)))
+plot(S, view.coord = view.coord, main ="optical nerves")
+plot(binl, view.coord = view.coord, col = palette, 
+    cut.interpolate = FALSE, add = TRUE)
+plot(binr, view.coord = view.coord, col =palette, 
+     cut.interpolate = FALSE, add = TRUE)
+plot(S, view.coord = view.coord, lwd = 2, add= TRUE)
 
 \dontrun{
 # with a smaller step
@@ -87,22 +107,21 @@ patient <- toy.load.patient (modality = c("ct", "rtstruct"),
                              dxyz = rep (step, 3))
 CT <- patient$ct[[1]]
 S <- patient$rtstruct[[1]]
+#' view.coord <- S$roi.info[S$roi.info$roi.pseudo == "leftopticalnerve",]$Gz
 
 # "optical nerve" binary without inclusions management
 bin <- bin.from.roi (CT, struct = S, roi.sname = "left optical", 
                      alias = "left_optical_nerve", within = FALSE,
                      verbose = FALSE)
-display.plane (CT, top = bin, struct = S,
-               view.coord = S$roi.info[S$roi.info$roi.pseudo == "leftopticalnerve",]$Gz, 
-               legend.shift = -80, interpolate = FALSE, main = "Left nerve selection")
+display.plane (CT, top = bin, struct = S, view.coord = view.coord, 
+               legend.shift = -80, interpolate = FALSE, main = "Left nerve")
 
 # "optical nerve" binary with inclusions management
 bin <- bin.from.roi (CT, struct = S, roi.sname = "left optical", 
                      alias = "left_optical_nerve", within = TRUE,
                      verbose = FALSE)
-display.plane (CT, top = bin, struct = S,
-               view.coord = S$roi.info[S$roi.info$roi.pseudo == "leftopticalnerve",]$Gz, 
-               legend.shift = -80, interpolate = FALSE, main = "Left nerve selection") 
+display.plane (CT, top = bin, struct = S, view.coord = view.coord, 
+               legend.shift = -80, interpolate = FALSE, main = "Left nerve") 
 }
 }
 \seealso{

@@ -56,22 +56,17 @@
 histo.from.bin  <- function (vol, sel.bin, breaks = NULL, alias = "", 
                              description = NULL) {
   
-  if (!is (vol, "volume")){
-    warning ("vol should be a volume class object.")
-    return (NULL)
-  }
-  if (!is (sel.bin, "volume")) {
-    warning ("sel.bin should be a volume class object.")
-    return (NULL)
-  }
-  if ((sel.bin$modality!="binary")) {
-    warning ("sel.bin must be modality binary.")
-    return (NULL)
-  }
+  if (!is (vol, "volume")) stop ("vol should be a volume class object.")
+  if (!is (sel.bin, "volume")) stop ("sel.bin should be a volume class object.")
+
+  if ((sel.bin$modality!="binary" & sel.bin$modality!="weight")) stop ("sel.bin must be modality binary or weight.")
+
   
   vol.sel <- vol.from.bin (vol, sel.bin, alias="dum")
   vol.sel$object.alias <- vol.sel$ref.object.alias
   vol.sel$object.info <- vol.sel$ref.object.info
+  weight <- NULL
+  if (sel.bin$modality =="weight") weight  <- sel.bin
   return (histo.vol (vol.sel, breaks = breaks, alias=alias,
-                      description = description))
+                      description = description,weight=weight))
 }

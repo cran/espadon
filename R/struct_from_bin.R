@@ -130,7 +130,7 @@ struct.from.bin <- function (vol, roi.name = vol$description, roi.nb = 1,
             ptk <- struct$roi.data[[1]][[k]]$pt
             keep <- .pt.in.polygon (ptj[ ,1], ptj[ ,2],
                                       ptk[ ,1], ptk[ ,2]) > 0.5
-            return (ifelse (any(keep), k,NA))}))
+            return (ifelse (all(keep), k,NA))}))
           r <- r[!is.na (r)]
           struct$roi.data[[1]][[j]]$level <- ifelse (length(r)!=0, length(r), 0)
         } 

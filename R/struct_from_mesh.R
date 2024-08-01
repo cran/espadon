@@ -427,7 +427,7 @@ struct.from.mesh <- function(mesh, z, thickness = NULL,
                       if (L.ct_[[k]]$type != "CLOSED_PLANAR") return(NA)
                       keep <- .pt.in.polygon (ptj[,1], ptj[,2], ptk[ ,1],
                                                         ptk[ ,2]) > 0.5
-                      return (ifelse (any(keep), k,NA))}))
+                      return (ifelse (all(keep), k,NA))}))
                     r <- r[!is.na (r)]
                     L.ct_[[j]]$level <- length(r)
                   }

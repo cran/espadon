@@ -161,6 +161,8 @@ roidata.sort <- function(roi.data, thickness = NULL, clockwise = TRUE){
         roi.data[[j]]$level <- ifelse (length(r)!=0, length(r), 0)
         
         if (type[j] == "closedplanar") 
+          # pt <- polyg.sort(l$pt)
+          
           roi.data[[j]]$pt  <- polyg.sort (roi.data[[j]]$pt, 
                                               clockwise = (roi.data[[j]]$level %%2) == as.numeric(!clockwise))
       } 

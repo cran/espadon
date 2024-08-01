@@ -24,7 +24,9 @@ rt.indices.from.bin(
   D.xcc = NULL,
   V.xpc = NULL,
   V.xGy = NULL,
-  verbose = TRUE
+  DVH = TRUE,
+  verbose = TRUE,
+  ...
 )
 }
 \arguments{
@@ -81,7 +83,12 @@ calculated.}
 \item{V.xGy}{Vector of the minimum dose in Gy, received by the volume to be
 calculated.}
 
+\item{DVH}{boolean. If \code{TRUE} (default), the function returns the DVHs of
+the target and healthy ROIs.}
+
 \item{verbose}{Boolean. if \code{TRUE} (default) a progress bar is displayed.}
+
+\item{...}{others parameters such as \code{DVH.step}.}
 }
 \value{
 Return  a list of  indices dataframe. For details, see
@@ -127,7 +134,8 @@ indices <- rt.indices.from.bin (D, target.bin.list, healthy.bin.list,
                                 conformity.indices = c("PITV", "PDS", "CI.lomax2003", 
                                                        "CN", "NCI", "DSC","COIN"),
                                 verbose = FALSE)
-indices
+indices[c("dosimetry","volume", "conformity","homogeneity","gradient")]
+head(indices$DVH)
 }
 \seealso{
 \link[espadon]{rt.indices.from.roi}.

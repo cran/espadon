@@ -30,11 +30,11 @@
 #' @importFrom methods is
 get.value.from.ijk <- function (ijk, vol, interpolate = TRUE, s.ijk = c(1,1,1))  {
   if (!is (vol, "volume")) stop ("vol should be a volume class object.")
-  s_ijk <- s.ijk
-  s_ijk [s_ijk < 1] <- 1
+  s_ijk <- abs(s.ijk)
+  # s_ijk [s_ijk < 1] <- 1
   if (length(s_ijk) < 3) s_ijk <- c(s_ijk, rep(s_ijk[length(s_ijk) ],2))[1:3]
-  if (length(s.ijk)!=3 | !all(s_ijk[1:min(length(s.ijk),3)]==s.ijk[1:min(length(s.ijk),3)])) 
-    warning("s.ijk is set to c(", paste(s_ijk, collapse = ", "),")")
+  # if (length(s.ijk)!=3 | !all(s_ijk[1:min(length(s.ijk),3)]==s.ijk[1:min(length(s.ijk),3)])) 
+  #   warning("s.ijk is set to c(", paste(s_ijk, collapse = ", "),")")
   toC3M <- function (vect) {return(matrix(vect,ncol=3))}
   ijk <- toC3M (ijk)
 

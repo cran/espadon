@@ -31,7 +31,9 @@ rt.indices.from.roi(
   D.xcc = NULL,
   V.xpc = NULL,
   V.xGy = NULL,
-  verbose = TRUE
+  DVH = TRUE,
+  verbose = TRUE,
+  ...
 )
 }
 \arguments{
@@ -100,7 +102,12 @@ calculated.}
 \item{V.xGy}{Vector of the minimum dose in Gy, received by the volume to be
 calculated.}
 
+\item{DVH}{boolean. If \code{TRUE} (default), the function returns the DVHs of
+the target and healthy ROIs.}
+
 \item{verbose}{Boolean. if \code{TRUE} (default) a progress bar is displayed.}
+
+\item{...}{others parameters such as \code{DVH.step}.}
 }
 \value{
 Returns  a list containing (if requested)
@@ -115,6 +122,8 @@ mean and standard deviation of the dose in the regions of interest.
 \item the requested \code{$D.xcc} : (Gy) Dose covering x (\mjeqn{cm^3}{ascii})
 of structure volume.
 }
+All numbers are displayed with a resolution depending on the DVH quantization
+step. The default resolution is 1e-3.
 
 \mjeqn{-~volume}{ascii} : dataframe containing, for all target and
 healthy structures, and isodoses:
@@ -261,6 +270,9 @@ respectively the mean and the standard deviation of the dose in the target volum
 \mjdeqn{mGI = \frac{V_{0.5~\cdot~presc.dose}}{V_{target ~\ge~ presc.dose}} = 
 \frac{V_{0.5~\cdot~presc.dose}}{V_{target} ~\cap~ V_{presc.dose}}}{ascii}
 }
+
+\mjeqn{-~DVH}{ascii} : dataframe containing the Dose-Volume histograms of
+target and healthy ROIs, in percent.
 }
 \description{
 The \code{rt.indices.from.roi} function calculates, from a "volume"
@@ -290,7 +302,8 @@ indices <- rt.indices.from.roi (patient$rtdose[[1]],  patient$rtstruct[[1]],
                                 conformity.indices = c("PITV", "PDS", "CI.lomax2003", 
                                                        "CN", "NCI", "DSC","COIN"),
                                 verbose = FALSE)
-indices
+indices[c("dosimetry","volume", "conformity","homogeneity","gradient")]
+head(indices$DVH)
 }
 \references{
 \strong{[1]} \insertRef{SHAW19931231}{espadon}

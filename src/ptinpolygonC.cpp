@@ -1,15 +1,4 @@
-#include <Rcpp.h>
-using namespace Rcpp;
-
-#include <R.h>
-#include <Rinternals.h>
-#include <Rdefines.h>
-#include <R_ext/Rdynload.h>
-// #include <iostream>
-#include <stdio.h>
-#include <string.h>
-//#include <cstdint>
-#include <locale> 
+#include "esplib.h"
 
 int signC(double x) {
   if (x > 0.0) {
