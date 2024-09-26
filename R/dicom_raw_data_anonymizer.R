@@ -8,6 +8,7 @@
 #' @param new.PIN Character string, representing the PIN remplacing the old one.
 #' @param reset.private.tag Boolean, if \code{TRUE}, the value of tags that are 
 #' not in the \code{tag.dictionary} is removed.
+#' @param new.UID Boolean. If \code{TRUE}, new UID are generated and replace the old ones.
 #' @param tag.dictionary Dataframe, by default equal to 
 #' \link[espadon]{dicom.tag.dictionary}, whose structure it must keep. This 
 #' dataframe is used to parse DICOM files.
@@ -41,8 +42,11 @@
 #' # zz <- file (new.file.name, "wb")
 #' # writeBin (an.raw.data, zz, size = 1)
 #' # close (zz)
+#' 
+#' @importFrom sodium hash
+#' @importFrom qs qserialize
 dicom.raw.data.anonymizer <- function( dicom.raw.data, offset = 0 , new.PIN = "Anonymous ",
-                                       reset.private.tag = FALSE,
+                                       reset.private.tag = FALSE, new.UID = FALSE,
                                        tag.dictionary = dicom.tag.dictionary ()){
   if (nchar(new.PIN)%%2 != 0) new.PIN <- paste(new.PIN," ",sep = "")
   
@@ -52,6 +56,24 @@ dicom.raw.data.anonymizer <- function( dicom.raw.data, offset = 0 , new.PIN = "A
     return(FALSE)
   }
 
+  UID.idx <- c()
+  if (new.UID){
+    UID.tab <- .dicom.get.UID (dicom.raw.data, white.list = c("UID"), 
+                               black.list = c("class"),
+                               tag.dictionary = dicom.tag.dictionary (),
+                               dicom.browser= dicom.df)
+    linktab <- unique(UID.tab[,c("Value","Value")])
+    linktab[,2] <- sapply( linktab[,1], function(uid) {
+      UID <- qserialize(list(uid,new.PIN,offset))
+      le.esp <- nchar( .espadon.UID()) + 1
+      return(paste( .espadon.UID(),
+                   paste(as.numeric(hash(UID, key = NULL,  size = max(nchar(uid),16+le.esp)-le.esp)) %% 10, 
+                         collapse=""), sep="."))
+    })
+    UID.tab$Value <- linktab[match(UID.tab$Value,linktab$Value),2]
+    UID.idx <- match(UID.tab$tag, dicom.df$tag)
+  }
+  
   last.tag <-sapply(dicom.df$tag, function(t) rev(unlist(strsplit(t, "[ ]")))[1])
   
   m <- match(last.tag, tag.dictionary$tag)
@@ -81,7 +103,7 @@ dicom.raw.data.anonymizer <- function( dicom.raw.data, offset = 0 , new.PIN = "A
   DA.idx <- which (dicom.df$VR=="DA" & has.load)
   DT.idx <- which (dicom.df$VR=="DT" & has.load)
   
-  modify.idx <- sort(c(pat.idx,reset.idx,identity.removed), decreasing = TRUE)
+  modify.idx <- sort(c(pat.idx,reset.idx,identity.removed, UID.idx), decreasing = TRUE)
   
   
   # anonymise date
@@ -112,9 +134,14 @@ dicom.raw.data.anonymizer <- function( dicom.raw.data, offset = 0 , new.PIN = "A
       new.raw <- NULL
       part1 <- NULL
       part3 <- NULL
+      match.uid <- match(idx,UID.idx)
       if (idx %in% pat.idx) {
         new.raw <- charToRaw(new.PIN)
-      } else if (idx %in% identity.removed) {new.raw <- charToRaw("YES ")}
+      } else if (idx %in% identity.removed) {new.raw <- charToRaw("YES ")
+      } else if (!is.na(match.uid)) {
+        new.raw <- c(charToRaw(UID.tab$Value[match.uid]),as.raw(0x00))
+        new.raw <- new.raw[1:(2 * floor(length(new.raw)/2))]
+      }
       if (dicom.df$start[idx]> 1) part1 <- dicom.raw.data[1:(dicom.df$start[idx]-1)]
       if (length(dicom.raw.data)> dicom.df$stop[idx]) part3 <- dicom.raw.data[(dicom.df$stop[idx] + 1): length(dicom.raw.data)]
       #transformer la partie du dicom.raw.data

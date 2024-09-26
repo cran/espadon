@@ -1,4 +1,4 @@
-.vol.border.tuning <- function (vol, pre.nijk = c (0, 0, 0), post.nijk = pre.nijk) {
+.vol.border.tuning <- function (vol, pre.nijk = c (0, 0, 0), post.nijk = pre.nijk, default.value = FALSE) {
   if (all(pre.nijk == c(0,0,0)) &  all(post.nijk == c(0,0,0))) return(vol)
   
   new.vol <- vol
@@ -23,7 +23,7 @@
                                  new.vol$n.ijk[1]-1, new.vol$n.ijk[2]-1, new.vol$n.ijk[3]-1, 1, 0, new.vol$n.ijk[2]-1, new.vol$n.ijk[3]-1, 1),
                                nrow=4, byrow= FALSE)
   
-  new.vol$vol3D.data <- array(NA, dim=new.vol$n.ijk)
+  new.vol$vol3D.data <- array(default.value, dim=new.vol$n.ijk)
   
   flag.i <- max(1, 1 - pre.nijk[1]) : min (vol$n.ijk[1], vol$n.ijk[1] + post.nijk[1])
   flag.j <- max(1, 1 - pre.nijk[2]) : min (vol$n.ijk[2], vol$n.ijk[2] + post.nijk[2])

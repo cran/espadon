@@ -58,7 +58,7 @@ nesting.bin <- function (obj, sel.bin, alias = "", description = NULL,
   T.MAT <- args[['T.MAT']]
   
   if (!is (sel.bin, "volume")) stop ("sel.bin should be a volume class object.")
-  if (sel.bin$modality!="binary") stop ("sel.bin must be of binary modality.")
+ 
   if (is.null(sel.bin$vol3D.data)) stop ("empty sel.bin$vol3D.data.")
   
   if (is.null(description)) description <-  paste (obj$description, "restricted to", 
@@ -70,9 +70,12 @@ nesting.bin <- function (obj, sel.bin, alias = "", description = NULL,
   
   if (is (obj, "volume")) {
   #-------------------------
-    if(is.null(obj$vol3D.data)) stop ("empty obj$vol3D.data.")
-  
-    ext.pt <- get.extreme.pt(sel.bin, pt.min = eps)
+    if (sel.bin$modality!="binary" & sel.bin$modality!="weight") 
+      stop ("sel.bin must be of modality binary or weight.")
+    pt <- get.xyz.from.index(which(sel.bin$vol3D.data > 0), sel.bin)
+    if (is.null(pt)) stop("sel.bin has no selection zone")
+    ext.pt <- data.frame(min=apply(pt,2,min),max = apply(pt,2,max))
+    # ext.pt <- get.extreme.pt(sel.bin, pt.min = eps, min=0.5)
     ext.pt[1,] <- ext.pt[1,] + abs(xyz.margin[1])*c(-1,1)
     ext.pt[2,] <- ext.pt[2,] + abs(xyz.margin[2])*c(-1,1)
     ext.pt[3,] <- ext.pt[3,] + abs(xyz.margin[3])*c(-1,1)
@@ -133,7 +136,7 @@ nesting.bin <- function (obj, sel.bin, alias = "", description = NULL,
     #                           description=description) 
     # 
   } else if (is (obj, "mesh")){
-    
+    if (sel.bin$modality!="binary") stop ("sel.bin must be of binary modality.")
     #on aggrandit sel.bin de la marge: 
   
     if (any(abs(xyz.margin)!=0)) sel.bin <- bin.dilation(sel.bin, radius =abs(xyz.margin))

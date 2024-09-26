@@ -13,7 +13,7 @@
 
 #####################################################################################
 .espadon.version <- function(){
-  return ("1.7.4")
+  return ("1.8.0")
 }
 
 #####################################################################################
@@ -3079,15 +3079,21 @@
   
   if (Lobj$from.dcm){
     if (!is.null(Lobj$data) & is.null(L$error)) {
-    
-      L$vol3D.data <-unlist(lapply(1:length(Lobj$data), function (i){
-        pixel <- tryCatch (as.numeric (Lobj$data[[i]][[grep("[(]7FE0,0010[)]$",names(Lobj$data[[i]]))]]), error = function (e) NA)
-        # flag <- pixel > 2^ L$pixeldecode$MSB
-        # flag[is.na(flag)] <- FALSE
-        # if (L$pixeldecode$signed==1) pixel [flag] <-  pixel [flag] - 2^ L$pixeldecode$bit.stored 
-        pixel * L$pixeldecode$slope[i] +    L$pixeldecode$intercept[i]
-      }))
-      L$vol3D.data <- round(array(L$vol3D.data , dim=c(L$n.ijk[1], L$n.ijk[2], L$n.ijk[3])),3)
+      if (all(L$pixeldecode$slope == round(L$pixeldecode$slope)) & 
+          all(L$pixeldecode$intercept == round(L$pixeldecode$intercept))){
+        L$vol3D.data <-unlist(lapply(1:length(Lobj$data), function (i){
+          pixel <- tryCatch (as.numeric (Lobj$data[[i]][[grep("[(]7FE0,0010[)]$",names(Lobj$data[[i]]))]]), error = function (e) NA)
+          as.integer(pixel * L$pixeldecode$slope[i] + L$pixeldecode$intercept[i])
+        }))
+        L$min.pixel <- as.integer(L$min.pixel)
+        L$max.pixel <- as.integer(L$max.pixel)
+      } else {
+        L$vol3D.data <-unlist(lapply(1:length(Lobj$data), function (i){
+          pixel <- tryCatch (as.numeric (Lobj$data[[i]][[grep("[(]7FE0,0010[)]$",names(Lobj$data[[i]]))]]), error = function (e) NA)
+          round(pixel * L$pixeldecode$slope[i] + L$pixeldecode$intercept[i], 6)
+        }))
+      }
+      L$vol3D.data <- array(L$vol3D.data , dim=c(L$n.ijk[1], L$n.ijk[2], L$n.ijk[3]))
     }
     L$pixeldecode <- NULL
     L$dvh <- NULL

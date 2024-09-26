@@ -31,11 +31,11 @@
 #' }
 #' @export
 #' @importFrom methods is
-
+#' @importFrom Rvcg vcgBox vcgClost vcgRaySearch
 nesting.cube <- function (obj, pt.min, pt.max, alias = "", description = NULL,...){
   
   passed <- names(as.list(match.call())[-1])
-  args <- list(...)
+  args <- tryCatch(list(...), error = function(e)list())
   if (!("obj" %in% passed)){
     if (is.null(args[['vol']])) stop('argument "obj" is missing, with no default')
     obj <- args[['vol']]
@@ -107,6 +107,40 @@ nesting.cube <- function (obj, pt.min, pt.max, alias = "", description = NULL,..
     }
     
     return(new.obj)
+    
+  } else if(is (obj, "struct")){
+    obj_ <- obj
+    obj_$file.basename <- ""
+    obj_$file.dirname <- ""
+    obj_$object.name <- alias
+    obj_$object.alias <- alias
+    obj_$object.info <- NULL
+    obj_$ref.object.alias <- NULL
+    obj_$ref.object.info <- NULL
+    if (!is.null(description)) obj_$description <- description
+    
+    
+    M <- solve(obj$ref.from.contour)
+    pt.min_ <- (c(pt.min,1) %*% t(M))[1,1:3]
+    pt.max_ <- (c(pt.max,1) %*% t(M))[1,1:3]
+    mesh.cube <- vcgBox()
+
+    mesh.cube$vb[1, c(1,3,5,7)] <- pt.max_[1]
+    mesh.cube$vb[1, c(2,4,6,8)] <- pt.min_[1]
+    mesh.cube$vb[2, c(1,2,5,6)] <- pt.max_[2]
+    mesh.cube$vb[2, c(3,4,7,8)] <- pt.min_[2]
+    mesh.cube$vb[3, 1:4] <- pt.max_[3]
+    mesh.cube$vb[3, 5:8] <- pt.min_[3]
+    
+    select.roi <- select.names (obj$roi.info$roi.pseudo, 
+                                args[["roi.name"]], args[["roi.sname"]], args[["roi.idx"]])
+    
+    for(roi.idx in select.roi){
+     
+    }
+    if (alias=="") return(obj_)
+    return(.set.ref.obj(obj_,list(obj)))
+
   } else {
     vb.idx<- which(as.numeric( obj$mesh$vb[1,])>=as.numeric(pt.min[1]) & 
                      as.numeric( obj$mesh$vb[2,])>=as.numeric(pt.min[2]) & 

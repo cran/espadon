@@ -1,7 +1,7 @@
 ####################################################################
 #' Creation of a binary volume according to RoI
-#' @description The \code{bin.from.roi} function creates a "volume" class 
-#' object, of "binary" modality, in which all the voxels of a RoI are set to \code{TRUE}.
+#' @description The \code{bin.from.roi} function creates a "volume" class object,
+#' of modality "binary" or "weight", by selecting the voxels defined by the RoI.
 #' @param vol "volume" class object.
 #' @param struct "struct" class object.
 #' @param roi.name Vector of exact names of the RoI in the \code{struct} object.
@@ -24,7 +24,7 @@
 #' \code{description = NULL}
 #' (default value), it will be set to \code{struct$roi.info$roi.pseudo[roi.idx]}.
 #' @param modality modality ("binary" or "weight") of the generated object.
-#' @param ... additional argument such as verbose
+#' @param ... additional argument. 
 #' @return Returns a "volume" class object of "binary" or "weight" modality (see 
 #' \link[espadon]{espadon.class} for class definitions), with the same grid as 
 #' \code{vol}. 
@@ -91,10 +91,6 @@
 #' }
 
 #' @importFrom methods is
-#' @import progress
-
-
-  
 #' @export
 bin.from.roi <- function (vol, struct, roi.name = NULL, roi.sname = NULL, roi.idx = NULL,
                            T.MAT = NULL,  within = TRUE, alias = "", description = NULL,
@@ -118,7 +114,7 @@ bin.from.roi <- function (vol, struct, roi.name = NULL, roi.sname = NULL, roi.id
   if (length (vol$k.idx)>1) {if (!all (diff(vol$k.idx)==1)) stop ("planes must be contiguous.")}
   if(is.null(struct$roi.data)) stop ("empty roi.data.")
   rigid.M <- get.rigid.M (T.MAT, src.ref=struct$ref.pseudo, dest.ref = vol$ref.pseudo)
-  if (is.null(rigid.M)) stop("vol and struct do not have the same repository: define a valid T.MAT")
+  if (is.null(rigid.M)) stop("vol and struct do not have the same frame of reference: define a valid T.MAT")
   
   warning.f <- FALSE
   if (length (roi.idx) == 0) {
@@ -295,8 +291,8 @@ bin.from.roi <- function (vol, struct, roi.name = NULL, roi.sname = NULL, roi.id
   }
   
   if (modality == "binary"){
-    vol.out$max.pixel <- as.logical( vol.out$max.pixel)
-    vol.out$min.pixel <- as.logical( vol.out$min.pixel)
+    vol.out$max.pixel <- !as.logical(round(1-vol.out$max.pixel))
+    vol.out$min.pixel <- !as.logical(round(1-vol.out$min.pixel))
     vol.out$vol3D.data <- array(!as.logical (round(1-vol.out$vol3D.data)),dim =vol.out$n.ijk)
   }
   
@@ -311,6 +307,7 @@ bin.from.roi <- function (vol, struct, roi.name = NULL, roi.sname = NULL, roi.id
 }
 
 ######################################################################################
+#' @import progress
 .bin.from.roi <- function (vol, struct, roi.name = NULL, roi.sname = NULL, roi.idx = NULL,
                           T.MAT = NULL,  within = TRUE, alias = "", description = NULL,...){
   if (is.null(vol)) return (NULL)

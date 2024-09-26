@@ -9,8 +9,8 @@ bin.opening(vol, radius = 10, alias = "", description = NULL)
 \arguments{
 \item{vol}{"volume" class object, of "binary" modality.}
 
-\item{radius}{Positive number, or xyzvector of 3 positive numbers (), in millimeters.
-By default, radius = 10.}
+\item{radius}{Positive number, or xyz-vector of 3 positive numbers. By default,
+radius = 10.}
 
 \item{alias}{Character string, \code{$object.alias} of the created object.}
 

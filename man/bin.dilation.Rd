@@ -9,8 +9,8 @@ bin.dilation(vol, radius = 10, alias = "", description = NULL)
 \arguments{
 \item{vol}{"volume" class object, of \code{"binary"} modality}
 
-\item{radius}{Positive number, or xyzvector of 3 positive numbers (), in millimeters.
-By default, radius = 10.}
+\item{radius}{Positive number, or xyz-vector of 3 positive numbers.By default,
+radius = 10.}
 
 \item{alias}{Character string, \code{$object.alias} of the created object.}
 
@@ -35,10 +35,6 @@ Dilation is useful for :
 \item filling narrow channels,
 \item merging two shapes close to each other.
 }
-}
-\note{
-Dilation can be time consuming, try to reduce the \code{binary}
-volume to the strict minimum, before any operations.
 }
 \examples{
 # loading of toy-patient objects (decrease dxyz for better result)

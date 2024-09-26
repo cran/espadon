@@ -51,7 +51,7 @@ depending on their \code{$level} field. If \code{within = FALSE}, only the
 
 \item{modality}{modality ("binary" or "weight") of the generated object.}
 
-\item{...}{additional argument such as verbose}
+\item{...}{additional argument.}
 }
 \value{
 Returns a "volume" class object of "binary" or "weight" modality (see
@@ -65,8 +65,8 @@ included in the ROI.
 }
 }
 \description{
-The \code{bin.from.roi} function creates a "volume" class
-object, of "binary" modality, in which all the voxels of a RoI are set to \code{TRUE}.
+The \code{bin.from.roi} function creates a "volume" class object,
+of modality "binary" or "weight", by selecting the voxels defined by the RoI.
 }
 \details{
 \code{roi.name}, \code{roi.sname}, and \code{roi.idx} must select

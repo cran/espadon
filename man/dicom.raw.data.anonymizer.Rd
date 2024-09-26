@@ -9,6 +9,7 @@ dicom.raw.data.anonymizer(
   offset = 0,
   new.PIN = "Anonymous ",
   reset.private.tag = FALSE,
+  new.UID = FALSE,
   tag.dictionary = dicom.tag.dictionary()
 )
 }
@@ -23,6 +24,8 @@ by this offset expressed in days.}
 
 \item{reset.private.tag}{Boolean, if \code{TRUE}, the value of tags that are
 not in the \code{tag.dictionary} is removed.}
+
+\item{new.UID}{Boolean. If \code{TRUE}, new UID are generated and replace the old ones.}
 
 \item{tag.dictionary}{Dataframe, by default equal to
 \link[espadon]{dicom.tag.dictionary}, whose structure it must keep. This
@@ -65,4 +68,5 @@ df
 # zz <- file (new.file.name, "wb")
 # writeBin (an.raw.data, zz, size = 1)
 # close (zz)
+
 }

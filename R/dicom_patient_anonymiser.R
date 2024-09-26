@@ -10,6 +10,7 @@
 #' @param new.PIN Character string, representing the PIN remplacing the old one.
 #' @param reset.private.tag Boolean, if \code{TRUE}, the value of tags that are 
 #' not in the \code{tag.dictionary} is removed.
+#' @param new.UID Boolean. If \code{TRUE}, new UID are generated and replace the old ones.
 #' @param tag.dictionary Dataframe, by default equal to 
 #' \link[espadon]{dicom.tag.dictionary}, whose structure it must keep. This 
 #' dataframe is used to parse DICOM files.
@@ -26,7 +27,7 @@
 #' \item If \code{reset.private.tag = TRUE}, the values of the tags not contained 
 #' in the \code{tag.dictionary} are deleted.
 #' }
-#' File names are composed of their modality and the SOP UID.
+#' File names are composed of their modality and a part of the SOP UID.
 #' @examples
 #' # First, save toy.dicom.raw () raw data to a temporary file pat.dir for testing.
 #' temp <- tempdir()
@@ -53,7 +54,7 @@
 #' @import progress
 dicom.patient.anonymiser <- function(dcm.files, pat.dest.dir, offset = 0,
                                      new.PIN = "Anonymous patient",
-                                     reset.private.tag = FALSE,
+                                     reset.private.tag = FALSE, new.UID = FALSE,
                                      tag.dictionary = dicom.tag.dictionary(),
                                      verbose = TRUE){
   
@@ -87,19 +88,25 @@ dicom.patient.anonymiser <- function(dcm.files, pat.dest.dir, offset = 0,
   
   for(fn in dcm.filenames) {
     raw.data <- dicom.raw.data.loader(fn)
-    dicom.df <- dicom.browser(raw.data, stop.tag = "(0008,0060)", full.info = TRUE)
-    m <- match(c("(0008,0060)","(0008,0018)"),dicom.df$tag)
-    new.fn <- paste0(paste(sapply(m, function(idx) {
-      dicom.tag.parser (dicom.df$start[idx], dicom.df$stop[idx], 
-                        dicom.df$VR[idx], dicom.df$endian[idx],
-                        raw.data, try.parse= FALSE)}), collapse ="_"),".dcm")
-    
+      
     an.raw.data <- dicom.raw.data.anonymizer(
       raw.data,
       offset = offset,
       new.PIN = new.PIN,
       reset.private.tag = reset.private.tag,
+      new.UID = new.UID,
       tag.dictionary = tag.dictionary)
+    dicom.df <- dicom.browser(an.raw.data, stop.tag = "(0008,0060)", full.info = TRUE)
+    m <- match(c("(0008,0060)","(0008,0018)"),dicom.df$tag)
+    new.fn <- paste0(dicom.tag.parser (dicom.df$start[m[1]], dicom.df$stop[m[1]], 
+                                       dicom.df$VR[m[1]], dicom.df$endian[m[1]], an.raw.data, 
+                                       try.parse= FALSE), "_",
+                     gsub(paste0(.espadon.UID(),"."),"", 
+                          dicom.tag.parser (dicom.df$start[m[2]], dicom.df$stop[m[2]], 
+                                            dicom.df$VR[m[2]], dicom.df$endian[m[2]],
+                                            an.raw.data, try.parse= FALSE)),".dcm")
+
+    
     zz <- file (file.path(pat.dest.dir, new.fn), "wb")
     writeBin (an.raw.data, zz, size = 1)
     close(zz)

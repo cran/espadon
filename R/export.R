@@ -1764,7 +1764,9 @@ create.UID <- function(obj, el.name=NULL,supp.info.l=NULL, size=64){ #>44
   UID <- paste(.espadon.UID(),
                paste(as.numeric(hash(UID, key = NULL,  size = max(size,16+le.esp)-le.esp)) %% 10, 
                      collapse=""), sep=".")
-  return(charToRaw(UID))
+  new.raw <- c(charToRaw (UID),as.raw(0x00))
+  new.raw <- new.raw[1:(2 * floor(length(new.raw)/2))]
+  return(new.raw)
 }
 
 

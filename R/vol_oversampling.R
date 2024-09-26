@@ -48,20 +48,20 @@ vol.oversampling <- function(vol, fact.ijk = 2, alias = "",interpolate = TRUE, d
   if (length(fact.ijk)==1) fact.ijk <- rep (fact.ijk, 3)
   if (all(fact.ijk==c(1,1,1))) return (vol)
   
-  
-  t.mat <- ref.cutplane.add(vol, ref.cutplane = "rcp" )
-  vol_ <- vol.in.new.ref(vol, new.ref.pseudo="rcp", T.MAT =  t.mat)
+  rcp <- paste0(vol$ref.pseudo,"m")
+  t.mat <- ref.cutplane.add(vol, ref.cutplane = rcp )
+  vol_ <- vol.in.new.ref(vol, new.ref.pseudo = rcp, T.MAT =  t.mat)
   new.dxyz <- vol_$dxyz
   true.n.ijk <- c(vol$n.ijk[1:2], vol$k.idx[vol$n.ijk[3]]-vol$k.idx[1]+1)
   new.n.ijk <- true.n.ijk
   
   # f <- new.n.ijk>1
   f <- rep(TRUE,3)
-  new.dxyz[f] <-  new.dxyz[f]/fact.ijk[f]
-  new.n.ijk[f] <- new.n.ijk[f] * fact.ijk[f] #(new.n.ijk[f]-1)*fact.ijk[f] + 1
+  new.dxyz[f] <-  new.dxyz[f]/fact.ijk[f] 
+  new.n.ijk[f] <- new.n.ijk[f] * fact.ijk[f] - fact.ijk[f] + as.numeric(f)#(new.n.ijk[f]-1)*fact.ijk[f] + 1
   #back.vol <- vol.create(n.ijk = new.n.ijk, dxyz=new.dxyz, pt000 = vol_$xyz0[1,], ref.pseudo = "rcp")
-  back.vol <- vol.create(n.ijk = new.n.ijk, dxyz=new.dxyz, 
-                         pt000 = vol_$xyz0[1,]+(new.dxyz-vol_$dxyz)/2, ref.pseudo = "rcp")
+  back.vol <- vol.create(n.ijk = new.n.ijk , dxyz=new.dxyz, 
+                         pt000 = vol_$xyz0[1,], ref.pseudo = rcp)
   
   if (is.null(description))  description <- paste("oversampling", vol$description)
   vol_ <- vol.regrid(vol_,back.vol, alias = "", interpolate=interpolate, description = description)

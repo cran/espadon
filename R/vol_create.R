@@ -11,6 +11,8 @@
 #' first voxel of the first plane.
 #' @param default.value Numerical or boolean value, representing the default 
 #' value of the voxels.
+#' @param value.sd Positive integer. If \code{default.value} is a number, it 
+#' represents standard deviation of the volume default value.
 #' @param ref.pseudo Character string, frame of reference pseudonym of the 
 #' created object.By defaukt equal to "ref1"
 #' @param frame.of.reference Character string, frame of reference of the 
@@ -42,7 +44,7 @@
 
 #' @export
 vol.create <- function (n.ijk, dxyz, mid.pt = NULL, pt000 = NULL, 
-                        default.value = NA, ref.pseudo = "ref1", 
+                        default.value = NA, value.sd = 0, ref.pseudo = "ref1", 
                         frame.of.reference = "",
                         alias = "", modality = "",  
                         description = "", number = 0) {
@@ -85,8 +87,7 @@ vol.create <- function (n.ijk, dxyz, mid.pt = NULL, pt000 = NULL,
   back.vol$n.ijk <- n.ijk
   back.vol$slice.thickness <- abs (dxyz[3])
 
-  back.vol$min.pixel <- default.value
-  back.vol$max.pixel <- default.value
+
 
   back.vol$dxyz<- dxyz
   back.vol$orientation <- c(1,0,0,0,1,0)
@@ -112,8 +113,17 @@ vol.create <- function (n.ijk, dxyz, mid.pt = NULL, pt000 = NULL,
                                   n.ijk[1]-1, n.ijk[2]-1, n.ijk[3]-1, 1,
                                   0, n.ijk[2]-1, n.ijk[3]-1, 1), nrow=4, byrow= FALSE)
   
-
-  back.vol$vol3D.data <- array(default.value, dim=back.vol$n.ijk)
+  if (is.numeric(default.value[1]) & abs(value.sd)!=0) {
+    back.vol$vol3D.data <- rnorm (prod(back.vol$n.ijk), default.value[1], abs(value.sd))
+    if (is.integer(default.value[1]))  back.vol$vol3D.data  <- as.integer(round(back.vol$vol3D.data))
+    back.vol$vol3D.data <- array(back.vol$vol3D.data, dim=back.vol$n.ijk)
+    back.vol$min.pixel <- min(back.vol$vol3D.data, na.rm = TRUE)
+    back.vol$max.pixel <- max(back.vol$vol3D.data, na.rm = TRUE)
+  } else {
+    back.vol$vol3D.data <- array(default.value[1], dim=back.vol$n.ijk)
+    back.vol$min.pixel <- default.value[1]
+    back.vol$max.pixel <- default.value[1]
+    }
 
   class (back.vol) <- "volume"
   return(back.vol)

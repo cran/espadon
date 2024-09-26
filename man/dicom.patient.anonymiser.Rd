@@ -10,6 +10,7 @@ dicom.patient.anonymiser(
   offset = 0,
   new.PIN = "Anonymous patient",
   reset.private.tag = FALSE,
+  new.UID = FALSE,
   tag.dictionary = dicom.tag.dictionary(),
   verbose = TRUE
 )
@@ -28,6 +29,8 @@ by this offset expressed in days.}
 
 \item{reset.private.tag}{Boolean, if \code{TRUE}, the value of tags that are
 not in the \code{tag.dictionary} is removed.}
+
+\item{new.UID}{Boolean. If \code{TRUE}, new UID are generated and replace the old ones.}
 
 \item{tag.dictionary}{Dataframe, by default equal to
 \link[espadon]{dicom.tag.dictionary}, whose structure it must keep. This
@@ -53,7 +56,7 @@ and shifted birthday.
 \item If \code{reset.private.tag = TRUE}, the values of the tags not contained
 in the \code{tag.dictionary} are deleted.
 }
-File names are composed of their modality and the SOP UID.
+File names are composed of their modality and a part of the SOP UID.
 }
 \examples{
 # First, save toy.dicom.raw () raw data to a temporary file pat.dir for testing.

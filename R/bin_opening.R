@@ -8,8 +8,8 @@
 #' \item smoothing shapes.
 #' }
 #' @param vol "volume" class object, of "binary" modality.
-#' @param radius Positive number, or xyzvector of 3 positive numbers (), in millimeters.
-#'  By default, radius = 10.
+#' @param radius Positive number, or xyz-vector of 3 positive numbers. By default, 
+#' radius = 10.
 #' @param alias Character string, \code{$object.alias} of the created object.
 #' @param description Character string, describing the created object. If 
 #' \code{description = NULL} (default value), it will be set to 
@@ -41,15 +41,15 @@
 #' @importFrom stats fft
 #' @importFrom methods is
 bin.opening <- function (vol, radius=10, alias = "", description = NULL) {
+
   if (is.null(vol)) return (NULL)
   if (!is (vol, "volume")) stop ("vol should be a volume class object.")
   if ((vol$modality!="binary")) stop ("vol must be of binary modality.")
   if(is.null(vol$vol3D.data)) stop ("empty vol$vol3D.data.")
   
   radius <- rep(radius,3)[1:3]
-  orientation <- matrix(vol$orientation,ncol=2, byrow=FALSE)
-  M.cut.from.refpseudo <- solve(as.matrix(cbind(orientation[,1], orientation[,2],
-                                                vector.product(orientation[,1], orientation[,2])),
+  M.cut.from.refpseudo <- solve(as.matrix(cbind(vol$orientation[1:3], vol$orientation[4:6],
+                                                vector.product(vol$orientation[1:3], vol$orientation[4:6])),
                                           dimnames = list(NULL,NULL)))
   radius <- abs(as.vector(radius  %*%t(M.cut.from.refpseudo)))
   if (all(radius -vol$dxyz<0)) {
@@ -61,37 +61,22 @@ bin.opening <- function (vol, radius=10, alias = "", description = NULL) {
   
   if (is.null(description)) description <-  paste (vol$object.alias, "opening r =", paste(unique(radius), collapse=" "))
   
-  Vb <- bin.inversion(vol, alias = alias, description = description)
-  
+
+  Vb <- bin.inversion(vol,alias = alias, description = description)
   na.pt <- is.na(Vb$vol3D.data)
   
   #augmentation provisoire eventuelle du volume
-  delta <- ceiling(radius/abs(Vb$dxyz))
+  delta <- ceiling(radius/abs(Vb$dxyz)) + 1
   
-  n.i <- c (1:delta[1],Vb$n.ijk[1]-(1:delta[1]) + 1)
-  n.i <- n.i[!is.na(match(n.i,1:Vb$n.ijk[1]))]
-  n.j <- c (1:delta[2],Vb$n.ijk[2]-(1:delta[2]) + 1)
-  n.j <- n.j[!is.na(match(n.j,1:Vb$n.ijk[2]))]
-  n.k <- c (1:delta[3],Vb$n.ijk[3]-(1:delta[3]) + 1)
-  n.k <- n.k[!is.na(match(n.k,Vb$k.idx+1))]
+  ext.ijk <- apply(get.ijk.from.index(which(vol$vol3D.data>0), vol), 2, range) +  
+    rbind(-delta,delta)
   
-  contour.pts <- unique(rbind(expand.grid(i = n.i, 
-                                          j = 1:Vb$n.ijk[2], 
-                                          k = 1 :Vb$n.ijk[3]),
-                              expand.grid(i = 1:Vb$n.ijk[1], 
-                                          j = n.j, 
-                                          k = 1 :Vb$n.ijk[3]),
-                              expand.grid(i = 1:Vb$n.ijk[1], 
-                                          j = 1:Vb$n.ijk[2], 
-                                          k = n.k)))
-  add.contour <- any(Vb$vol3D.data[as.matrix(contour.pts)], na.rm=TRUE)
+  pre.nijk <- - ext.ijk[1,]
+  post.nijk <- ext.ijk[2,] - vol$n.ijk + 1 + as.numeric(!((ext.ijk[2,]-ext.ijk[1,] + 1) %% 2))
   
-  if (!add.contour) delta <- c(0,0,0)
-  add.post <- !(Vb$n.ijk %% 2)
-  if (add.contour | any(add.post)) Vb <- .vol.border.tuning (Vb, pre.nijk = +delta, 
-																		post.nijk = delta+as.numeric(add.post))
-  #####
-  
+  add.ijk <-any(c(pre.nijk,post.nijk)!=0)
+  if (add.ijk) Vb <- .vol.border.tuning (Vb, pre.nijk = pre.nijk, post.nijk = post.nijk)
+
   Vb$vol3D.data [is.na(Vb$vol3D.data)] <- FALSE
   
   kernel <- .kernel (Vb,radius)
@@ -100,34 +85,15 @@ bin.opening <- function (vol, radius=10, alias = "", description = NULL) {
   expansion <- Re (fft (fft (Vb$vol3D.data) * fft_kernel, inverse=TRUE))
   Vb$vol3D.data <- expansion <= 0.5
   
-  if (add.contour) {
-    n.i <- c (1:delta[1],Vb$n.ijk[1]-(1:delta[1]) + 1)
-    n.i <- n.i[!is.na(match(n.i,1:Vb$n.ijk[1]))]
-    n.j <- c (1:delta[2],Vb$n.ijk[2]-(1:delta[2]) + 1)
-    n.j <- n.j[!is.na(match(n.j,1:Vb$n.ijk[2]))]
-    n.k <- c (1:delta[3],Vb$n.ijk[3]-(1:delta[3]) + 1)
-    n.k <- n.k[!is.na(match(n.k,Vb$k.idx+1))]
-    
-    contour.pts <- unique(rbind(expand.grid(i = n.i, 
-                                            j = 1:Vb$n.ijk[2], 
-                                            k = 1 :Vb$n.ijk[3]),
-                                expand.grid(i = 1:Vb$n.ijk[1], 
-                                            j = n.j, 
-                                            k = 1 :Vb$n.ijk[3]),
-                                expand.grid(i = 1:Vb$n.ijk[1], 
-                                            j = 1:Vb$n.ijk[2], 
-                                            k = n.k)))
-    Vb$vol3D.data [as.matrix(contour.pts)] <- FALSE
-  }
-  
   expansion <- Re (fft (fft (Vb$vol3D.data) * fft_kernel, inverse=TRUE))
   Vb$vol3D.data <- expansion > 0.5
-  if (add.contour| any(add.post)) Vb <- .vol.border.tuning (Vb, pre.nijk = -delta,
-																	 post.nijk = -delta-as.numeric(add.post))
+
   
-  Vb$min.pixel <- all(Vb$vol3D.data)
-  Vb$max.pixel <- any(Vb$vol3D.data)
-  Vb$vol3D.data [na.pt] <- NA
+  if (add.ijk) Vb <- .vol.border.tuning (Vb, pre.nijk = -pre.nijk, post.nijk = -post.nijk)
+  
+  Vb$vol3D.data [na.pt & !Vb$vol3D.data] <- NA
+  Vb$min.pixel <- all(Vb$vol3D.data, na.rm = TRUE)
+  Vb$max.pixel <- any(Vb$vol3D.data, na.rm = TRUE)
   
   return (Vb)
 }

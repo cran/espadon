@@ -13,7 +13,6 @@
 #' is of class 'volume'. Arguments \code{roi.name}, \code{roi.sname}, \code{roi.idx} 
 #' if \code{obj} is of class 'struct'. Arguments \code{vol} (depracated), replaced by \code{obj}.
 #' @return Returns a dataframe of min and max columns, and x, y and z rows. 
-#' 
 #' \itemize{
 #' \item If \code{obj} is a member of the class volume: the returned dataframe 
 #' represents the coordinates of the 2 extreme points of the rectangle parallelepiped 

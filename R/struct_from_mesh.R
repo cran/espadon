@@ -32,7 +32,6 @@
 #' S <- struct.from.mesh (M, z = seq(-1,1,0.5))
 #' display.3D.contour(S)
 #' @importFrom Rvcg vcgFaceNormals vcgBorder vcgIsolated checkFaceOrientation vcgGetEdge vcgNonBorderEdge
-#' @importFrom Morpho mergeMeshes 
 #' @importFrom rgl addNormals
 #' @importFrom methods is
 #' @export
@@ -130,7 +129,7 @@ struct.from.mesh <- function(mesh, z, thickness = NULL,
   closed <- c(TRUE, TRUE, FALSE, FALSE)
   orientation <- orientation[f]
   closed <- closed[f]
-  M.L <- lapply(M.L,function(l) {if (length(l)>1) return(mergeMeshes(l)); return(l[[1]])})
+  M.L <- lapply(M.L,function(l) {if (length(l)>1) return(.mergeMeshes(l)); return(l[[1]])})
   if (length(M.L)==0) return(obj)
   
   info.L <- list()
@@ -165,7 +164,7 @@ struct.from.mesh <- function(mesh, z, thickness = NULL,
   
   L.ct <- list()
   total <- length(unlist(lapply(info.L, function(i) i$rangez)))
-  if (verbose)   pb <- progress_bar$new(format ="[:bar] :percent",total = total, width= 60)
+  if (verbose)   pb <- progress_bar$new(format =paste(roi.name,"[:bar] :percent"),total = total, width= 60)
   pb.sens <- FALSE
   if (length(Mesh.L)>0){
     for (M.idx in 1:length(Mesh.L)){
@@ -352,7 +351,7 @@ struct.from.mesh <- function(mesh, z, thickness = NULL,
           
           #et on les mets dans un contours
           L.ct_ <- lapply(vb_u,function(pt.idx) 
-            list(type="POINT",pt = vb[pt.idx, c("x","y","z")], level =0))
+            list(type="POINT ",pt = vb[pt.idx, c("x","y","z")], level =0))
           
           # on rassemble les connexions en cas de contour étudié comme fermé
           # if (info.L[[M.idx]]$closed) {
@@ -408,8 +407,8 @@ struct.from.mesh <- function(mesh, z, thickness = NULL,
                 }
                 
                 row.names(pt) <- NULL
-                if (op) return(list(type="OPEN_PLANAR", pt = pt, level =0))
-                return(list(type="CLOSED_PLANAR", pt = pt, level =0))
+                if (op) return(list(type="OPEN_PLANAR ", pt = pt, level =0))
+                return(list(type="CLOSED_PLANAR ", pt = pt, level =0))
               }))
               
               L.ct_ <- L.ct_[!sapply(L.ct_, is.null)]
@@ -424,7 +423,7 @@ struct.from.mesh <- function(mesh, z, thickness = NULL,
                     
                     r <- unique (sapply (roi.index.k, function (k) {
                       ptk <- L.ct_[[k]]$pt
-                      if (L.ct_[[k]]$type != "CLOSED_PLANAR") return(NA)
+                      if (L.ct_[[k]]$type != "CLOSED_PLANAR ") return(NA)
                       keep <- .pt.in.polygon (ptj[,1], ptj[,2], ptk[ ,1],
                                                         ptk[ ,2]) > 0.5
                       return (ifelse (all(keep), k,NA))}))
@@ -450,4 +449,19 @@ struct.from.mesh <- function(mesh, z, thickness = NULL,
   # display.3D.contour(obj, roi.lwd = 3)
   if (pb.sens) warning("Some faces have an inconsistent orientation. Some contours will be considered open.")
   return(obj)
+}
+
+.mergeMeshes <- function(meshlist){
+  lm <- length(meshlist)
+  cl <- unique(sapply(meshlist,class))
+  if (cl!="mesh3d") stop("It must be a list of mesh3d")
+  le <-sapply(meshlist, function(m) ncol(m$vb))
+  cle <- c(0,cumsum(le))[1:lm]
+  tot <- list()
+  tot$vb <- do.call(cbind,lapply(meshlist,function(l) l$vb))
+  tot$it <- do.call(cbind,lapply(1:lm,function(idx) meshlist[[idx]]$it + cle[idx]))
+  tot$normals <- do.call(cbind,lapply(meshlist,function(l) l$normals))
+  tot$remface <- unlist(lapply(meshlist,function(l) l$remface))
+  class(tot) <- "mesh3d"
+  return(tot)
 }

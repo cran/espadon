@@ -10,6 +10,7 @@ vol.create(
   mid.pt = NULL,
   pt000 = NULL,
   default.value = NA,
+  value.sd = 0,
   ref.pseudo = "ref1",
   frame.of.reference = "",
   alias = "",
@@ -33,6 +34,9 @@ first voxel of the first plane.}
 
 \item{default.value}{Numerical or boolean value, representing the default
 value of the voxels.}
+
+\item{value.sd}{Positive integer. If \code{default.value} is a number, it
+represents standard deviation of the volume default value.}
 
 \item{ref.pseudo}{Character string, frame of reference pseudonym of the
 created object.By defaukt equal to "ref1"}
