@@ -6,7 +6,7 @@
 #' @param alias Character string, \code{$alias} of the created object.
 #' @return Returns a espadon class object (see \link[espadon]{espadon.class} 
 #' for class definitions).
-
+#' @seealso \link[espadon]{vol.create}, \link[espadon]{struct.create}. 
 #' @examples
 #' # Creation of an espadon mesh of a cube
 #' M <- obj.create (class = "mesh")

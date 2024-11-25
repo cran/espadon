@@ -22,7 +22,7 @@
 #' @param ... Others parameters
 #' @return Returns a "struct" class object (see \link[espadon]{espadon.class}
 #' for class definition), including the unique \code{roi.name} as region of interest.
-
+#' @seealso \link[espadon]{struct.create}.
 #' @examples
 #' # Creation of an espadon mesh of a cube
 #' M <- obj.create (class = "mesh")

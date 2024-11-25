@@ -27,3 +27,6 @@ M$mesh <- Rvcg::vcgIsotropicRemeshing (Rvcg::vcgBox(),0.5)
 M$nb.faces <- ncol (M$mesh$it)
 rgl::wire3d (M$mesh)
 }
+\seealso{
+\link[espadon]{vol.create}, \link[espadon]{struct.create}.
+}

@@ -15,6 +15,7 @@
 #' @return Returns a "volume" class object (see \link[espadon]{espadon.class} 
 #' for class definitions), with the same grid as \code{vol}, in which \code{$vol3D.data} 
 #' is initialized to \code{NA}.
+#' @seealso \link[espadon]{vol.create}, \link[espadon]{obj.create}. 
 #' @examples
 #' # loading of toy-patient objects (decrease dxyz for  better result)
 #' patient <- toy.load.patient (modality = "ct", roi.name = "",dxyz = c (4, 4, 4))

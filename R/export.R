@@ -218,7 +218,7 @@ export.img3Dplan.to.dicom <- function(obj, ref.obj.list = NULL, use.original.UIs
   SOP <- create.SOPUID(obj)
   
   ######################################
-  fn <- sapply(SOP$l1155, function(uid)  rev(unlist(strsplit(rawToChar(uid),"[.]")))[1])
+  fn <- sapply(SOP$l1155, function(uid)  rev(unlist(strsplit(rawToChar(uid[uid!=as.raw(0)]),"[.]")))[1])
   
   if (length(file.name)==0){
     filen <- file.path(file.dirname, paste0(file.prefix, fn, ".dcm"))
@@ -617,7 +617,7 @@ export.rtstruct.to.dicom <- function(obj, ref.obj.list = NULL, use.original.UIs 
   
   
   ######################################
-  fn <- sapply(SOP$l1155, function(uid)  rev(unlist(strsplit(rawToChar(uid),"[.]")))[1])
+  fn <- sapply(SOP$l1155, function(uid)  rev(unlist(strsplit(rawToChar(uid[uid!=as.raw(0)]),"[.]")))[1])
   
   if (length(file.name)==0){
     filen <- file.path(file.dirname, paste0(file.prefix, fn, ".dcm"))
@@ -1171,7 +1171,7 @@ export.rtdose.to.dicom <- function(obj, ref.obj.list = NULL, use.original.UIs = 
   SOP <- create.SOPUID(obj)
   
   ######################################
-  fn <- sapply(SOP$l1155, function(uid)  rev(unlist(strsplit(rawToChar(uid),"[.]")))[1])
+  fn <- sapply(SOP$l1155, function(uid)  rev(unlist(strsplit(rawToChar(uid[uid!=as.raw(0)]),"[.]")))[1])
   
   if (length(file.name)==0){
     filen <- file.path(file.dirname, paste0(file.prefix, fn, ".dcm"))

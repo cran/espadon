@@ -7,23 +7,20 @@
 #' of modality “binary” or “weight”, by selecting the voxels defining a rectangular 
 #' cuboid, an elliptical cylinder or an ellipsoid.
 #' @param back.vol "volume" class object.
-#' @param pt.min,pt.max Minimum and maximum x, y, z coordinates of the vertices 
-#' of the rectangular cuboid.
+#' @param side Numerical vector of length 3, representing the length, width and height of the cuboid.
+# @param pt.min,pt.max Minimum and maximum x, y, z coordinates of the vertices 
+# of the rectangular cuboid.
 #' @param center Numeric vector of length 3, representing the xyz-center of the 
-#' cylinder or the ellipsoid.
+#' shape, in the \code{back.vol} frame of reference.
 #' @param radius Positive number, or xy-vector or xyz-vector of 2 or 3 positive 
 #' numbers, representing the radius of the cylinder or the ellipsoid.
 #' @param height Positive number representing the height of the cylinder.
-#' @param ref.shape Character string. Pseudonym of the frame of reference in which 
-#' the requested shape is defined.
-#' @param T.MAT "t.mat" class object, created by \link[espadon]{load.patient.from.Rdcm} 
-#' or \link[espadon]{load.T.MAT}. If\code{T.MAT = NULL}, \code{ref.shape} must be 
-#' equal to \code{back.vol$ref.pseudo}.
+#' @param orientation Numerical vector of length 6, specifying the coordinates of 
+#' the 2 vectors making up the shape base.
 #' @param modality modality ("binary" or "weight") of the generated object.
 #' @param alias Character string, \code{$alias} of the created object.
 #' @param description Character string, describing the created object. 
-#' @param ... Additional arguments, such as \code{error}, representing the relative 
-#' error on the volume of the ellipsoid, if \code{back.vol$orientation = c(1, 0, 0, 0, 1, 0)}.
+#' @param ... Additional arguments.
 #' @return Returns a "volume" class object of "binary" or "weight" modality (see 
 #' \link[espadon]{espadon.class} for class definitions), with the same grid as 
 #' \code{back.vol}. 
@@ -37,34 +34,23 @@
 #' @examples
 #' # Creation of back.vol
 #' CT <- vol.create (c(80, 80,40), c(1.2, 1.2, 2), 
-#'                   pt000 = c(-50.4,-50.4,-75), modality = "ct", 
+#'                   pt000 = c(-50.4,-50.4,-39), modality = "ct", 
 #'                   default.value = as.integer(-997), value.sd = 1)
 #'                    
 #' # Creation of a cuboid
-#' cuboid <- bin.cuboid(CT, pt.min = c(-45.3, -40.2, -60.4), 
-#'                      pt.max =  c(-15.6, -20.2, -40.2))
+#' cuboid <- bin.cuboid(CT, side = c(29.7, 20.0, 20.2), 
+#'                      center = c(-10.9, -20.4, -10.6))
 #'                        
-#' # Definition of the shape frame of reference
-#' angle.yz =30
-#' Myz <- cbind(c(1, 0, 0, 0),
-#'              c(0, cos(pi * angle.yz / 180), sin(pi * angle.yz / 180), 0) ,
-#'              c(0, -sin(pi * angle.yz / 180), cos(pi * angle.yz / 180), 0),
-#'              c(0, 0, 0, 1 )) 
-#' angle.xy <- 59
-#' Mxy <- cbind(c(cos(pi * angle.xy / 180), sin(pi * angle.xy / 180), 0, 0) ,
-#'              c(-sin(pi * angle.xy / 180), cos(pi * angle.xy / 180), 0, 0), 
-#'              c(0 ,0, 1, 0), c(0, 0, 0, 1)) 
-#'
-#' t.mat <- ref.srctodest.add("ref1", "shaperef", TM = Myz %*% Mxy) 
-#' 
+
 #' # Creation of a cylinder 
-#' cylinder <- bin.cylinder(CT, center = c(10.3, 30.6, -30.7), 
+#' cylinder <- bin.cylinder(CT, center =c(10.3, 15.6, 0.7), 
 #'                          radius =  c(10, 20), height = 50, 
-#'                          ref.shape ="shaperef", T.MAT = t.mat) 
+#'                          orientation = c(0.5150381, 0.7423287, 0.4285837,
+#'                                          -0.8571673, 0.4460361, 0.2575190)) 
 #'                       
 #' # Creation of an ellipsoid 
-#' ellipsoid <- bin.ellipsoid(CT, center = c(-20.1, 0.1, -15), 
-#'                            radius =  c(19.3, 20.2, 15.3))  
+#' ellipsoid <- bin.ellipsoid(CT, center = c(-20.1, 0.1, 5), 
+#'                            radius =  c(3.3, 6.2, 5.3))  
 #'                        
 #'  # Display                         
 #'  k.idx <- unique(which(cuboid$vol3D.data>0, arr.ind = TRUE)[,3]) - 1
@@ -85,19 +71,52 @@
 #'                           "#7F7FB2FF", "#5F5F9FFF", "#3F3F8CFF", "#1F1F79FF", 
 #'                           "#000066FF"))                           
 #' @export
-bin.cuboid <- function(back.vol, pt.min, pt.max, ref.shape = back.vol$ref.pseudo, T.MAT = NULL,
-                       modality ="weight", alias = "", description = NULL){
-  if (length(pt.min)!=3 | length(pt.max)!=3) stop ("pt.min and pt.max must be numerical vectors of length 3.")
+bin.cuboid <- function(back.vol, side=c(10,10,10), center= c(0,0,0), orientation = c(1,0,0,0,1,0),
+                       modality ="weight", alias = "", description = NULL,...){
+  
+  args_ <- tryCatch(list(...), error = function(e)list())
+  pt.min <- args_[["pt.min"]]
+  pt.max <- args_[["pt.max"]]
+  # up to version 1.8.0
+  if (!is.null(pt.min) & !is.null(pt.max)){
+    if (length(pt.min)!=3 | length(pt.max)!=3) stop ("pt.min and pt.max must be numerical vectors of length 3.")
+    center <- pt.min + pt.max
+    side <- pt.max - pt.min
+  } else {
+    if (length(center)!=3) stop ("Center must be numerical vectors of length 3.")
+    if (length(side)!=3 & length(side)!=1) stop ("side must be numerical vectors of length 1 or 3.")
+    side <- rep(side,3)[1:3]
+  }
+  
+
+  if (any(side<1e-6)) stop("The sides of the cuboid must not be less than or equal to zero")
+  
+  ref.shape <-  args_[["ref.shape"]]
+  t.mat <-  args_[["T.MAT"]]
+  if (!is.null(ref.shape)){
+    M <- get.rigid.M(t.mat,ref.shape, back.vol$ref.pseudo)
+    if (is.null(M)) 
+      stop("Instead of ref.shape, define the orientation of the cuboid")
+    t.mat$matrix.list[[paste0(,"<-",ref.shape)]][1:3,4] <- center
+    t.mat$matrix.list[[paste0(ref.shape,"<-",back.vol$ref.pseudo)]] <- solve(t.mat$matrix.list[[paste0(back.vol$ref.pseudo,"<-",ref.shape)]])
+    
+  }else{
+    ref.shape <- paste0(back.vol$ref.pseudo,"r")
+    t.mat <- ref.add (back.vol$ref.pseudo, orientation = orientation,
+                      origin = center, 
+                      new.ref.pseudo = ref.shape,
+                      T.MAT = NULL)
+    
+  }
+
+ 
   args <- list()
   args[["back.vol"]] <- back.vol
   
-  rg <- apply(cbind(pt.min,pt.max), 1,range)
-  side <- args[["pt.max"]] - args[["pt.min"]]
-  if (any(side<1e-6)) stop("the sides of the cuboid must not be equal to zero")
-  args[["pt.min"]] <- rg[1,]
-  args[["pt.max"]] <- rg[2,]
+  args[["pt.min"]] <- (-side/2)
+  args[["pt.max"]] <- (+side/2)
   args[["ref.shape"]] <- ref.shape
-  args[["T.MAT"]] <- T.MAT
+  args[["T.MAT"]] <- t.mat
   args[["modality"]] <- modality[1]
   args[["alias"]] <- alias
   args[["description"]] <- description
@@ -112,16 +131,35 @@ bin.cuboid <- function(back.vol, pt.min, pt.max, ref.shape = back.vol$ref.pseudo
 
 #' @rdname bin.cuboid   
 #' @export
-bin.cylinder <- function(back.vol, center, radius, height, ref.shape = back.vol$ref.pseudo, T.MAT = NULL,
-                         modality ="weight", alias = "", description = NULL){
+bin.cylinder <- function(back.vol, center, radius, height, orientation = c(1,0,0,0,1,0),
+                         modality ="weight", alias = "", description = NULL,...){
+  
+  args_ <- tryCatch(list(...), error = function(e)list())
+ 
+  ref.shape <-  args_[["ref.shape"]]
+  t.mat <-  args_[["T.MAT"]]
+  if (!is.null(ref.shape)){
+    M <- get.rigid.M(t.mat,ref.shape, back.vol$ref.pseudo)
+    if (is.null(M)) 
+      stop("Instead of ref.shape, define the orientation of the cuboid")
+    t.mat$matrix.list[[paste0(,"<-",ref.shape)]][1:3,4] <- center
+    t.mat$matrix.list[[paste0(ref.shape,"<-",back.vol$ref.pseudo)]] <- solve(t.mat$matrix.list[[paste0(back.vol$ref.pseudo,"<-",ref.shape)]])
+  }else{
+    ref.shape <- paste0(back.vol$ref.pseudo,"r")
+    t.mat <- ref.add (back.vol$ref.pseudo, orientation = orientation,
+                      origin = center, 
+                      new.ref.pseudo = ref.shape,
+                      T.MAT = NULL)
+  }
+  
   if (length(radius)>2) stop ("radius must be a numerical vector of length 1 or 2.")
   args <- list()
   args[["back.vol"]] <- back.vol
-  args[["center"]] <- center
+  args[["center"]] <- c(0,0,0)
   args[["radius"]] <- abs(rep(radius,2)[1:2])
   args[["height"]] <- abs(height[1])
   args[["ref.shape"]] <- ref.shape
-  args[["T.MAT"]] <- T.MAT
+  args[["T.MAT"]] <- t.mat
   args[["modality"]] <- modality[1]
   args[["alias"]] <- alias
   args[["description"]] <- description
@@ -137,15 +175,35 @@ bin.cylinder <- function(back.vol, center, radius, height, ref.shape = back.vol$
 
 #' @rdname bin.cuboid   
 #' @export
-bin.ellipsoid <- function(back.vol, center, radius, ref.shape = back.vol$ref.pseudo, T.MAT = NULL,
+bin.ellipsoid <- function(back.vol, center, radius, orientation = c(1,0,0,0,1,0),
                           modality ="weight", alias = "", description = NULL,...){
+  
+  args_ <- tryCatch(list(...), error = function(e)list())
+  
+  ref.shape <-  args_[["ref.shape"]]
+  t.mat <-  args_[["T.MAT"]]
+  if (!is.null(ref.shape)){
+    M <- get.rigid.M(t.mat,ref.shape, back.vol$ref.pseudo)
+    if (is.null(M)) 
+      stop("Instead of ref.shape, define the orientation of the cuboid")
+    t.mat$matrix.list[[paste0(,"<-",ref.shape)]][1:3,4] <- center
+    t.mat$matrix.list[[paste0(ref.shape,"<-",back.vol$ref.pseudo)]] <- solve(t.mat$matrix.list[[paste0(back.vol$ref.pseudo,"<-",ref.shape)]])
+  }else{
+    ref.shape <- paste0(back.vol$ref.pseudo,"r")
+    t.mat <- ref.add (back.vol$ref.pseudo, orientation = orientation,
+                      origin = center, 
+                      new.ref.pseudo = ref.shape,
+                      T.MAT = NULL)
+  }
+  
   if (length(radius)>3) stop ("radius must be a numerical vector of length less than 3.")
-  args <- tryCatch(list(...), error = function(e)list())
+  
+  args <- list()
   args[["back.vol"]] <- back.vol
-  args[["center"]] <- center
+  args[["center"]] <- c(0,0,0)
   args[["radius"]] <- abs(c(radius,rep(radius[length(radius)],2)))[1:3]
   args[["ref.shape"]] <- ref.shape
-  args[["T.MAT"]] <- T.MAT
+  args[["T.MAT"]] <- t.mat
   args[["modality"]] <- modality[1]
   args[["alias"]] <- alias
   if (is.null(description)) {
@@ -154,6 +212,7 @@ bin.ellipsoid <- function(back.vol, center, radius, ref.shape = back.vol$ref.pse
   }
   args[["description"]] <- description
   args[["shape"]] <- "ellipsoid"
+  args[["error"]] <-  args_[["error"]] 
   do.call(bin.shape, args)
 }
 
@@ -340,11 +399,13 @@ bin.shape <- function(back.vol, shape, ref.shape = back.vol$ref.pseudo, T.MAT = 
     error_rel <- +Inf
     
     error_rel0 <- args[["error"]]
-    
     if (!is.numeric(error_rel0)) error_rel0 <- 0.01
+    
     error_rel0 <- abs(error_rel0[1])
     error_abs0 <- error_rel0/10/( pi*Rijk[1]*Rijk[2])
-    while((abs(error_rel) > error_rel0) & (abs(error_abs*pi*Rijk[1]*Rijk[2])> error_abs0) & ((k.max - k.min+1) * samp.nb < 500)){
+    cat(error_rel0,error_abs0)
+    (abs(error_abs*pi*Rijk[1]*Rijk[2])> error_abs0)
+    while(((abs(error_rel) > error_rel0) & (abs(error_abs*pi*Rijk[1]*Rijk[2])> error_abs0))& ((k.max - k.min+1) * samp.nb < 500)){
       samp.nb <- samp.nb + 2
       mid.samp <- floor(0.5*samp.nb)
       rg.k <- seq(k.min - mid.samp/samp.nb,k.max + mid.samp/samp.nb,1/samp.nb)
@@ -353,6 +414,8 @@ bin.shape <- function(back.vol, shape, ref.shape = back.vol$ref.pseudo, T.MAT = 
       error_abs <- sum(1-sinphi[fz]^2)/samp.nb - (4*Rijk[3]/3)
       error_rel <- 100 * error_abs /(4*Rijk[3]/3) 
     }
+    cat(abs(error_rel))
+    cat(abs(error_abs*pi*Rijk[1]*Rijk[2]))
     
     cosphi <- suppressWarnings(sqrt(1-sinphi^2))
     
@@ -411,8 +474,11 @@ bin.shape <- function(back.vol, shape, ref.shape = back.vol$ref.pseudo, T.MAT = 
         S.ellipse <- (as.integer(zone) + (as.integer(zone) %% 2)) * Rijk[1]*Rijk[2]*pi * 0.25
         S.ellipse[!f] <- S.ellipse[!f]  + 0.5*Rijk[1]*Rijk[2]* atan(tan(theta_[!f])*Rijk[1]/Rijk[2]) 
         pt <- cbind(pt,(abs(diff(S.ellipse)) - S.triangle) * cosphi[cp.idx]^2)
-        tab<- as.matrix(do.call (rbind,by(pt, pt[,1]+ 1i*pt[,2],function(tab) cbind(tab[1,1:3],sum(tab[,4])))))
-        vol3D [tab[,1:3]] <-tab[,4]
+        
+        ptijk <- unique(pt[,1:3])
+        ptijk <- cbind(ptijk, sapply(1:nrow(ptijk),function(idx) 
+          sum(pt[ptijk[idx,1]==pt[,1] & ptijk[idx,2]==pt[,2],4])))
+        vol3D [ptijk[,1:3]] <- ptijk[,4]
         
         O_ijk[[cp.idx]] <- O_ijk[[cp.idx]][1:(le-1),]
       # vol3D <- vol3D +
@@ -448,8 +514,9 @@ bin.shape <- function(back.vol, shape, ref.shape = back.vol$ref.pseudo, T.MAT = 
   # Vb$min.pixel <- min(Vb$vol3D.data, na.rm=TRUE)
   #   display.3D.stack(Vb,Vb$k.idx, border =F)
   # rgl::bg3d("black")
-  
-  if (grid.equal (vol.out, Vb)) {
+
+  if ((all (abs(vol.out$xyz.from.ijk - Vb$xyz.from.ijk) < 1e-6)) & all(rigid.M==diag(4))) {
+
     vol.out$vol3D.data[rgi + 1, rgj + 1, rgk + 1] <- Vb$vol3D.data[rgi + 1, rgj + 1, rgk + 1]
     vol.out$vol3D.data[rgi + 1, rgj + 1, rgk + 1][vol.out$vol3D.data[rgi + 1, rgj + 1, rgk + 1] >1] <- 1
     vol.out$vol3D.data[rgi + 1, rgj + 1, rgk + 1][vol.out$vol3D.data[rgi + 1, rgj + 1, rgk + 1] <0] <- 0
@@ -505,3 +572,6 @@ bin.shape <- function(back.vol, shape, ref.shape = back.vol$ref.pseudo, T.MAT = 
   }
   return(vol.out)
 }
+
+
+

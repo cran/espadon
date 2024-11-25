@@ -8,13 +8,13 @@
 \usage{
 bin.cuboid(
   back.vol,
-  pt.min,
-  pt.max,
-  ref.shape = back.vol$ref.pseudo,
-  T.MAT = NULL,
+  side = c(10, 10, 10),
+  center = c(0, 0, 0),
+  orientation = c(1, 0, 0, 0, 1, 0),
   modality = "weight",
   alias = "",
-  description = NULL
+  description = NULL,
+  ...
 )
 
 bin.cylinder(
@@ -22,19 +22,18 @@ bin.cylinder(
   center,
   radius,
   height,
-  ref.shape = back.vol$ref.pseudo,
-  T.MAT = NULL,
+  orientation = c(1, 0, 0, 0, 1, 0),
   modality = "weight",
   alias = "",
-  description = NULL
+  description = NULL,
+  ...
 )
 
 bin.ellipsoid(
   back.vol,
   center,
   radius,
-  ref.shape = back.vol$ref.pseudo,
-  T.MAT = NULL,
+  orientation = c(1, 0, 0, 0, 1, 0),
   modality = "weight",
   alias = "",
   description = NULL,
@@ -44,15 +43,13 @@ bin.ellipsoid(
 \arguments{
 \item{back.vol}{"volume" class object.}
 
-\item{pt.min, pt.max}{Minimum and maximum x, y, z coordinates of the vertices
-of the rectangular cuboid.}
+\item{side}{Numerical vector of length 3, representing the length, width and height of the cuboid.}
 
-\item{ref.shape}{Character string. Pseudonym of the frame of reference in which
-the requested shape is defined.}
+\item{center}{Numeric vector of length 3, representing the xyz-center of the
+shape, in the \code{back.vol} frame of reference.}
 
-\item{T.MAT}{"t.mat" class object, created by \link[espadon]{load.patient.from.Rdcm}
-or \link[espadon]{load.T.MAT}. If\code{T.MAT = NULL}, \code{ref.shape} must be
-equal to \code{back.vol$ref.pseudo}.}
+\item{orientation}{Numerical vector of length 6, specifying the coordinates of
+the 2 vectors making up the shape base.}
 
 \item{modality}{modality ("binary" or "weight") of the generated object.}
 
@@ -60,16 +57,12 @@ equal to \code{back.vol$ref.pseudo}.}
 
 \item{description}{Character string, describing the created object.}
 
-\item{center}{Numeric vector of length 3, representing the xyz-center of the
-cylinder or the ellipsoid.}
+\item{...}{Additional arguments.}
 
 \item{radius}{Positive number, or xy-vector or xyz-vector of 2 or 3 positive
 numbers, representing the radius of the cylinder or the ellipsoid.}
 
 \item{height}{Positive number representing the height of the cylinder.}
-
-\item{...}{Additional arguments, such as \code{error}, representing the relative
-error on the volume of the ellipsoid, if \code{back.vol$orientation = c(1, 0, 0, 0, 1, 0)}.}
 }
 \value{
 Returns a "volume" class object of "binary" or "weight" modality (see
@@ -90,34 +83,22 @@ cuboid, an elliptical cylinder or an ellipsoid.
 \examples{
 # Creation of back.vol
 CT <- vol.create (c(80, 80,40), c(1.2, 1.2, 2), 
-                  pt000 = c(-50.4,-50.4,-75), modality = "ct", 
+                  pt000 = c(-50.4,-50.4,-39), modality = "ct", 
                   default.value = as.integer(-997), value.sd = 1)
                    
 # Creation of a cuboid
-cuboid <- bin.cuboid(CT, pt.min = c(-45.3, -40.2, -60.4), 
-                     pt.max =  c(-15.6, -20.2, -40.2))
+cuboid <- bin.cuboid(CT, side = c(29.7, 20.0, 20.2), 
+                     center = c(-10.9, -20.4, -10.6))
                        
-# Definition of the shape frame of reference
-angle.yz =30
-Myz <- cbind(c(1, 0, 0, 0),
-             c(0, cos(pi * angle.yz / 180), sin(pi * angle.yz / 180), 0) ,
-             c(0, -sin(pi * angle.yz / 180), cos(pi * angle.yz / 180), 0),
-             c(0, 0, 0, 1 )) 
-angle.xy <- 59
-Mxy <- cbind(c(cos(pi * angle.xy / 180), sin(pi * angle.xy / 180), 0, 0) ,
-             c(-sin(pi * angle.xy / 180), cos(pi * angle.xy / 180), 0, 0), 
-             c(0 ,0, 1, 0), c(0, 0, 0, 1)) 
-
-t.mat <- ref.srctodest.add("ref1", "shaperef", TM = Myz \%*\% Mxy) 
-
 # Creation of a cylinder 
-cylinder <- bin.cylinder(CT, center = c(10.3, 30.6, -30.7), 
+cylinder <- bin.cylinder(CT, center =c(10.3, 15.6, 0.7), 
                          radius =  c(10, 20), height = 50, 
-                         ref.shape ="shaperef", T.MAT = t.mat) 
+                         orientation = c(0.5150381, 0.7423287, 0.4285837,
+                                         -0.8571673, 0.4460361, 0.2575190)) 
                       
 # Creation of an ellipsoid 
-ellipsoid <- bin.ellipsoid(CT, center = c(-20.1, 0.1, -15), 
-                           radius =  c(19.3, 20.2, 15.3))  
+ellipsoid <- bin.ellipsoid(CT, center = c(-20.1, 0.1, 5), 
+                           radius =  c(3.3, 6.2, 5.3))  
                        
  # Display                         
  k.idx <- unique(which(cuboid$vol3D.data>0, arr.ind = TRUE)[,3]) - 1

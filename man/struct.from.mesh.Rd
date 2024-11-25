@@ -68,3 +68,6 @@ M$nb.faces <- ncol (M$mesh$it)
 S <- struct.from.mesh (M, z = seq(-1,1,0.5))
 display.3D.contour(S)
 }
+\seealso{
+\link[espadon]{struct.create}.
+}

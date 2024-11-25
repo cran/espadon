@@ -40,3 +40,6 @@ CT <- patient$ct[[1]]
 vol.from.CT <- vol.copy (CT, alias = "ct reference")
 str (vol.from.CT)
 }
+\seealso{
+\link[espadon]{vol.create}, \link[espadon]{obj.create}.
+}
