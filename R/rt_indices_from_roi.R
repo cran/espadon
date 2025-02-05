@@ -346,7 +346,7 @@ rt.indices.from.roi <- function (vol, struct = NULL, T.MAT = NULL,
                                  DVH = TRUE,
                                  verbose = TRUE,...){
 
-  args <- list(...)
+  args <- tryCatch(list(...), error = function(e)list())
   DVH.step <- args[['DVH.step']]
   if (is.null(DVH.step)) DVH.step <-0.001
   if (DVH.step>0.01) DVH.step <- 0.01
@@ -984,7 +984,7 @@ create.histo <- function(vol3D, weight3D, breaks){
   
   
   mean.d <- sum(vol3D*tab$weight)
-  mean_sd.vect <- c(mean = mean.d,std= sqrt(tot / (tot-1) * sum(tab$weight*(vol3D  - mean.d)^2)))
+  mean_sd.vect <- c(mean = mean.d,std= sqrt(sum(tab$weight*(vol3D  - mean.d)^2)/tot))
   dose.pt <- c(min = min(vol3D), max = max(vol3D),mean_sd.vect)
   
   byC <- as.numeric(by(tab,tab$D,function(v) sum(v$weight)))

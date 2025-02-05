@@ -17,8 +17,10 @@ struct.create(
 )
 }
 \arguments{
-\item{contours.list}{List of 3-column matrices or dataframes providing contour
-coordinates in z steps.}
+\item{contours.list}{list of data frames or 3-column matrices, representing the
+xyz coordinates of polygon vertices.  Each polygon must have a unique
+z-coordinate. All coordinates must be uniformly distributed according to a
+unique inter-slice distance.}
 
 \item{roi.name}{Character string, representing the name of created RoI.}
 

@@ -14,7 +14,7 @@
 #' @param T.MAT "t.mat" class object, created by 
 #' \link[espadon]{load.patient.from.Rdcm} or \link[espadon]{load.T.MAT}. If 
 #' \code{T.MAT = NULL}, \code{struct$ref.pseudo} must be equal to 
-#' \code{vol$ref.pseudo} or set to \code{NULL}.
+#' \code{vol$ref.pseudo}.
 #' @param within Boolean, defaults to \code{TRUE}. If \code{within = TRUE}, the
 #' contours included in a RoI are managed,
 #' depending on their \code{$level} field. If \code{within = FALSE}, only the 
@@ -40,7 +40,7 @@
 #' @seealso \link[espadon]{bin.from.vol}.
 #' @examples
 #' # loading of toy-patient objects (decrease dxyz for better result)
-#' step <- 3
+#' step <- 5
 #' patient <- toy.load.patient (modality = c("ct", "rtstruct"), 
 #'                              roi.name =  c("eye", "optical nerve", "brain"), 
 #'                              dxyz = rep (step, 3))
@@ -62,7 +62,7 @@
 #' plot(binl, view.coord = view.coord, col = palette, 
 #'     cut.interpolate = FALSE, add = TRUE)
 #' plot(binr, view.coord = view.coord, col =palette, 
-#'      cut.interpolate = FALSE, add = TRUE)
+#'       cut.interpolate = FALSE, add = TRUE)
 #' plot(S, view.coord = view.coord, lwd = 2, add= TRUE)
 #' 
 #' \dontrun{
@@ -170,7 +170,6 @@ bin.from.roi <- function (vol, struct, roi.name = NULL, roi.sname = NULL, roi.id
   if (!within) level.range <- 0
   pt.l <-lapply(level.range, function(lev){
     L <- lapply(l.data[levels==lev], function(l) {
-      # pt <- polyg.sort(l$pt)
       pt <- matrix(.polygcleanC(as.vector(t(as.matrix(l$pt))), sort = TRUE), byrow = TRUE, ncol=3)
       list(as.matrix(pt[-nrow(pt),]),cbind(diff(pt[,1]),diff(pt[,2]),diff(pt[,3])))})
     list(O = do.call(rbind,lapply(L, function(l) l[[1]])),
@@ -225,7 +224,7 @@ bin.from.roi <- function (vol, struct, roi.name = NULL, roi.sname = NULL, roi.id
     pO <- as.numeric(t(sweep(O_ijk[[level.idx]][,1:3] ,2,vol3D.range[,1])))
     
     vol3D  <- vol3D + sens * array(.ouline2voxC(as.numeric(t( u)),vol3D.nijk , 0:(vol3D.nijk[3]-1),  0:(vol3D.nijk[3]-1),pO,
-                                                          lambda_max = dist.u, ntab = sum(ceiling(dist.u/min(Vb.dxyz))+5)),dim=vol3D.nijk)
+                                                        lambda_max = dist.u, ntab = sum(ceiling(dist.u/min(Vb.dxyz))+5)),dim=vol3D.nijk)
     
   }
   
@@ -233,25 +232,27 @@ bin.from.roi <- function (vol, struct, roi.name = NULL, roi.sname = NULL, roi.id
   rgj <- (common.range[2,1]:common.range[2,2])
   rgk <- (common.range[3,1]:common.range[3,2]) 
   Vb$vol3D.data[ rgi + 1, rgj + 1, rgk + 1] <-
-    vol3D[ rgi-vol3D.range[1,1]+1, rgj-vol3D.range[2,1]+1, rgk-vol3D.range[3,1]+1]
+    round(vol3D[ rgi-vol3D.range[1,1]+1, rgj-vol3D.range[2,1]+1, rgk-vol3D.range[3,1]+1],6)
   
   # Vb$max.pixel <- max(Vb$vol3D.data, na.rm=TRUE)
   # Vb$min.pixel <- min(Vb$vol3D.data, na.rm=TRUE)
   # display.3D.stack(Vb,Vb$k.idx, border =F)
   # display.3D.contour(struct, roi.idx =roi.idx)
   # bg3d("black")
-  
-  if (grid.equal (vol.out, Vb)) {
+
+  if ((all (abs(vol.out$xyz.from.ijk - Vb$xyz.from.ijk) < 1e-6)) & all(rigid.M==diag(4))) {
+
     vol.out$vol3D.data[rgi + 1, rgj + 1, rgk + 1] <- Vb$vol3D.data[rgi + 1, rgj + 1, rgk + 1]
     vol.out$vol3D.data[rgi + 1, rgj + 1, rgk + 1][vol.out$vol3D.data[rgi + 1, rgj + 1, rgk + 1] >1] <- 1
     vol.out$vol3D.data[rgi + 1, rgj + 1, rgk + 1][vol.out$vol3D.data[rgi + 1, rgj + 1, rgk + 1] <0] <- 0
     vol.out$max.pixel <- max(vol.out$vol3D.data[rgi + 1, rgj + 1, rgk + 1], na.rm=TRUE)
     vol.out$min.pixel <- min(vol.out$vol3D.data[rgi + 1, rgj + 1, rgk + 1], na.rm=TRUE)
-    
+
   } else {
-    f <-common.range[,1]>1 
+
+    f <-common.range[,1]>1
     common.range[f,1] <- common.range[f,1]-1
-    f <-common.range[,2]< Vb$n.ijk -1 
+    f <-common.range[,2]< Vb$n.ijk -1
     common.range[f,2] <- common.range[f,2]+1
     cube.idx <- Vb$cube.idx
     cube.idx [1,] <- common.range[1,c(1,2,2,1,1,2,2,1)]
@@ -267,12 +268,12 @@ bin.from.roi <- function (vol, struct, roi.name = NULL, roi.sname = NULL, roi.id
     fna <- is.na(back.rgk.loc)
     rgk <- rgk[!fna]
     back.rgk.loc <-  back.rgk.loc[!fna]
-    
+
     ijk.out <- as.matrix(expand.grid(rgi,rgj,rgk,1))
     R.ijk.out <- as.matrix(expand.grid(rgi+1,rgj+1,back.rgk.loc))
     Mref <- t(solve(Vb$xyz.from.ijk) %*% contour.from.ijk)
     ijk <- (ijk.out %*% Mref)[,1:3,drop =FALSE]
-    
+
     s_ijk <-apply(abs(rbind(c(1,0,0,0),c(0,1,0,0), c(0,0,1,0)) %*% Mref)[,1:3, drop =FALSE],1,max)
     vol.out$vol3D.data[R.ijk.out] <- .getvaluefromijkC (vol3D = as.numeric(Vb$vol3D.data),
                                                                   interpolate = TRUE,
@@ -287,9 +288,9 @@ bin.from.roi <- function (vol, struct, roi.name = NULL, roi.sname = NULL, roi.id
     vol.out$vol3D.data[R.ijk.out][vol.out$vol3D.data[R.ijk.out] <0] <- 0
     vol.out$max.pixel <- max(vol.out$vol3D.data[R.ijk.out], na.rm=TRUE)
     vol.out$min.pixel <- min(vol.out$vol3D.data[R.ijk.out], na.rm=TRUE)
-    
+     
   }
-  
+
   if (modality == "binary"){
     vol.out$max.pixel <- !as.logical(round(1-vol.out$max.pixel))
     vol.out$min.pixel <- !as.logical(round(1-vol.out$min.pixel))

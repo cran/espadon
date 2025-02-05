@@ -36,7 +36,12 @@ orientation.create  <- function(A = c (0, 0, 0), B= NULL, C = NULL,
                                 normal = NULL){
   
 
-  if (is.null(B) | (is.null(C) & is.null (normal))) stop ("Allocate B and C or normal.")
+  if (is.null(B) | (is.null(C) & is.null (normal))) {
+    if (nrow(A)!=3 & ncol(A)!=3) stop ("Allocate B and C or normal.")
+    B <- A[2,]
+    C <- A[3,]
+    A <- A[1,]
+    }
   u <- as.numeric(B - A)
   
   if (!is.null(C)) {

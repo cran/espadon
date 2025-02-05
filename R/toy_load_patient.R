@@ -21,11 +21,11 @@
 #' @importFrom stats runif spline
 #' @export
 toy.load.patient <- function ( 
-    modality = c("ct", "mr", "rtdose", "rtstruct"),
+    modality = c("ct", "mr", "sct","rtdose", "rtstruct"),
     roi.name = c("eye", "optical nerve", "brain","labyrinth processing unit",
                 "energy unit", "gizzard","ghost container", "exhaust valve" ), 
     dxyz = c(1,1,1), beam.nb = 7){
-  m <- match(modality,c("ct", "mr", "rtdose", "rtstruct"))
+  m <- match(modality,c("ct", "sct", "mr", "rtdose", "rtstruct"))
   
   if (all(is.na(m))) {
     warning ("modality must contain at least one known object.")
@@ -36,11 +36,14 @@ toy.load.patient <- function (
   ref1.do.nb <- rep(0,3)
   f <-!is.na(match( c("ct", "rtdose", "rtstruct"), modality))
   ref1.do.nb[f] <- 1:sum(f)
-  
+  ref2.do.nb <- rep(0,2)
+  f <-!is.na(match( c("mr","sct"), modality))
+  ref2.do.nb[f] <- 1:sum(f)
   
   S <- NULL
   rtstruct.f <- "rtstruct" %in% modality
   ct.f <- "ct" %in% modality
+  sct.f <- "sct" %in% modality
   mr.f <- "mr" %in% modality
   rtdose.f<- "rtdose" %in% modality
   
@@ -48,6 +51,7 @@ toy.load.patient <- function (
   
   MR.date <- "20220523"
   CT.date <- "20220609"
+  sCT.date <-  "20220615"
   rt.date <- "20220610"
   
   mr.offset <- c(50,100,-70)
@@ -62,10 +66,6 @@ toy.load.patient <- function (
   ptv.G <- c (-30.2,50.5,-30.1)
   
   
-  
- 
-
-  
   pat <- list()
   pat$patient <- data.frame(PIN = pat.pseudo, name =pat.name,  birth.date=bd, sex=sex)
   pat$pat.pseudo <- pat$patient[1,1]
@@ -79,17 +79,14 @@ toy.load.patient <- function (
   pat$T.MAT$ref.info <- list ()
   pat$T.MAT$ref.info <- data.frame(ref.pseudo=character(0), ref=character(0))
   
-  if (any (!is.na(match(modality, c("ct", "rtdose")))))
+  if (any (!is.na(match(modality, c("ct", "rtdose","rtstruct")))))
     pat$T.MAT$ref.info <- rbind(pat$T.MAT$ref.info, 
                                 data.frame(ref.pseudo = "ref1", 
                                            ref = "1.2.826.0.1.3680043.10.1002.9415909408182024"))
-  if (any (!is.na(match(modality, c("rtstruct")))))
-    pat$T.MAT$ref.info <- rbind(pat$T.MAT$ref.info, 
-                                data.frame(ref.pseudo = "ref1", 
-                                           ref = "1.2.826.0.1.3680043.10.1002.9415909408182024"))
+
   
   
-  if (any (!is.na(match(modality, c("mr")))))
+  if (any (!is.na(match(modality, c("mr", "sct")))))
     pat$T.MAT$ref.info <- rbind(pat$T.MAT$ref.info, 
                                 data.frame(ref.pseudo = "ref2", 
                                            ref = "1.2.826.0.1.3680043.10.1002.2767261731078746"))
@@ -562,11 +559,12 @@ toy.load.patient <- function (
     return (src)
   }
   
+  
   ct.n <- paste0(CT.date,"_ref1_do",ref1.do.nb[1],"_ct")
-  if (ct.f | rtdose.f){
+  if (ct.f | rtdose.f | sct.f){
     n <-ct.n
     pat$ct <- list()
-    pat$ct[[paste0(n,1)]] <-
+    pat$ct[[paste0(ct.n,1)]] <-
       vol.create (n.ijk = n.ijk, dxyz = dxyz, pt000=pt000, modality = "ct",
                   default.value = -1000, ref.pseudo = "ref1", 
                   description = "FULL^BODY|initial",
@@ -582,6 +580,7 @@ toy.load.patient <- function (
     pat$ct[[1]]$acq.date = CT.date
     pat$ct[[1]]$study.date = CT.date
     pat$ct[[1]]$creation.date = CT.date
+    pat$ct[[1]]$unit = "HU"
     
     pat$ct[[1]]  <- fill ( pat$ct[[1]] , b.PM.int, -50, 10)
     pat$ct[[1]]  <- fill ( pat$ct[[1]] , b.bone, 800, 10)
@@ -631,10 +630,9 @@ toy.load.patient <- function (
       pat$rtdose[[1]]$unit = "GY"
       
     }
-    if (!ct.f) pat$ct <- NULL
   }
   
-  if (mr.f){
+  if (mr.f | sct.f){
     
     pat$mr <- list()
     
@@ -666,7 +664,8 @@ toy.load.patient <- function (
     m <- as.matrix (expand.grid(1:b$n.ijk[1],
                                 1:b$n.ijk[2],
                                 1:b$n.ijk[3]))
-    n <-paste0(MR.date,"_ref2_do1_mr")
+   
+    n <- paste0(MR.date,"_ref2_do",ref2.do.nb[1],"_mr")
     pat$mr[[paste0(n,1)]] <- 
       vol.create (n.ijk = n.ijk[perm], dxyz = dxyz[perm], pt000=b$xyz0[1,], 
                   modality = "mr", default.value = 0, ref.pseudo = "ref2", 
@@ -683,7 +682,7 @@ toy.load.patient <- function (
     pat$mr[[1]]$min.pixel <- b$min.pixel
     
     pat$mr[[1]]$patient <- pat$pat.pseudo
-	pat$mr[[1]]$patient.name <- pat$patient$name[1]
+    pat$mr[[1]]$patient.name <- pat$patient$name[1]
     pat$mr[[1]]$patient.bd <- pat$patient$birth.date[1]
     pat$mr[[1]]$patient.sex <- pat$patient$sex[1]
     pat$mr[[1]]$object.name <- n
@@ -695,6 +694,30 @@ toy.load.patient <- function (
     rm(b)
     
   }
+  
+  if (sct.f){
+    n <- paste0(sCT.date,"_ref2_do",ref2.do.nb[2],"_ct")
+    pat$ct[[paste0(n,1)]] <-  vol.regrid(pat$ct[[1]], pat$mr[[1]], T.MAT= pat$T.MAT, 
+                                         alias = ifelse(mr.f, paste0(n,1), ""),
+                                         description = "synthetic CT")
+    
+    pat$ct[[2]]$ref.object.alias <- pat$mr[[1]]$object.alias
+    
+    pat$ct[[2]]$acq.date = sCT.date
+    pat$ct[[2]]$study.date = sCT.date
+    pat$ct[[2]]$creation.date = sCT.date
+    
+     f <- pat$mr[[1]]$vol3D.data  < 70
+     pat$ct[[2]]$vol3D.data[f] <- round(((pat$ct[[2]]$vol3D.data[f] + 1001) / 
+       (pat$mr[[1]]$vol3D.data[f]) + 1)) * pat$mr[[1]]$vol3D.data[f]  - 990
+    f <- pat$mr[[1]]$vol3D.data  >= 125
+    pat$ct[[2]]$vol3D.data[f] <- round(((pat$ct[[2]]$vol3D.data[f] + 1001) / 
+       pat$mr[[1]]$vol3D.data[f])) * pat$mr[[1]]$vol3D.data[f]  - 1002
+    pat$ct[[2]]$min.pixel <- min(pat$ct[[2]]$vol3D.data, na.rm = TRUE)
+    pat$ct[[2]]$max.pixel <- max(pat$ct[[2]]$vol3D.data, na.rm = TRUE)
+  }
+  if (!ct.f){ if (sct.f) {pat$ct <- pat$ct[2]} else { pat$ct <- NULL}}
+  if (!mr.f)  pat$mr <- NULL
   
   if (rtstruct.f) {
     pat$rtstruct <- list ()
@@ -720,10 +743,10 @@ toy.load.patient <- function (
   }
   
   pat$description <- do.call(rbind.data.frame, 
-                             lapply(do.call(c, pat[c("ct", "mr", "rtdose", "rtstruct")]), function(l) {
+                             lapply(do.call(c, pat[c("ct", "mr", "rtdose", "rtstruct","sct")]), function(l) {
                                nb <- switch(l$modality, "rtstruct" =  l$nb.of.roi,  
                                             "rtdose" = l$n.ijk[3], "ct" = l$n.ijk[3],
-                                            "mr" = l$n.ijk[3],NA)
+                                            "mr" = l$n.ijk[3],"sct"= l$n.ijk[3],NA)
                                max.pix <- NA
                                idx <- grep ("max[.]pixel", names(l))
                                if (length(idx)>0)  max.pix <- l[[idx]]

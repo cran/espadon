@@ -2,7 +2,7 @@
 % Please edit documentation in R/export.R
 \name{export}
 \alias{export}
-\title{Export espadon objects in dicom format}
+\title{Export espadon objects in DICOM format}
 \usage{
 export(
   obj,

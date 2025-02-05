@@ -60,7 +60,20 @@ nesting.cube <- function (obj, pt.min, pt.max, alias = "", description = NULL,..
     struct.cube[3, 1:4] <- pt.min[3]
     struct.cube[3, 5:8] <- pt.max[3]
     
-    struct.in.obj.cube.idx <- round(solve (obj$xyz.from.ijk) %*% struct.cube,6)
+    # struct.in.obj.cube.idx <- round(solve (obj$xyz.from.ijk) %*% struct.cube,6)
+    idx.c <- which(apply(abs(obj$xyz.from.ijk[1:3,1:3]),2,sum)==0) 
+    idx.r <-  which(apply(abs(obj$xyz.from.ijk[1:3,1:3]),1,sum)==0)
+    if (length(idx.c)>0) {
+      #2D
+      u <- obj$xyz.from.ijk 
+      u[idx.r,idx.c]<- 1
+      ijk.from.xyz <- solve(u)
+      ijk.from.xyz[idx.r,idx.c] <- 0
+      struct.in.obj.cube.idx <- round(ijk.from.xyz %*% struct.cube,6)
+    } else {
+      struct.in.obj.cube.idx <- round(solve (obj$xyz.from.ijk) %*% struct.cube,6)
+    }
+    
     rg.i <- c(ceiling(min(struct.in.obj.cube.idx[1,])):floor(max(struct.in.obj.cube.idx[1,])))
     rg.j <- c(ceiling(min(struct.in.obj.cube.idx[2,])):floor(max(struct.in.obj.cube.idx[2,])))
     rg.k <- c(ceiling(min(struct.in.obj.cube.idx[3,])):floor(max(struct.in.obj.cube.idx[3,])))

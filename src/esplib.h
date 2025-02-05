@@ -10,6 +10,5 @@ using namespace Rcpp;
 #include <string.h>
 //#include <cstdint>
 #include <locale> 
-#include <locale> 
 
 int signC(double x);

@@ -72,8 +72,7 @@ step <- 4
 patient <- toy.load.patient (modality = "ct", dxyz = rep (step, 3))
 
 # display o 3 planes
-library (rgl)
-open3d()
+rgl::open3d()
 display.3D.stack (patient$ct[[1]],
                   col = pal.RVV (200, alpha = c(rep(0,90), rep (1, 110))))
 }

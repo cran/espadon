@@ -39,8 +39,7 @@ bin <- bin.from.roi (CT, struct = S, roi.name = "patient", verbose = FALSE)
 mesh.patient <- mesh.from.bin (bin, alias = "patient", verbose = FALSE)
 
 # display of the patient mesh, with transparency
-library (rgl)
-open3d()
+rgl::open3d()
 display.3D.mesh (mesh.patient, color = "burlywood2", specular = "#404040")
 }
 \seealso{

@@ -67,8 +67,7 @@ step <- 4
 patient <- toy.load.patient (modality = "ct", dxyz = rep (step, 3))
 CT <- patient$ct[[1]]
 
-library (rgl)
-open3d()
+rgl::open3d()
 display.3D.sections(CT, cross.pt= c(0, 50, 80),
                     col= pal.RVV(200, alpha= c(rep(0,90), rep(1,110))))
 }

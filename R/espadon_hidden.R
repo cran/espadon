@@ -13,7 +13,7 @@
 
 #####################################################################################
 .espadon.version <- function(){
-  return ("1.9.0")
+  return ("1.10.0")
 }
 
 #####################################################################################
@@ -3610,9 +3610,6 @@
   if (length(pol.x) ==0 | length(pol.y) == 0)  stop("polygon coordinates not defined")
   
   result  <- rep(0, length(point.x))
-  
-  result  <- rep(0, length(point.x))
-  
   if (pol_le == 1) {
     result [point.x==pol.x & point.y==pol.y] <- 3
     return(result)

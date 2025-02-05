@@ -92,6 +92,7 @@ histo.vol  <- function (vol, breaks = NULL, alias = "", description = NULL, weig
                       weight = weight3D)
   } else {
     keep <- (vol3D>= breaks[1]) & (vol3D< rev(breaks)[1])
+    step = diff(breaks)
     tab <- data.frame(D=cut(vol3D[keep], breaks = breaks, include.lowest=TRUE),
                       weight = weight3D[keep])
   }

@@ -82,9 +82,9 @@ nesting.bin <- function (obj, sel.bin, alias = "", description = NULL,
     
     ext.pt.obj <- get.extreme.pt(obj)
     if (obj.restrict) {
-      ext.pt[1,] <- .range.intersection(ext.pt[1,],ext.pt.obj[1,])
-      ext.pt[2,] <- .range.intersection(ext.pt[2,],ext.pt.obj[2,])
-      ext.pt[3,] <- .range.intersection(ext.pt[3,],ext.pt.obj[3,])
+      ext.pt[1,] <- .range.intersection(ext.pt[1,],ext.pt.obj[1,], egal=c(TRUE,TRUE))
+      ext.pt[2,] <- .range.intersection(ext.pt[2,],ext.pt.obj[2,], egal=c(TRUE,TRUE))
+      ext.pt[3,] <- .range.intersection(ext.pt[3,],ext.pt.obj[3,], egal=c(TRUE,TRUE))
     }
     if (any(is.na(ext.pt))) stop("obj and the selection of sel.bin have no common zones")
     obj_ <- nesting.cube(obj,pt.min = ext.pt[,1], pt.max = ext.pt[,2],

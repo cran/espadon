@@ -34,9 +34,8 @@
 #' step <- 4
 #' patient <- toy.load.patient (modality = "rtstruct", roi.name = "eye",
 #'                              dxyz = rep (step, 3))
-#' library (rgl)
-#' open3d()
-#' bg3d ("black")
+#' rgl::open3d()
+#' rgl::bg3d ("black")
 #' display.3D.contour (struct = patient$rtstruct[[1]], roi.print = TRUE)
 
 #' @importFrom rgl lines3d text3d cur3d points3d

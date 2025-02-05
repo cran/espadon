@@ -1,8 +1,10 @@
 #' Struct creating from contours list
 #' @description The \code{struct.create} function creates a struct object from a 
 #' list of polygons, representing the contours of a shape.
-#' @param contours.list List of 3-column matrices or dataframes providing contour 
-#' coordinates in z steps.
+#' @param contours.list list of data frames or 3-column matrices, representing the 
+#' xyz coordinates of polygon vertices.  Each polygon must have a unique 
+#' z-coordinate. All coordinates must be uniformly distributed according to a 
+#' unique inter-slice distance.
 #' @param roi.name Character string, representing the name of created RoI.
 #' @param roi.nb Positive integer, representing the number of created RoI.
 #' @param roi.color Color of the created RoI, in hex code format ("#RRGGBB").

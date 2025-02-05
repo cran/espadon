@@ -22,31 +22,30 @@
 
 #' @examples
 #' # loading of toy-patient objects (decrease dxyz for better result)
-#' step <- 5
+#' step <- 6
 #' patient <- toy.load.patient (modality = c("ct", "rtstruct"), roi.name = "", 
 #'                              dxyz = rep (step, 3))
 #' CT <- patient$ct[[1]]
 #' S <- patient$rtstruct[[1]]
 #'
-#' #creation of the patient mesh
+#' # creation of the patient mesh
 #' bin <- bin.from.roi (CT, struct = S, roi.name = "patient", verbose = FALSE)
-#' m.patient <- mesh.from.bin (bin)
-#' m.skin <- mesh.repair (m.patient, verbose = FALSE)
+#' m.skin <- mesh.from.bin (bin)
 #'
 #' m.proj <- mesh.spheric.proj (m.skin, verbose = FALSE)
 #'
-#' library (rgl)
-#' col <- hcl.colors (12, "Blue-Red 3")
-#' open3d()
-#' shade3d (m.proj$mesh, meshColors = "vertices",
-#'          color = col[round ((m.proj$mesh$Lat/2 + 0.5) * 11) + 1],
-#'          specular = "#404040")
-#' open3d()         
-#' shade3d (m.proj$mesh, meshColors = "vertices",
-#'          color = col[round ((m.proj$mesh$Lon/2 + 0.5) * 11) + 1],
-#'          specular = "#404040")
-
-#'
+#' if (interactive()) {
+#'   col <- hcl.colors (12, "Blue-Red 3")
+#'   rgl::open3d()
+#'   rgl::shade3d (m.proj$mesh, meshColors = "vertices",
+#'                 color = col[round ((m.proj$mesh$Lat/2 + 0.5) * 11) + 1],
+#'                 specular = "#404040")
+#'   rgl::open3d()         
+#'   rgl::shade3d (m.proj$mesh, meshColors = "vertices",
+#'                 color = col[round ((m.proj$mesh$Lon/2 + 0.5) * 11) + 1],
+#'                 specular = "#404040")
+#'                 
+#' }
 #' @importFrom Rvcg vcgVFadj
 #' @import Matrix
 #' @importFrom methods is
@@ -241,3 +240,4 @@ mesh.spheric.proj <- function (mesh, verbose = TRUE) {
   
   return (mesh)
 }
+

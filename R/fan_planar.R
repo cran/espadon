@@ -28,10 +28,10 @@
 #' patient <- toy.load.patient (modality = c("ct"), dxyz = rep (step, 3))
 #' fan <- fan.planar (patient$ct[[1]], origin = patient$ct[[1]]$xyz0[1,])
 #' head (fan$xyz)
-#' library (rgl)
-#' open3d ()
-#' points3d (fan$xyz)
-
+#' if (interactive()) {
+#'   rgl::open3d ()
+#'   points3d (fan$xyz)
+#' }
 fan.planar  <- function(vol, k = vol$k.idx[ceiling(length(vol$k.idx)/2)], 
                         origin = c(0,0,0),
                         alias = "", 

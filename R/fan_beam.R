@@ -27,10 +27,10 @@
 #' @examples
 #' fan <- fan.beam (alpha = 30, dalpha = 1)
 #' head (fan$xyz)
-#' library (rgl)
-#' open3d ()
-#' points3d (fan$xyz)
-
+#' if (interactive()) {
+#'   rgl::open3d ()
+#'   rgl::points3d (fan$xyz)
+#' }
 fan.beam  <- function(alpha, dalpha,  orientation = c(0,0,1,1,0,0), 
                       origin = c(0,0,0),
                       ref.pseudo = "ref1", 

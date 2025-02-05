@@ -36,7 +36,7 @@ By default \code{roi.idx = NULL}. See Details.}
 \item{T.MAT}{"t.mat" class object, created by
 \link[espadon]{load.patient.from.Rdcm} or \link[espadon]{load.T.MAT}. If
 \code{T.MAT = NULL}, \code{struct$ref.pseudo} must be equal to
-\code{vol$ref.pseudo} or set to \code{NULL}.}
+\code{vol$ref.pseudo}.}
 
 \item{within}{Boolean, defaults to \code{TRUE}. If \code{within = TRUE}, the
 contours included in a RoI are managed,
@@ -74,7 +74,7 @@ only one RoI.
 }
 \examples{
 # loading of toy-patient objects (decrease dxyz for better result)
-step <- 3
+step <- 5
 patient <- toy.load.patient (modality = c("ct", "rtstruct"), 
                              roi.name =  c("eye", "optical nerve", "brain"), 
                              dxyz = rep (step, 3))
@@ -96,7 +96,7 @@ plot(S, view.coord = view.coord, main ="optical nerves")
 plot(binl, view.coord = view.coord, col = palette, 
     cut.interpolate = FALSE, add = TRUE)
 plot(binr, view.coord = view.coord, col =palette, 
-     cut.interpolate = FALSE, add = TRUE)
+      cut.interpolate = FALSE, add = TRUE)
 plot(S, view.coord = view.coord, lwd = 2, add= TRUE)
 
 \dontrun{

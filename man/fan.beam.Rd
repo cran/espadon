@@ -54,9 +54,10 @@ the rays of rectangular pyramid fan. Rays are uniformly distributed by angle.
 \examples{
 fan <- fan.beam (alpha = 30, dalpha = 1)
 head (fan$xyz)
-library (rgl)
-open3d ()
-points3d (fan$xyz)
+if (interactive()) {
+  rgl::open3d ()
+  rgl::points3d (fan$xyz)
+}
 }
 \seealso{
 \link[espadon]{fan.planar}, \link[espadon]{fan.sphere}, \link[espadon]{fan.to.voxel}.

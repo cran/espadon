@@ -89,7 +89,7 @@ with \mjeqn{D_i}{ascii} the measured dose at voxel \mjeqn{i}{ascii},
 # Creation of a reference volume  and measured volume
 # loading of toy-patient objects (decrease dxyz for  better result)
 patient <- toy.load.patient (modality = c ("rtdose", "rtstruct"), 
-                             roi.name = "ptv", dxyz = c (3, 3, 3))
+                             roi.name = "ptv", dxyz = c (5, 5, 5))
 D.ref <- patient$rtdose[[1]]  
 # We will assume that the measured dose is equal to the reference dose shifted
 # by 3 pixels on the x axis

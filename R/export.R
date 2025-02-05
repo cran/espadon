@@ -1,4 +1,4 @@
-#' Export espadon objects in dicom format
+#' Export espadon objects in DICOM format
 #' @description  The \code{export} function exports struct class objects and 
 #' volume class objects with CT or RTDOSE modality in DICOM format.
 #' @param obj espadon object of rtstruct, ct or rtdose modality to be exported.

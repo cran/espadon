@@ -73,7 +73,7 @@ provided with more complex functions to filter the data efficiently (see example
 }
 \examples{
 # loading of toy-patient objects (decrease dxyz for better result)
-step <- 4
+step <- 5
 patient <- toy.load.patient (modality = c("ct", "rtstruct"), roi.name = "",
                              dxyz = rep (step, 3))
 CT <- patient$ct[[1]]
@@ -87,12 +87,13 @@ mesh.patient <- mesh.from.bin (bin, alias = "patient", verbose = FALSE)
 # density value on the skin contour, extracted from CT
 density <- get.value.from.mesh (mesh.patient, CT ,depth = 0) 
 
-# Display of mesh, with RVV pal
-density[density < -1000] <- -1000
-density[density > 1000] <- 1000
-col <- pal.RVV(255)[cut (density, seq (-1000, 1000, length.out = 256), 
-                        include.lowest=TRUE)]
-library (rgl)
-open3d ()
-display.3D.mesh (mesh.patient, col = col)
+if (interactive()){
+  # Display of mesh, with RVV pal
+  density[density < -1000] <- -1000
+  density[density > 1000] <- 1000
+  col <- pal.RVV(255)[cut (density, seq (-1000, 1000, length.out = 256), 
+                           include.lowest=TRUE)]
+  rgl::open3d ()
+  display.3D.mesh (mesh.patient, col = col)
+}
 }

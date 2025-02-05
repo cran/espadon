@@ -62,11 +62,12 @@ regular.fan <- fan.sphere (angle = 30)
 head (regular.fan$xyz)
 random.fan <- fan.sphere (angle = 30, method = "random")
 head (random.fan$xyz)
-library (rgl)
-open3d ()
-points3d (regular.fan$xyz)
-open3d ()
-points3d (random.fan$xyz)
+if (interactive()){
+  rgl::open3d ()
+  rgl::points3d (regular.fan$xyz)
+  rgl::open3d ()
+  rgl::points3d (random.fan$xyz)
+}
 }
 \references{
 \strong{[1]} \insertRef{Deserno}{espadon}

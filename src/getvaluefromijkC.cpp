@@ -131,23 +131,26 @@ std::vector <double> getvaluefromijkC (
         // centres faces
         if (fill_i & fill_j){
           for(long i_ = round_i[0] + 1; i_ < round_i[1]; i_++)
-            for( long j_ = round_j[0] + 1; j_< round_j[1]; j_++)
-              value[idx] = value[idx] + vol3D[(i_ + (j_ * n_ijk[0]) +  (k_loc[round_k[0]] * le_map))] * pk[0] +
-                vol3D[(i_ + (j_ * n_ijk[0]) +  (k_loc[round_k[1]] * le_map))] * pk[1];
+            for( long j_ = round_j[0] + 1; j_< round_j[1]; j_++){
+              value[idx] = value[idx] + vol3D[(i_ + (j_ * n_ijk[0]) +  (k_loc[round_k[0]] * le_map))] * pk[0];
+              if (pk[1]!=0) value[idx] = vol3D[(i_ + (j_ * n_ijk[0]) +  (k_loc[round_k[1]] * le_map))] * pk[1];
+            }
         }
-        
+
         if (fill_i & fill_k){
           for(long i_ = round_i[0] + 1; i_ < round_i[1]; i_++)
-            for(long k_ = round_k[0] + 1; k_ <round_k[1]; k_++) 
-              value[idx] = value[idx] + vol3D[(i_ + (round_j[0] * n_ijk[0]) +  (k_loc[k_] * le_map))] * pj[0] + 
-                vol3D[(i_ + (round_j[1] * n_ijk[0]) +  (k_loc[k_] * le_map))] * pj[1];
+            for(long k_ = round_k[0] + 1; k_ <round_k[1]; k_++){
+              value[idx] = value[idx] + vol3D[(i_ + (round_j[0] * n_ijk[0]) +  (k_loc[k_] * le_map))] * pj[0];
+              if (pj[1]!=0) value[idx] = vol3D[(i_ + (round_j[1] * n_ijk[0]) +  (k_loc[k_] * le_map))] * pj[1];
+            }
         }
-        
+
         if (fill_j & fill_k){
           for( long j_ = round_j[0] + 1; j_< round_j[1]; j_++)
-            for(long k_ = round_k[0] + 1; k_ <round_k[1]; k_++) 
-              value[idx] = value[idx] + vol3D[(round_i[0] + (j_ * n_ijk[0]) +  (k_loc[k_] * le_map))] * pi[0] + 
-                vol3D[(round_i[1] + (j_ * n_ijk[0]) +  (k_loc[k_] * le_map))] * pi[1] ;
+            for(long k_ = round_k[0] + 1; k_ <round_k[1]; k_++){
+              value[idx] = value[idx] + vol3D[(round_i[0] + (j_ * n_ijk[0]) +  (k_loc[k_] * le_map))] * pi[0];
+              if (pi[1]!=0) value[idx] = vol3D[(round_i[1] + (j_ * n_ijk[0]) +  (k_loc[k_] * le_map))] * pi[1] ;
+            }
         }
         value[idx] = value[idx]/ (s_ijk[0]*s_ijk[1]*s_ijk[2]);
       }

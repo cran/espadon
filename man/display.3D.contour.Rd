@@ -72,8 +72,7 @@ If \code{roi.name}, \code{roi.sname}, and \code{roi.idx} are all
 step <- 4
 patient <- toy.load.patient (modality = "rtstruct", roi.name = "eye",
                              dxyz = rep (step, 3))
-library (rgl)
-open3d()
-bg3d ("black")
+rgl::open3d()
+rgl::bg3d ("black")
 display.3D.contour (struct = patient$rtstruct[[1]], roi.print = TRUE)
 }

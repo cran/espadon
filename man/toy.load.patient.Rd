@@ -5,7 +5,7 @@
 \title{Load a toy patient for test}
 \usage{
 toy.load.patient(
-  modality = c("ct", "mr", "rtdose", "rtstruct"),
+  modality = c("ct", "mr", "sct", "rtdose", "rtstruct"),
   roi.name = c("eye", "optical nerve", "brain", "labyrinth processing unit",
     "energy unit", "gizzard", "ghost container", "exhaust valve"),
   dxyz = c(1, 1, 1),

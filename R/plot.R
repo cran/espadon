@@ -352,11 +352,19 @@ plot.struct <- function(x, ..., view.type = "trans",
   m <- match(view.type[1],coord.map)
   if (is.na(m)) stop("Undefined abcisse or ordinate. view.type must be set to ", paste(coord.map, collapse=", "))
   
-  x <- .suppress.roi(x, !is.na(x$roi.info[,"min.x"]))
-  list.roi.idx <- select.names (x$roi.info$roi.pseudo, 
-                                roi.name =roi.name, roi.sname = roi.sname, 
-                                roi.idx = roi.idx)
-    # args[["roi.name"]] <- args[["roi.sname"]] <- args[["roi.idx"]] <- NULL
+  list.roi.idx <-  select.names (x$roi.info$roi.pseudo, roi.name =roi.name, 
+                                 roi.sname = roi.sname, roi.idx = roi.idx)
+  if (is.null(list.roi.idx)){
+    message("no ROI to display")
+    return(x)
+  } 
+  
+  f.roi <- !is.na(x$roi.info[,"min.x"])
+  f <- rep(FALSE, x$nb.of.roi)
+  f[list.roi.idx[f.roi]] <- TRUE
+  x <- .suppress.roi(x,f)
+  list.roi.idx <- (0:sum(f))[-1]
+  
   
   if (is.null(list.roi.idx)){
     message("no ROI to display")
