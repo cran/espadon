@@ -2,6 +2,7 @@
 % Please edit documentation in R/err_metrics_from_roi.R
 \name{err.metrics.from.roi}
 \alias{err.metrics.from.roi}
+\alias{err.metrics.from.bin}
 \title{Error evaluation metrics for 2-volume comparisons}
 \usage{
 err.metrics.from.roi(
@@ -13,6 +14,8 @@ err.metrics.from.roi(
   roi.idx = NULL,
   T.MAT = NULL
 )
+
+err.metrics.from.bin(obj, obj.ref, bin.list = NULL, T.MAT)
 }
 \arguments{
 \item{obj}{"volume" class object to be compared.}
@@ -36,6 +39,9 @@ By default \code{roi.idx = NULL}. See Details.}
 \link[espadon]{load.patient.from.Rdcm} or \link[espadon]{load.T.MAT}. If
 \code{T.MAT = NULL}, \code{struct$ref.pseudo} must be equal to
 \code{obj$ref.pseudo} and \code{obj.ref$ref.pseudo}.}
+
+\item{bin.list}{list of objects of class 'volume' and modality 'binary' or 'weight',
+giving the selection of voxels in which metrics will be calculated.}
 }
 \value{
 Returns, in the zones delimited by the requested RoI, the following metrics:
@@ -44,12 +50,14 @@ Returns, in the zones delimited by the requested RoI, the following metrics:
 \item MAE: Mean Absolute Error
 \item MSE: Mean Squared Error
 \item RMSE: Root Mean Squared Error
+\item MIN: Min Error
+\item MAX: Max Error
 }
 }
 \description{
-The \code{err.metrics.from.roi} calculates various metrics
-(ME, MAE, MSE, RMSE) to compare 2 “volume” class objects in the zones delimited
-by the requested RoI.
+The \code{err.metrics.from.roi} and \code{err.metrics.from.bin}
+calculate various metrics (ME, MAE, MSE, RMSE) to compare 2 “volume” class
+objects in the zones delimited by the requested RoI or binary selections
 }
 \details{
 If \code{roi.name}, \code{roi.sname}, and \code{roi.idx} are
@@ -76,5 +84,19 @@ err.metrics.from.roi(obj = patient$ct[[2]], obj.ref = patient$ct[[1]],
 # Calculation on all volume
 err.metrics.from.roi(obj = patient$ct[[2]], obj.ref = patient$ct[[1]], 
                      T.MAT= patient$T.MAT)
-                     
+ 
+# Calculation using err.metrics.from.bin. The binary selection must first be 
+# created.  
+roi.idx <- select.names(patient$rtstruct[[1]]$roi.info$roi.pseudo,
+                        roi.sname = c("eye","ptv"))  
+bin.ROI <- lapply (roi.idx, function(idx){
+   bin.from.roi (patient$ct[[1]], struct = patient$rtstruct[[1]], 
+                 roi.idx = idx, T.MAT = patient$T.MAT, 
+                 alias = patient$rtstruct[[1]]$roi.info$roi.pseudo[idx], 
+                 description = patient$rtstruct[[1]]$roi.info$name[idx],
+                 modality = "weight")})   
+ names (bin.ROI) <-patient$rtstruct[[1]]$roi.info$name[roi.idx]   
+ 
+ err.metrics.from.bin (obj = patient$ct[[2]], obj.ref = patient$ct[[1]], 
+                       bin.list = bin.ROI, T.MAT= patient$T.MAT)                             
 }

@@ -30,7 +30,7 @@ std::vector <double> ouline2voxC (std::vector <double> p,
   
   nb_out =0;
   for (m=0; m< (int) lambda_max.size(); m++){
-    R_CheckUserInterrupt();
+    if (m % 2048 == 0) R_CheckUserInterrupt();
     roundM[2] = (int)( O_ijk[3*m + 2] + 0.5);
     if ((roundM[2]>=k_idx[0]) && (roundM[2]<= k_idx[n_ijk[2]-1])){
       if ((int) roundM[2]==k_idx[(int) roundM[2]]){

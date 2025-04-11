@@ -66,7 +66,7 @@ A file in .xlsx format can also be created with the ***xlsx.from.dcm*** function
 
 Thanks to the ***dicom.set.tag.value*** function, the content of the various tags can be modified or deleted, as far as they are in ascii format.
 
-The ***dicom.raw.data.anonymizer*** function provides pseudonymization by shifting dates, changing the patient's PIN and name, removing all patient data except age, weight, and height, and also removing any other name, phone, operator, service, and undocumented tag content.
+The ***dicom.raw.data.anonymizer*** function provides pseudonymization by shifting dates, changing the patient's PIN and name, removing all patient data except age, weight, and height, and also removing any other name, phone, operator, service, and undocumented tag content. It can change UIDs, for more robust anonymization.
 
 ## Patient overview
 

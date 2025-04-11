@@ -50,13 +50,13 @@ load.Rdcm.raw.data <- function (Rdcm.filename, address= TRUE, data=TRUE,
     h$espadon.version <- NULL
   }
   from.dcm <- l[2]>0
-  
+  version <- as.numeric(strsplit(espadon.version,"[.]")[[1]])
   #correction à apporter
   correction <- list(
     version0 = espadon.version=="0.0.0",
     rtplan = espadon.version=="0.0.0" & h$modality == "rtplan",
     nopatient = is.null(h$patient.name),
-    acq.date = espadon.version < "1.3.0"
+    acq.date = (version[1]<1) ||  (version[1]==1 & version[2]<3) || (version[1]==1 & version[2]==3 & version[3]<0)
   )
   ################################
   update.needed <- any(unlist(correction))

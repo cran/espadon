@@ -36,7 +36,7 @@ std::vector <bool> meshinfront (
   std::vector <bool> infront(le);
   for(p2_idx = 0; p2_idx < le; p2_idx++){
     infront[p2_idx] = true;
-    R_CheckUserInterrupt();
+    if (p2_idx % 2048 == 0) R_CheckUserInterrupt();
     for(tr_idx = 0; tr_idx< (int)n_A.size (); tr_idx++) {
       m[0] = pt_x[n_B[tr_idx]] -pt_x[n_A[tr_idx]];//m(0, 0)
       m[1] = pt_y[n_B[tr_idx]] -pt_y[n_A[tr_idx]];//m(1, 0)

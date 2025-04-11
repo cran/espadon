@@ -13,7 +13,7 @@
 
 #####################################################################################
 .espadon.version <- function(){
-  return ("1.10.0")
+  return ("1.11.0")
 }
 
 #####################################################################################
@@ -2903,7 +2903,7 @@
       if ((L$thickness==0) | diff.f) L$thickness <- thickness
       
     # on vérifie si les contours sont des contours inscrits ou non.
-    for (i in roi.used[nb.plane!=0]) {
+    for (i in (0:length(L$roi.data))[-1][nb.plane!=0]) {
       roi.all.z<- sapply(L$roi.data[[i]], function(li)  li$pt[1,3])
       ord <- order(roi.all.z)
       L$roi.data[[i]] <- L$roi.data[[i]][ord]

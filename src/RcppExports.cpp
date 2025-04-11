@@ -11,7 +11,7 @@ Rcpp::Rostream<false>& Rcpp::Rcerr = Rcpp::Rcpp_cerr_get();
 #endif
 
 // dicombrowser
-std::list <std::string> dicombrowser(std::vector <unsigned char> dicomrawdata, DataFrame tagdico, unsigned int nbTAG, std::string stop_tag, unsigned int stop_level, bool full_info, bool verbose);
+Rcpp::List dicombrowser(std::vector <unsigned char> dicomrawdata, DataFrame tagdico, unsigned int nbTAG, std::string stop_tag, unsigned int stop_level, bool full_info, bool verbose);
 RcppExport SEXP _espadon_dicombrowser(SEXP dicomrawdataSEXP, SEXP tagdicoSEXP, SEXP nbTAGSEXP, SEXP stop_tagSEXP, SEXP stop_levelSEXP, SEXP full_infoSEXP, SEXP verboseSEXP) {
 BEGIN_RCPP
     Rcpp::RObject rcpp_result_gen;

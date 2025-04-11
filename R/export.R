@@ -64,9 +64,9 @@ export <- function(obj,format="dcm", ref.obj.list = NULL, use.original.UIs = FAL
   if (format[1] == "dcm"){
     if (!(is(obj,"volume") | is(obj,"struct"))) 
       stop("At present, only espadon objects with the ct, rtdose or rtstruct modality can be exported.")
-    if  (!(obj$modality %in% c("ct","rtdose","rtstruct"))) 
-      stop("At present, only espadon objects with the ct, rtdose or rtstruct modality can be exported.")
-    if (tolower(obj$modality)=="ct") {
+    if  (!(obj$modality %in% c("ct","mr","rtdose","rtstruct"))) 
+      stop("At present, only espadon objects with the ct, mr, rtdose or rtstruct modality can be exported.")
+    if (tolower(obj$modality)=="ct" | tolower(obj$modality)=="mr") {
       export.img3Dplan.to.dicom (obj, ref.obj.list = ref.obj.list, use.original.UIs = use.original.UIs,
                                  use.original.ref.UIs=use.original.ref.UIs,
                                  file.prefix =file.prefix, file.dirname= file.dirname, file.name = file.name, 
@@ -148,7 +148,7 @@ export.img3Dplan.to.dicom <- function(obj, ref.obj.list = NULL, use.original.UIs
       if (any(f)) {
         if (is.null(NAvalue)){
           # NAvalue <-  - 2^ceiling(log(slope* max.pixel)/log(2))
-          NAvalue <-  - 2^15
+          if (obj$modality == "ct") {NAvalue <-  - 2^15} else {NAvalue <- 0}
           warning(c("obj$vol3D.data contains NA values. This data will be replaced by the value ",NAvalue, 
                     ". If you wish to change this value, add the argument NAvalue=your_NA_value."))
         }
@@ -163,58 +163,7 @@ export.img3Dplan.to.dicom <- function(obj, ref.obj.list = NULL, use.original.UIs
     warning(c("There is no obj$vol3D.data in ", obj$object.alias,"."))
   }
   
-  
-  
-  # ref.modality<- sapply(ref.obj.list, function(l) l$modality)
-  # ref.obj.list <- ref.obj.list[ref.modality=="rtstruct"]
-  # 
-  L00081140 <- c()#structure Set containing structures that were used to calculate the RT Dose. opt
-  # if (!is.null(ref.obj.list)){
-  #   ref.serie<- do.call(rbind, lapply(ref.obj.list,function(obj_)
-  #     create.UID(obj_,serie.vect,size =50)))
-  #   f <- !duplicated.array(ref.serie)
-  #   ref.obj.list <- ref.obj.list[f]
-  #   ref.serie <- ref.serie[f,, drop = FALSE]
-  #   
-  #   SOP.L <- lapply(ref.obj.list, function(obj_) {
-  #     if (length(.ascii.to.hex(obj_$frame.of.reference, "UI"))==0) 
-  #       obj_$frame.of.reference <-  rawToChar(create.UID (obj_,c("patient", "ref.pseudo"), size =44))
-  #     if (!is.null(obj_$object.info) & use.original.ref.UIs) {
-  # # l1155 <- obj_$object.info$SOP.label
-  # # ncl.f<- cumsum(nchar(l1155))
-  # # ncl.d <- c(1,ncl.f[-length(ncl.f)] -1)
-  # # l1155 <- charToRaw(paste(l1155,collapse=""))
-  # # l1155 <- lapply(1:length(ncl.f), function(i) {
-  # #   new.raw <- c(l1155[ncl.d[i]:ncl.f[i]] ,as.raw(0x00));  new.raw[1:(2 * floor(length(new.raw)/2))]})
-  # l1155 <- lapply(obj_$object.info$SOP.label, function(uid) .ascii.to.hex(uid,"UI"))
-  #       l1150 <- .ascii.to.hex(obj_$object.info$SOP.ID,"UI")
-  #       l1150 <- lapply(l1155,function(i) l1155)
-  #       return(list(l1150=l1150,l1150=l1155))
-  #       
-  #     }
-  #     return(create.SOPUID(obj_))
-  #   }) 
-  #   ref.SOP_UID.1150 <- lapply(SOP.L, function(l )l$l1150)
-  #   ref.SOP_UID.1155 <- lapply(SOP.L, function(l )l$l1155)
-  #   ref.SOP_UID.1150 <- lapply(ref.SOP_UID.1150,function(l) lapply(l, function (uid)
-  #     c(unlist(.value.to.raw (length(uid),2,TRUE)),uid)))
-  #   ref.SOP_UID.1155 <- lapply(ref.SOP_UID.1155,function(l) lapply(l, function (uid)
-  #     c(unlist(.value.to.raw (length(uid),2,TRUE)),uid)))
-  #   rm(SOP.L)
-  #   
-  #   L00081140loop <- unlist(lapply(1:length(ref.SOP_UID.1150), function(ref.idx) 
-  #     return(unlist(lapply(1:length(ref.SOP_UID.1150[[ref.idx]]), function(idx){
-  #       tot <- c(.tag.to.hex("(0008,1150)"),charToRaw(tag.dictionary["(0008,1150)","VR"]),
-  #                ref.SOP_UID.1150[[ref.idx]][[idx]],
-  #                .tag.to.hex("(0008,1155)"),charToRaw(tag.dictionary["(0008,1155)","VR"]),
-  #                ref.SOP_UID.1155[[ref.idx]][[idx]])
-  #       c (as.raw(c(0xfe, 0xff, 0x00, 0xe0)), unlist(.value.to.raw (length(tot),4,TRUE)), tot)}))
-  #     )))
-  #   L00081140 <- c(.tag.to.hex("(0008,1140)"), charToRaw(tag.dictionary["(0008,1140)","VR"]), as.raw(c(0x00,0x00)), 
-  #                  unlist(.value.to.raw (length(L3006060loop),4,TRUE)), L3006060loop)
-  #   
-  # }
-  
+  L00081140 <- c()
   SOP <- create.SOPUID(obj)
   
   ######################################
@@ -318,8 +267,15 @@ export.img3Dplan.to.dicom <- function(obj, ref.obj.list = NULL, use.original.UIs
   
   L0008[["(0008,0050)"]] <- c (.tag.to.hex ("(0008,0050)"), charToRaw (tag.dictionary["(0008,0050)","VR"]), as.raw (c (0x00,0x00)))
   
-  L0008[["(0008,0060)"]] <- c (.tag.to.hex ("(0008,0060)"), charToRaw (tag.dictionary["(0008,0060)","VR"]), 
-                               as.raw (c (0x02,0x00)), charToRaw ("CT"))
+  if (obj$modality == "ct") {
+    L0008[["(0008,0060)"]] <- c (.tag.to.hex ("(0008,0060)"), charToRaw (tag.dictionary["(0008,0060)","VR"]), 
+                                 as.raw (c (0x02,0x00)), charToRaw ("CT"))
+  } else {
+    L0008[["(0008,0060)"]] <- c (.tag.to.hex ("(0008,0060)"), charToRaw (tag.dictionary["(0008,0060)","VR"]), 
+                                 as.raw (c (0x02,0x00)), charToRaw ("MR"))
+    
+  }
+  
   
   new.raw <- .ascii.to.hex ("R ESPADON MANUFACTURER", tag.dictionary["(0008,0070)","VR"])
   L0008[["(0008,0070)"]] <- c (.tag.to.hex ("(0008,0070)"), charToRaw (tag.dictionary["(0008,0070)","VR"]), 

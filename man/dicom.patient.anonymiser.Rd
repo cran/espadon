@@ -8,9 +8,11 @@ dicom.patient.anonymiser(
   dcm.files,
   pat.dest.dir,
   offset = 0,
-  new.PIN = "Anonymous patient",
+  new.PIN = "ANONYMOUS^Unknown",
   reset.private.tag = FALSE,
   new.UID = FALSE,
+  UID.white.list = "UID",
+  UID.black.list = c("class", "context", "mapping", "coding"),
   tag.dictionary = dicom.tag.dictionary(),
   verbose = TRUE
 )
@@ -31,6 +33,14 @@ by this offset expressed in days.}
 not in the \code{tag.dictionary} is removed.}
 
 \item{new.UID}{Boolean. If \code{TRUE}, new UID are generated and replace the old ones.}
+
+\item{UID.white.list}{List of words or parts of DICOM names containing “UID”,
+defining UIDs that will be modified if \code{new.UID} is equal to \code{TRUE}.
+The default is “UID”.}
+
+\item{UID.black.list}{List of words or parts of DICOM names containing “UID”,
+defining UIDs that will not be modified if \code{new.UID} is equal to \code{TRUE}.
+The default is c("class", "context", "mapping", "coding").}
 
 \item{tag.dictionary}{Dataframe, by default equal to
 \link[espadon]{dicom.tag.dictionary}, whose structure it must keep. This

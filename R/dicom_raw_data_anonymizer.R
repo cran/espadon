@@ -9,6 +9,12 @@
 #' @param reset.private.tag Boolean, if \code{TRUE}, the value of tags that are 
 #' not in the \code{tag.dictionary} is removed.
 #' @param new.UID Boolean. If \code{TRUE}, new UID are generated and replace the old ones.
+#' @param UID.white.list List of words or parts of DICOM names containing “UID”, 
+#' defining UIDs that will be modified if \code{new.UID} is equal to \code{TRUE}. 
+#' The default is “UID”.
+#' @param UID.black.list List of words or parts of DICOM names containing “UID”, 
+#' defining UIDs that will not be modified if \code{new.UID} is equal to \code{TRUE}. 
+#' The default is c("class", "context", "mapping", "coding").
 #' @param tag.dictionary Dataframe, by default equal to 
 #' \link[espadon]{dicom.tag.dictionary}, whose structure it must keep. This 
 #' dataframe is used to parse DICOM files.
@@ -45,9 +51,11 @@
 #' 
 #' @importFrom sodium hash
 #' @importFrom qs qserialize
-dicom.raw.data.anonymizer <- function( dicom.raw.data, offset = 0 , new.PIN = "Anonymous ",
-                                       reset.private.tag = FALSE, new.UID = FALSE,
-                                       tag.dictionary = dicom.tag.dictionary ()){
+dicom.raw.data.anonymizer <- function( dicom.raw.data, offset = 0 , new.PIN = "ANONYMOUS^Unknown",
+                                        reset.private.tag = FALSE, new.UID = FALSE,
+                                        UID.white.list = "UID", 
+                                        UID.black.list = c("class", "context", "mapping", "coding"),
+                                        tag.dictionary = dicom.tag.dictionary ()){
   if (nchar(new.PIN)%%2 != 0) new.PIN <- paste(new.PIN," ",sep = "")
   
   dicom.df <- dicom.browser (dicom.raw.data, full.info = TRUE, tag.dictionary = tag.dictionary)
@@ -55,20 +63,21 @@ dicom.raw.data.anonymizer <- function( dicom.raw.data, offset = 0 , new.PIN = "A
     warning ("not dicom compliant.")
     return(FALSE)
   }
-
+  
   UID.idx <- c()
+  UID.tab <- NULL
   if (new.UID){
-    UID.tab <- .dicom.get.UID (dicom.raw.data, white.list = c("UID"), 
-                               black.list = c("class"),
-                               tag.dictionary = dicom.tag.dictionary (),
-                               dicom.browser= dicom.df)
+    UID.tab <- .dicom.get.UID (dicom.raw.data, white.list = UID.white.list, 
+                                         black.list = UID.black.list,
+                                         tag.dictionary = dicom.tag.dictionary (),
+                                         dicom.browser= dicom.df)
     linktab <- unique(UID.tab[,c("Value","Value")])
     linktab[,2] <- sapply( linktab[,1], function(uid) {
       UID <- qserialize(list(uid,new.PIN,offset))
-      le.esp <- nchar( .espadon.UID()) + 1
-      return(paste( .espadon.UID(),
-                   paste(as.numeric(hash(UID, key = NULL,  size = max(nchar(uid),16+le.esp)-le.esp)) %% 10, 
-                         collapse=""), sep="."))
+      le.esp <- nchar(.espadon.UID()) + 1
+      return(paste(.espadon.UID(),
+                    paste(as.numeric(hash(UID, key = NULL,  size = max(nchar(uid),16+le.esp)-le.esp)) %% 10, 
+                          collapse=""), sep="."))
     })
     UID.tab$Value <- linktab[match(UID.tab$Value,linktab$Value),2]
     UID.idx <- match(UID.tab$tag, dicom.df$tag)
@@ -84,7 +93,7 @@ dicom.raw.data.anonymizer <- function( dicom.raw.data, offset = 0 , new.PIN = "A
     rpt <- which(is.na(name) & not.item & !grepl ('0000[)]$',last.tag) & has.load)
   }else {
     rpt <- integer(0)
-    }
+  }
   
   res.idx <- which (grepl ('physician|operator|author[ ]|author$|reviewer',tolower (name)) & has.load)
   pat.idx <- which (grepl ('^[(]0010,',tolower (last.tag)) & has.load)
@@ -103,11 +112,11 @@ dicom.raw.data.anonymizer <- function( dicom.raw.data, offset = 0 , new.PIN = "A
   DA.idx <- which (dicom.df$VR=="DA" & has.load)
   DT.idx <- which (dicom.df$VR=="DT" & has.load)
   
-  modify.idx <- sort(c(pat.idx,reset.idx,identity.removed, UID.idx), decreasing = TRUE)
+  modify.idx <- sort(c(pat.idx,reset.idx,identity.removed, UID.idx))
   
   
   # anonymise date
-  if (length(DA.idx)>0) {
+  if (length(DA.idx)>0 & offset!=0) {
     new.DA <- sapply(DA.idx, function(idx) {
       as.character(format(as.Date(dicom.tag.parser (dicom.df$start[idx],dicom.df$stop[idx],
                                                     dicom.df$VR[idx], dicom.df$endian[idx],
@@ -115,7 +124,7 @@ dicom.raw.data.anonymizer <- function( dicom.raw.data, offset = 0 , new.PIN = "A
     for (idx in 1:length(DA.idx)) dicom.raw.data[dicom.df$start[DA.idx[idx]]:dicom.df$stop[DA.idx[idx]]] <- charToRaw(new.DA[idx])
   }
   
-  if (length(DT.idx)>0) {
+  if (length(DT.idx)>0 & offset!=0) {
     new.DT <- sapply(DT.idx, function(idx) {
       DT <- dicom.tag.parser (dicom.df$start[idx],dicom.df$stop[idx],
                               dicom.df$VR[idx], dicom.df$endian[idx],
@@ -129,103 +138,293 @@ dicom.raw.data.anonymizer <- function( dicom.raw.data, offset = 0 , new.PIN = "A
   }
   
   if (length(modify.idx)>0) {
+    ######################################
+    maUID <- match(modify.idx,UID.idx)
+    matwhUID_value <- UID.tab$Value[maUID]
+    matchuid_f <- !is.na(maUID)
+    identityremoved_f <-  !is.na(match(modify.idx,identity.removed))  
+    pat_f <-  !is.na(match(modify.idx,pat.idx)) 
+    new.value <- lapply(1:length(modify.idx), function(i){
+      if (pat_f[i]) return(charToRaw(new.PIN))
+      if (identityremoved_f[i]) return(charToRaw("YES "))
+      if (matchuid_f[i]) {
+        new.raw <- c(charToRaw(matwhUID_value[i]),as.raw(0x00))
+        new.raw[1:(2 * floor(length(new.raw)/2))]
+      }
+    })
     
-    for (idx in modify.idx) {
-      new.raw <- NULL
-      part1 <- NULL
-      part3 <- NULL
-      match.uid <- match(idx,UID.idx)
-      if (idx %in% pat.idx) {
-        new.raw <- charToRaw(new.PIN)
-      } else if (idx %in% identity.removed) {new.raw <- charToRaw("YES ")
-      } else if (!is.na(match.uid)) {
-        new.raw <- c(charToRaw(UID.tab$Value[match.uid]),as.raw(0x00))
-        new.raw <- new.raw[1:(2 * floor(length(new.raw)/2))]
+    
+    tosubstract <- sapply(1:length(modify.idx), function(i) dicom.df$stop[modify.idx[i]]-dicom.df$start[modify.idx[i]]+1 - length(new.value[[i]]))
+    
+    tagtochangeidx <- do.call(rbind, lapply(1:length(modify.idx), function(i) {
+      tag <- unlist(strsplit(dicom.df$tag[modify.idx[i]],'[ ]'))
+      leveltochange <- suppressWarnings (as.numeric(unlist(strsplit(dicom.df$encaps.load[modify.idx[i]],'[ ]'))))
+      data.frame(tag =sapply (1:(length(leveltochange)+1), function (i) paste(tag[1:i], collapse=" ")),subs = tosubstract[i])
+    }))
+    
+    tagtochangeidx <- tagtochangeidx[tagtochangeidx$subs!=0, ]
+    
+    byt <- by(tagtochangeidx, tagtochangeidx$tag,function(v) sum(v$subs))
+    tosubstract.tab <- data.frame(nb = match(names(byt),dicom.df$tag), value = as.numeric(byt))
+    endian <- dicom.df$endian[tosubstract.tab$nb]
+    
+    loadmsg.idx <- lapply(tosubstract.tab$nb, function(i) dicom.df$load.start[i]:dicom.df$load.stop[i])
+    
+    new.loadsize <- unlist(lapply((0:nrow(tosubstract.tab))[-1], function(i) {
+      size <- length(loadmsg.idx[[i]])
+      raw.load <- packBits(intToBits(readBin (dicom.raw.data[loadmsg.idx[[i]]], 
+                                              what="int", n= 1,
+                                              size = size,
+                                              endian = dicom.df$endian[tosubstract.tab$nb[i]]) - tosubstract.tab$value[i]), type="raw")
+      if (size==4){
+        if (endian[i]=="little") return(raw.load)
+        return(rev(raw.load))
       }
-      if (dicom.df$start[idx]> 1) part1 <- dicom.raw.data[1:(dicom.df$start[idx]-1)]
-      if (length(dicom.raw.data)> dicom.df$stop[idx]) part3 <- dicom.raw.data[(dicom.df$stop[idx] + 1): length(dicom.raw.data)]
-      #transformer la partie du dicom.raw.data
-      dicom.raw.data <- c(part1, new.raw, part3)
+      if (endian[i]=="little") return(raw.load[1:2])
+      return(rev(raw.load[1:2]))
       
-      new.raw.load <- packBits(intToBits(as.raw(length (new.raw))), type="raw")
-      dicom.raw.data.loadsize <- dicom.df$load.stop[idx]-dicom.df$load.start[idx]+1
-      # if (dicom.raw.data.loadsize==4){
-      #   if (dicom.df$endian[idx]=="little") {
-      #     dicom.raw.data[dicom.df$load.start[idx]:dicom.df$load.stop[idx]] <-new.raw.load
-      #   } else { dicom.raw.data[dicom.df$load.start[idx]:dicom.df$load.stop[idx]] <-rev(new.raw.load)}
-      # } else {
-      if (dicom.df$endian[idx]=="little") {
-        dicom.raw.data[dicom.df$load.start[idx]:dicom.df$load.stop[idx]] <-new.raw.load[1:dicom.raw.data.loadsize]
-      } else {
-        dicom.raw.data[dicom.df$load.start[idx]:dicom.df$load.stop[idx]] <-rev(new.raw.load[1:dicom.raw.data.loadsize]) 
+    }))
+    
+    
+    # rafraichissement de la load
+    dicom.raw.data[unlist(loadmsg.idx)] <- new.loadsize
+    
+    # group impact
+    idx.group  <- grep("0000[)]$", dicom.df$tag)
+    tag.group <- sapply(dicom.df$tag[idx.group], function (t) substr(t,1,nchar(t)-5))
+    tag.reg <-  paste0("^", gsub(")","[)]", gsub("(","[(]",tag.group, fixed = TRUE), fixed = TRUE))
+    impacted.sub <- sapply(tag.reg,function(t) { sum(tosubstract[grepl(t, dicom.df$tag[modify.idx])])})
+    impacted.f <- impacted.sub!=0
+    idx.group <- idx.group[impacted.f]
+    impacted.sub <- impacted.sub[impacted.f]
+    new.impact.value <- lapply((0:length(idx.group))[-1], function(i) {
+      size <- dicom.df$stop[idx.group[i]] - dicom.df$start[idx.group[i]] + 1
+      raw.load <- packBits(intToBits(readBin (dicom.raw.data[dicom.df$start[idx.group[i]] :dicom.df$stop[idx.group[i]]], 
+                                              what="int", n= 1,
+                                              size = size,
+                                              endian = dicom.df$endian[idx.group[i]]) - impacted.sub[i]), type="raw")
+      if (size==4){
+        if (endian[i]=="little") return(raw.load)
+        return(rev(raw.load))
       }
-      # }
+      if (endian[i]=="little") return(raw.load[1:2])
+      return(rev(raw.load[1:2]))
       
-      
-      if (nchar(dicom.df$encaps.load[idx])>0){
-        to.substract <- dicom.df$stop[idx]-dicom.df$start[idx]+1 - length(new.raw)
-        level.to.change <- suppressWarnings (as.numeric(unlist(strsplit(dicom.df$encaps.load[idx],'[ ]'))))
-        if (length(level.to.change)>0) {
-          tag.to.change <- unlist(strsplit(dicom.df$tag[idx],'[ ]'))
-          tag.to.change <- sapply (1:length(level.to.change), function (i) paste(tag.to.change[1:i], collapse=" "))
-          tag.to.change.idx <- match(tag.to.change,dicom.df$tag)
-          tag.to.change.idx  <- tag.to.change.idx[!is.na(level.to.change)]
-          #--> reset idx
-          for (i in tag.to.change.idx){
-            size <- dicom.df$load.stop[i]-dicom.df$load.start[i]+1
-            raw.load <- packBits(intToBits(readBin (dicom.raw.data[dicom.df$load.start[i]:dicom.df$load.stop[i]], what="int", n= 1,
-                                                    size = size,
-                                                    endian = dicom.df$endian[i]) - to.substract), type="raw")
-            
-            if (size==4){
-              if (dicom.df$endian[i]=="little") {dicom.raw.data[dicom.df$load.start[i]:dicom.df$load.stop[i]] <-raw.load
-              } else { dicom.raw.data[dicom.df$load.start[i]:dicom.df$load.stop[i]] <-rev(raw.load)}
-            } else {
-              if (dicom.df$endian[i]=="little") {dicom.raw.data[dicom.df$load.start[i]:dicom.df$load.stop[i]] <-raw.load[1:2]
-              } else {dicom.raw.data[dicom.df$load.start[i]:dicom.df$load.stop[i]] <-rev(raw.load[1:2]) }
-            }
-            
-          }
-        }
-      }
-    }
+    })
+    
+    modify.idx <- c(modify.idx, idx.group)
+    new.value <- c(new.value, new.impact.value)
+    ord <- order(modify.idx)
+    modify.idx <- modify.idx[ord]
+    new.value <- new.value[ord]
+    # dicom.raw.data cut
+    modify_area <- c(rep(c(TRUE,FALSE),each =length(modify.idx)), FALSE)
+    deb <- c(dicom.df$start[modify.idx],1,dicom.df$stop[modify.idx] + 1)
+    end <-c(dicom.df$stop[modify.idx],dicom.df$start[modify.idx] - 1,length(dicom.raw.data))
+
+    keep <- !duplicated(deb) & (deb<end) & (deb>0)
+    deb <- deb[keep]
+    ord <- order(deb)
+    deb <- deb[ord]
+    modify_area <-(modify_area[keep])[ord]
+    end <- (end[keep])[ord]
+    
+    dicom.raw.data.l <- lapply((0:length(deb))[-1], function(i) {
+      dicom.raw.data[deb[i]:end[i]]
+    })
+    dicom.raw.data.l[modify_area] <- new.value
+  
+    
+    dicom.raw.data <- unlist(dicom.raw.data.l)
   }
   
-  
-
-  idx.group  <- grep("0000[)]$", dicom.df$tag)
-  tag.group <- sapply(dicom.df$tag[idx.group], function (t) substr(t,1,nchar(t)-5))
-  tag.reg <-  paste0("^", gsub(")","[)]", gsub("(","[(]",tag.group, fixed = TRUE), fixed = TRUE))
-
-  impacted <- sapply(tag.reg,function(t) any(grepl(t, dicom.df$tag[modify.idx])))
-  if (any(impacted)){
-    dicom.df <- dicom.browser(dicom.raw.data,full.info = TRUE)
-
-    length.group <- sapply(tag.reg[impacted], function(t){
-      idx <- range(grep(t,dicom.df$tag))+1
-      e <- ifelse(idx[2]<= nrow(dicom.df),dicom.df$tag.start[idx[2]], length(dicom.raw.data)+1)
-      e-dicom.df$tag.start[idx[1]]})
-
-    idx.group_ <-idx.group[impacted]
-    for (i in 1:length(idx.group_)){
-      size <- dicom.df$stop[idx.group_[i]]-dicom.df$start[idx.group_[i]]+1
-      raw.load_ <- packBits(intToBits(length.group[i]), type="raw")
-
-      if(!is.na(size)){
-        if (size==4){
-          if (dicom.df$endian[i]=="little") {raw.load <- raw.load_
-          } else {raw.load <-rev(raw.load_)}
-        } else {
-          if (dicom.df$endian[i]=="little") {raw.load<- raw.load_[1:2]
-          } else { raw.load<-rev(raw.load_[1:2])}
-        }
-
-        dicom.raw.data[dicom.df$start[idx.group_[i]]:dicom.df$stop[idx.group_[i]]] <-raw.load
-        
-      }
-    }
-  }
-
   return(dicom.raw.data)
 }
 
+# 
+# dicom.raw.data.anonymizer <- function( dicom.raw.data, offset = 0 , new.PIN = "Anonymous ",
+#                                        reset.private.tag = FALSE, new.UID = FALSE,
+#                                        UID.white.list = "UID", 
+#                                        UID.black.list = c("class", "context", "mapping", "coding"),
+#                                        tag.dictionary = dicom.tag.dictionary ()){
+#   if (nchar(new.PIN)%%2 != 0) new.PIN <- paste(new.PIN," ",sep = "")
+#   
+#   dicom.df <- dicom.browser (dicom.raw.data, full.info = TRUE, tag.dictionary = tag.dictionary)
+#   if (is.null(dicom.df)) {
+#     warning ("not dicom compliant.")
+#     return(FALSE)
+#   }
+# 
+#   UID.idx <- c()
+#   if (new.UID){
+#     UID.tab <- .dicom.get.UID (dicom.raw.data, white.list = UID.white.list, 
+#                                black.list = UID.black.list,
+#                                tag.dictionary = dicom.tag.dictionary (),
+#                                dicom.browser= dicom.df)
+#     linktab <- unique(UID.tab[,c("Value","Value")])
+#     linktab[,2] <- sapply( linktab[,1], function(uid) {
+#       UID <- qserialize(list(uid,new.PIN,offset))
+#       le.esp <- nchar( .espadon.UID()) + 1
+#       return(paste( .espadon.UID(),
+#                    paste(as.numeric(hash(UID, key = NULL,  size = max(nchar(uid),16+le.esp)-le.esp)) %% 10, 
+#                          collapse=""), sep="."))
+#     })
+#     UID.tab$Value <- linktab[match(UID.tab$Value,linktab$Value),2]
+#     UID.idx <- match(UID.tab$tag, dicom.df$tag)
+#   }
+#   
+#   last.tag <-sapply(dicom.df$tag, function(t) rev(unlist(strsplit(t, "[ ]")))[1])
+#   
+#   m <- match(last.tag, tag.dictionary$tag)
+#   name<- tag.dictionary$name[m]
+#   not.item <- grepl("[)]$",last.tag)
+#   has.load <- !is.na(dicom.df$start) & !is.na(dicom.df$stop)
+#   if (reset.private.tag){ 
+#     rpt <- which(is.na(name) & not.item & !grepl ('0000[)]$',last.tag) & has.load)
+#   }else {
+#     rpt <- integer(0)
+#     }
+#   
+#   res.idx <- which (grepl ('physician|operator|author[ ]|author$|reviewer',tolower (name)) & has.load)
+#   pat.idx <- which (grepl ('^[(]0010,',tolower (last.tag)) & has.load)
+#   reset.idx <- unique (sort (c (res.idx,#[grepl('requesting|name|address|phone',tolower (name[res.idx]))],
+#                                 # which (grepl ('undocumented',tolower (name)) & has.load), 
+#                                 # which (dicom.df$VR=="UN" & has.load),
+#                                 rpt,
+#                                 pat.idx[-grep ('0000[)]$|0010[)]$|0020[)]$|0030[)]$|0040[)]$|1010[)]$|1020[)]$|1030[)]$',last.tag[pat.idx])],
+#                                 which (last.tag=="(4008,0119)" & has.load),
+#                                 which (last.tag=="(4008,011A)"& has.load))))
+#   
+#   pat.idx <- which(grepl("[(]0010,0020[)]$|[(]0010,0010[)]$", dicom.df$tag) & has.load)
+#   
+#   identity.removed <- which(last.tag=="[(]0012,0062[)]")
+#   
+#   DA.idx <- which (dicom.df$VR=="DA" & has.load)
+#   DT.idx <- which (dicom.df$VR=="DT" & has.load)
+#   
+#   modify.idx <- sort(c(pat.idx,reset.idx,identity.removed, UID.idx), decreasing = TRUE)
+#   
+#   
+#   # anonymise date
+#   if (length(DA.idx)>0) {
+#     new.DA <- sapply(DA.idx, function(idx) {
+#       as.character(format(as.Date(dicom.tag.parser (dicom.df$start[idx],dicom.df$stop[idx],
+#                                                     dicom.df$VR[idx], dicom.df$endian[idx],
+#                                                     dicom.raw.data), format="%Y%m%d") + offset, format="%Y%m%d") )})
+#     for (idx in 1:length(DA.idx)) dicom.raw.data[dicom.df$start[DA.idx[idx]]:dicom.df$stop[DA.idx[idx]]] <- charToRaw(new.DA[idx])
+#   }
+#   
+#   if (length(DT.idx)>0) {
+#     new.DT <- sapply(DT.idx, function(idx) {
+#       DT <- dicom.tag.parser (dicom.df$start[idx],dicom.df$stop[idx],
+#                               dicom.df$VR[idx], dicom.df$endian[idx],
+#                               dicom.raw.data)
+#       DA <-substr(DT,1,8) 
+#       if (nchar(DT)>8) {reste <- substr(DT,9,nchar(DT)) 
+#       } else {reste <- ""}
+#       paste(as.character(format(as.Date(DA, format="%Y%m%d") + offset, format="%Y%m%d")),reste,sep="")
+#     })
+#     for (idx in 1:length(DT.idx)) dicom.raw.data[dicom.df$start[DT.idx[idx]]:dicom.df$stop[DT.idx[idx]]] <- charToRaw(new.DT[idx])
+#   }
+#   
+#   if (length(modify.idx)>0) {
+#     
+#     for (idx in modify.idx) {
+#       new.raw <- NULL
+#       part1 <- NULL
+#       part3 <- NULL
+#       match.uid <- match(idx,UID.idx)
+#       if (idx %in% pat.idx) {
+#         new.raw <- charToRaw(new.PIN)
+#       } else if (idx %in% identity.removed) {new.raw <- charToRaw("YES ")
+#       } else if (!is.na(match.uid)) {
+#         new.raw <- c(charToRaw(UID.tab$Value[match.uid]),as.raw(0x00))
+#         new.raw <- new.raw[1:(2 * floor(length(new.raw)/2))]
+#       }
+#       if (dicom.df$start[idx]> 1) part1 <- dicom.raw.data[1:(dicom.df$start[idx]-1)]
+#       if (length(dicom.raw.data)> dicom.df$stop[idx]) part3 <- dicom.raw.data[(dicom.df$stop[idx] + 1): length(dicom.raw.data)]
+#       #transformer la partie du dicom.raw.data
+#       dicom.raw.data <- c(part1, new.raw, part3)
+#       
+#       new.raw.load <- packBits(intToBits(as.raw(length (new.raw))), type="raw")
+#       dicom.raw.data.loadsize <- dicom.df$load.stop[idx]-dicom.df$load.start[idx]+1
+#       # if (dicom.raw.data.loadsize==4){
+#       #   if (dicom.df$endian[idx]=="little") {
+#       #     dicom.raw.data[dicom.df$load.start[idx]:dicom.df$load.stop[idx]] <-new.raw.load
+#       #   } else { dicom.raw.data[dicom.df$load.start[idx]:dicom.df$load.stop[idx]] <-rev(new.raw.load)}
+#       # } else {
+#       if (dicom.df$endian[idx]=="little") {
+#         dicom.raw.data[dicom.df$load.start[idx]:dicom.df$load.stop[idx]] <-new.raw.load[1:dicom.raw.data.loadsize]
+#       } else {
+#         dicom.raw.data[dicom.df$load.start[idx]:dicom.df$load.stop[idx]] <-rev(new.raw.load[1:dicom.raw.data.loadsize]) 
+#       }
+#       # }
+#       
+#       
+#       if (nchar(dicom.df$encaps.load[idx])>0){
+#         to.substract <- dicom.df$stop[idx]-dicom.df$start[idx]+1 - length(new.raw)
+#         level.to.change <- suppressWarnings (as.numeric(unlist(strsplit(dicom.df$encaps.load[idx],'[ ]'))))
+#         if (length(level.to.change)>0) {
+#           tag.to.change <- unlist(strsplit(dicom.df$tag[idx],'[ ]'))
+#           tag.to.change <- sapply (1:length(level.to.change), function (i) paste(tag.to.change[1:i], collapse=" "))
+#           tag.to.change.idx <- match(tag.to.change,dicom.df$tag)
+#           tag.to.change.idx  <- tag.to.change.idx[!is.na(level.to.change)]
+#           #--> reset idx
+#           for (i in tag.to.change.idx){
+#             size <- dicom.df$load.stop[i]-dicom.df$load.start[i]+1
+#             raw.load <- packBits(intToBits(readBin (dicom.raw.data[dicom.df$load.start[i]:dicom.df$load.stop[i]], what="int", n= 1,
+#                                                     size = size,
+#                                                     endian = dicom.df$endian[i]) - to.substract), type="raw")
+#             
+#             if (size==4){
+#               if (dicom.df$endian[i]=="little") {dicom.raw.data[dicom.df$load.start[i]:dicom.df$load.stop[i]] <-raw.load
+#               } else { dicom.raw.data[dicom.df$load.start[i]:dicom.df$load.stop[i]] <-rev(raw.load)}
+#             } else {
+#               if (dicom.df$endian[i]=="little") {dicom.raw.data[dicom.df$load.start[i]:dicom.df$load.stop[i]] <-raw.load[1:2]
+#               } else {dicom.raw.data[dicom.df$load.start[i]:dicom.df$load.stop[i]] <-rev(raw.load[1:2]) }
+#             }
+#             
+#           }
+#         }
+#       }
+#     }
+#   }
+#   
+#   
+# 
+#   idx.group  <- grep("0000[)]$", dicom.df$tag)
+#   tag.group <- sapply(dicom.df$tag[idx.group], function (t) substr(t,1,nchar(t)-5))
+#   tag.reg <-  paste0("^", gsub(")","[)]", gsub("(","[(]",tag.group, fixed = TRUE), fixed = TRUE))
+# 
+#   impacted <- sapply(tag.reg,function(t) any(grepl(t, dicom.df$tag[modify.idx])))
+#   if (any(impacted)){
+#     dicom.df <- dicom.browser(dicom.raw.data,full.info = TRUE)
+# 
+#     length.group <- sapply(tag.reg[impacted], function(t){
+#       idx <- range(grep(t,dicom.df$tag))+1
+#       e <- ifelse(idx[2]<= nrow(dicom.df),dicom.df$tag.start[idx[2]], length(dicom.raw.data)+1)
+#       e-dicom.df$tag.start[idx[1]]})
+# 
+#     idx.group_ <-idx.group[impacted]
+#     for (i in 1:length(idx.group_)){
+#       size <- dicom.df$stop[idx.group_[i]]-dicom.df$start[idx.group_[i]]+1
+#       raw.load_ <- packBits(intToBits(length.group[i]), type="raw")
+# 
+#       if(!is.na(size)){
+#         if (size==4){
+#           if (dicom.df$endian[i]=="little") {raw.load <- raw.load_
+#           } else {raw.load <-rev(raw.load_)}
+#         } else {
+#           if (dicom.df$endian[i]=="little") {raw.load<- raw.load_[1:2]
+#           } else { raw.load<-rev(raw.load_[1:2])}
+#         }
+# 
+#         dicom.raw.data[dicom.df$start[idx.group_[i]]:dicom.df$stop[idx.group_[i]]] <-raw.load
+#         
+#       }
+#     }
+#   }
+# 
+#   return(dicom.raw.data)
+# }
+# 

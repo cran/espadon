@@ -45,7 +45,7 @@ std::vector <double> gammaindex (
   std::vector <double> gamma(le);
   
   for (index= 0; index < le; index ++){
-    R_CheckUserInterrupt();
+    if (index % 2048 == 0) R_CheckUserInterrupt();
     
     volindex = inspect_idx[index];
     k = (int) (volindex/le_map);

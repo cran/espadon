@@ -27,7 +27,7 @@ std::vector <double> mdcC (
 
   dist_max = sqrt(pow(n_ijk[0]*dxyz[0],2) +  pow(n_ijk[1]*dxyz[1],2)  +  pow(n_ijk[2]*dxyz[2],2));
   for (test_idx= 0; test_idx < test_le; test_idx ++){
-    R_CheckUserInterrupt();
+    if (test_idx % 2048 == 0) R_CheckUserInterrupt();
     out[test_idx] = R_NaN;
     dist = dist_max;
     for (idx=Testi[test_idx]+1;idx<n_ijk[0];idx ++){

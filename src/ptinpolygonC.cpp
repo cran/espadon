@@ -27,7 +27,7 @@ std::vector <int> ptinpolygonC (
   
   last_slope0 =  signC(pol_x[pol_le - 1] - pol_x[pol_le - 2]);
   for (pt_idx = 0; pt_idx < pt_le; pt_idx++){
-    R_CheckUserInterrupt();
+    if (pt_idx % 2048 == 0) R_CheckUserInterrupt();
     after = 0;
     out[pt_idx] = 0;
     // sa_old =0;

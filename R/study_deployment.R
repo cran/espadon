@@ -144,7 +144,7 @@ study.deployment <- function (pats.dir, deploy.dir,
                                       tag.dictionary = tag.dictionary,
                                       dicom.browser= dicom.df)
           
-          # pn met tous les tag de protocole 002 à la fin 
+          # on met tous les tag de protocole 002 à la fin 
           f0002 <- grepl("^[(]0002,", UID.tab0$tag)
           UID.tab <- rbind(UID.tab0[!f0002, ],UID.tab0[f0002, ])
           rownames(UID.tab) <- NULL

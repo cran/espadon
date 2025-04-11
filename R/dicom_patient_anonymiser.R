@@ -11,6 +11,12 @@
 #' @param reset.private.tag Boolean, if \code{TRUE}, the value of tags that are 
 #' not in the \code{tag.dictionary} is removed.
 #' @param new.UID Boolean. If \code{TRUE}, new UID are generated and replace the old ones.
+#' @param UID.white.list List of words or parts of DICOM names containing “UID”, 
+#' defining UIDs that will be modified if \code{new.UID} is equal to \code{TRUE}. 
+#' The default is “UID”.
+#' @param UID.black.list List of words or parts of DICOM names containing “UID”, 
+#' defining UIDs that will not be modified if \code{new.UID} is equal to \code{TRUE}. 
+#' The default is c("class", "context", "mapping", "coding").
 #' @param tag.dictionary Dataframe, by default equal to 
 #' \link[espadon]{dicom.tag.dictionary}, whose structure it must keep. This 
 #' dataframe is used to parse DICOM files.
@@ -53,8 +59,10 @@
 #' @export
 #' @import progress
 dicom.patient.anonymiser <- function(dcm.files, pat.dest.dir, offset = 0,
-                                     new.PIN = "Anonymous patient",
+                                     new.PIN = "ANONYMOUS^Unknown",
                                      reset.private.tag = FALSE, new.UID = FALSE,
+                                     UID.white.list = "UID", 
+                                     UID.black.list = c("class", "context", "mapping", "coding"),
                                      tag.dictionary = dicom.tag.dictionary(),
                                      verbose = TRUE){
   
@@ -83,7 +91,7 @@ dicom.patient.anonymiser <- function(dcm.files, pat.dest.dir, offset = 0,
   dcm.filenames <- dcm.filenames[flag]
   
   if (!dir.exists(pat.dest.dir)) dir.create(pat.dest.dir, recursive =TRUE)
-  if (verbose) pb <- progress_bar$new(format = " downloading [:bar] :percent",
+  if (verbose) pb <- progress_bar$new(format = " processing [:bar] :percent",
                                       total = length(dcm.filenames), width= 60)
   
   for(fn in dcm.filenames) {
@@ -94,8 +102,8 @@ dicom.patient.anonymiser <- function(dcm.files, pat.dest.dir, offset = 0,
       offset = offset,
       new.PIN = new.PIN,
       reset.private.tag = reset.private.tag,
-      new.UID = new.UID,
-      tag.dictionary = tag.dictionary)
+      new.UID = new.UID, UID.white.list=UID.white.list,
+      UID.black.list, tag.dictionary = tag.dictionary)
     dicom.df <- dicom.browser(an.raw.data, stop.tag = "(0008,0060)", full.info = TRUE)
     m <- match(c("(0008,0060)","(0008,0018)"),dicom.df$tag)
     new.fn <- paste0(dicom.tag.parser (dicom.df$start[m[1]], dicom.df$stop[m[1]], 

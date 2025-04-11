@@ -23,7 +23,7 @@ std::vector <unsigned int> labelbrowser (
   std::vector <unsigned int> label_last_pt(le_vol3D);
   
   for (i = 0; i < le_vol3D; i++) {
-    R_CheckUserInterrupt();
+    if (i % 2048 == 0) R_CheckUserInterrupt();
     if (vol3D[i] == false) {
       label[i] = le_vol3D;
       label_last_pt [i] = le_vol3D;

@@ -51,21 +51,14 @@ dicom.browser <- function(dicom.raw.data, nbTAG = 0, stop.tag = "", stop.level= 
   L <- .dicombrowser (dicom.raw.data, tag.dictionary, nbTAG = nbTAG,
                          stop_tag=stop.tag, stop_level= stop.level, 
                          full_info = full.info, verbose = FALSE)
-  if (any(L=="not dicom compliant")) return(NULL)
-  VRness <- L[length(L)]
-  dicom.df <- do.call(rbind.data.frame, strsplit(L[-length(L)],";"))
-  
-  if (full.info) {
-    colnames(dicom.df) <- c("tag", "VR", "endian","start", "stop","encaps.load",
-                            "load.start","load.stop","tag.start")
-    dicom.df [ , 7:9] <- suppressWarnings(lapply(dicom.df [ , 7:9] ,as.numeric ))
-  } else {
-    colnames(dicom.df) <- c("tag", "VR", "endian","start", "stop")
+  if (any(L$error!="")) {
+    warnings(L$error)
+    return(NULL)
   }
-  dicom.df [ , 4:5] <- suppressWarnings(lapply(dicom.df [ , 4:5] ,as.numeric ))
-  lt.idx <- nrow(dicom.df)
-  if (is.na(dicom.df[lt.idx, 5]) & dicom.df[lt.idx, 2] == "UN" & VRness=="1") 
-    warning ( paste("Last decoded TAG",dicom.df[lt.idx, 1], 
+
+  lt.idx <- nrow(L$db)
+  if (is.na(L$db[lt.idx, 5]) & L$db[lt.idx, 2] == "UN" & L$VRness=="1") 
+    warning ( paste("Last decoded TAG",L$db[lt.idx, 1], 
                     "is unknown with unspecified length. DICOM parsing is unpredictable."))
-  return(dicom.df)
+  return(L$db)
 }

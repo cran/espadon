@@ -32,7 +32,7 @@ Rcpp::List ptnearestC (
   index_min[0] = 1;index_min[1] = 1;
   
   for(i = 0; i < pt1_le; i++){
-    R_CheckUserInterrupt();
+    if (i % 2048 == 0) R_CheckUserInterrupt();
     d[i]= sqrt(pow(pt2_x[0]-pt1_x[i],2) + pow(pt2_y[0]-pt1_y[i],2) + pow(pt2_z[0]-pt1_z[i],2));
     index[i] = 1;
 

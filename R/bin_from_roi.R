@@ -183,7 +183,7 @@ bin.from.roi <- function (vol, struct, roi.name = NULL, roi.sname = NULL, roi.id
   Vb.pt000 <- (apply(contour.from.ijk %*% vol$cube.idx,1,range))[,1:3]
   Vb.pt000[2,3] <- ceiling((Vb.pt000[2,3]-pt.l[[1]]$O[1,3])/struct$thickness)*struct$thickness + pt.l[[1]]$O[1,3]
   Vb.pt000[1,3] <- floor((Vb.pt000[1,3]-pt.l[[1]]$O[1,3])/struct$thickness)*struct$thickness + pt.l[[1]]$O[1,3]
-  Vb.n.ijk <- ceiling((Vb.pt000[2,]- Vb.pt000[1,])/Vb.dxyz + 1)
+  Vb.n.ijk <- ceiling(round((Vb.pt000[2,]- Vb.pt000[1,])/Vb.dxyz + 1,9))
   Vb <- vol.create(n.ijk = Vb.n.ijk, dxyz = Vb.dxyz, modality ="weight",pt000 = Vb.pt000[1,],
                    default.value = 0,ref.pseudo = struct$ref.pseudo)
   
@@ -241,7 +241,9 @@ bin.from.roi <- function (vol, struct, roi.name = NULL, roi.sname = NULL, roi.id
   # bg3d("black")
 
   if ((all (abs(vol.out$xyz.from.ijk - Vb$xyz.from.ijk) < 1e-6)) & all(rigid.M==diag(4))) {
-
+    rgi <- rgi[!is.na(match(rgi, (1:vol.out$n.ijk[1])-1))]
+    rgj <- rgj[!is.na(match(rgj, (1:vol.out$n.ijk[2])-1))]
+    rgk <- rgk[!is.na(match(rgk, vol.out$k.idx))]
     vol.out$vol3D.data[rgi + 1, rgj + 1, rgk + 1] <- Vb$vol3D.data[rgi + 1, rgj + 1, rgk + 1]
     vol.out$vol3D.data[rgi + 1, rgj + 1, rgk + 1][vol.out$vol3D.data[rgi + 1, rgj + 1, rgk + 1] >1] <- 1
     vol.out$vol3D.data[rgi + 1, rgj + 1, rgk + 1][vol.out$vol3D.data[rgi + 1, rgj + 1, rgk + 1] <0] <- 0
