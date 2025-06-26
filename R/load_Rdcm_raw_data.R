@@ -12,7 +12,6 @@
 #' @return Returns a list containing the information, converted by \pkg{espadon}, of a 
 #' DICOM object..
 #' @seealso \link[espadon]{dicom.to.Rdcm.converter}, \link[espadon]{load.obj.from.Rdcm}. 
-#' @import qs
 #' @examples
 #' # For testing, save first toy.dicom.raw () raw data to a temporary file, and
 #' # convert it in Rdcm fie
@@ -35,20 +34,40 @@
 #' # Cleaning  temporary directory
 #' unlink (pat.src.dir, recursive = TRUE)  
 #' @export
+# @importFrom qs  qdeserialize 
+#' @importFrom qs2 qs_deserialize
 load.Rdcm.raw.data <- function (Rdcm.filename, address= TRUE, data=TRUE, 
                                 upgrade.to.latest.version = FALSE) {
   if (!file.exists(Rdcm.filename)) return (NULL)
   zz <-  file(Rdcm.filename, "rb")
+  on.exit(close(zz))
   l <- readBin(zz,what="int",size=4, n=3, endian="little")
-  h <- qdeserialize (readBin(zz,what="raw", n=l[1]))
+
+  h_raw <- readBin(zz, what = "raw", n = l[1])
+  h <- tryCatch(qs_deserialize(h_raw), error = function(e) NULL)
+  old_qs <- is.null(h)
+  if (old_qs){
+    if (!requireNamespace("qs", quietly = TRUE)) {
+      stop(paste0("To read ",basename(Rdcm.filename),", install 'qs' : install.packages('qs')."))
+    } else {
+      warning(paste("the serialization of",basename(Rdcm.filename),
+      "is no longer up-to-date, consider updating your Rdcm files with the Rdcm.upgrade function."),
+      call. = FALSE)
+      h <- qs::qdeserialize (h_raw)
+      }
+  }
+  
+  
   a <- NULL
   d <- NULL
+  
   if (is.null(h$espadon.version)){
     espadon.version <- "0.0.0"
   } else {
     espadon.version <- h$espadon.version
     h$espadon.version <- NULL
   }
+  
   from.dcm <- l[2]>0
   version <- as.numeric(strsplit(espadon.version,"[.]")[[1]])
   #correction à apporter
@@ -60,18 +79,26 @@ load.Rdcm.raw.data <- function (Rdcm.filename, address= TRUE, data=TRUE,
   )
   ################################
   update.needed <- any(unlist(correction))
-  # old.version <- espadon.version <.espadon.version()
+  if (from.dcm & (address | data | (upgrade.to.latest.version & update.needed))){
+    a_raw <- readBin(zz, what = "raw", n = l[2])
+    if (old_qs){
+      a <- qs::qdeserialize (a_raw)
+    } else{
+      a <- qs_deserialize (a_raw)
+      }
+    }
+    
+  if (data | (update.needed & from.dcm & upgrade.to.latest.version)) {
+    d_raw <- readBin(zz, what = "raw", n = l[3])
+    if (old_qs){
+      d <- qs::qdeserialize (d_raw)
+    } else{
+      d <- qs_deserialize (d_raw)
+    }
+  }
   
-  if (from.dcm & (address | data | (upgrade.to.latest.version & update.needed)))
-    a <-  qdeserialize (readBin(zz,what="raw", n=l[2]))
-  
-  if (data | (update.needed & from.dcm & upgrade.to.latest.version)) 
-    d <-  qdeserialize (readBin(zz,what="raw", n=l[3]))
-  close (zz)
   
   if (update.needed){
-  
-  # if ((!from.dcm | !upgrade.to.latest.version) & update.needed){
     if (correction$version0) {
       n <- names(h)
       idx <- which(n=="ref.object.name")
@@ -99,7 +126,6 @@ load.Rdcm.raw.data <- function (Rdcm.filename, address= TRUE, data=TRUE,
       idx <-grep("^patient$",n)
       h <- c(h[1:idx], patient.name="", h[(idx+1):length(n)])
     }
-    
   }
   
   if (from.dcm & update.needed & upgrade.to.latest.version) {
@@ -167,7 +193,7 @@ load.Rdcm.raw.data <- function (Rdcm.filename, address= TRUE, data=TRUE,
     
   }
   
-  
+  update.needed = update.needed|old_qs
   h$file.dirname <- dirname (Rdcm.filename)
   h$file.basename <- basename (Rdcm.filename)
   
@@ -187,104 +213,3 @@ load.Rdcm.raw.data <- function (Rdcm.filename, address= TRUE, data=TRUE,
 }
 
 
-# load.Rdcm.raw.data <- function (Rdcm.filename, address= TRUE, data=TRUE, 
-#                                 upgrade.to.latest.version = FALSE) {
-#   if (!file.exists(Rdcm.filename)) return (NULL)
-#   zz <-  file(Rdcm.filename, "rb")
-#   l <- readBin(zz,what="int",size=4, n=3, endian="little")
-#   h <- qdeserialize (readBin(zz,what="raw", n=l[1]))
-#   a <- NULL
-#   d <- NULL
-#   if (is.null(h$espadon.version)){
-#     espadon.version <- "0.0.0"
-#   } else {
-#     espadon.version <- h$espadon.version
-#     h$espadon.version <- NULL
-#   }
-#   from.dcm <- l[2]>0
-#   
-#   #correction à apporter
-#   correction <- list(
-#     version0 = espadon.version=="0.0.0",
-#     rtplan = espadon.version=="0.0.0" & h$modality == "rtplan",
-#     nopatient = is.null(h$patient.name),
-#     acq.date = espadon.version <= "1.3.0"
-#   )
-#   ################################
-#   update.needed <- any(unlist(correction))
-#   
-#   if (from.dcm & (address | data | (upgrade.to.latest.version & update.needed)))
-#     a <-  qdeserialize (readBin(zz,what="raw", n=l[2]))
-#   
-#   if (data | (update.needed & from.dcm & upgrade.to.latest.version)) 
-#     d <-  qdeserialize (readBin(zz,what="raw", n=l[3]))
-#   close (zz)
-#   
-#   h$file.dirname <- dirname (Rdcm.filename)
-#   h$file.basename <- basename (Rdcm.filename)
-# 
-#   class.h <- class(h)
-#   
-#   if (correction$version0) {
-#     n <- names(h)
-#     idx <- which(n=="ref.object.name")
-#     if (length(idx)!=0) n[idx] <- "ref.object.alias"
-#     idx <- which(n=="patient.xyz0")  
-#     if (length(idx)!=0) n[idx] <- "xyz0"  
-#     idx <- which(n=="patient.orientation")  
-#     if (length(idx)!=0) n[idx] <- "orientation"  
-#     names(h) <- n
-#   }
-#   
-#   if (correction$nopatient){
-#     n <- names(h)
-#     idx <-grep("^patient$",n)
-#     h <- c(h[1:idx], patient.name="", h[(idx+1):length(n)])
-# 
-#     if(!is.null(d) & upgrade.to.latest.version){
-#       h$patient.name <-  tryCatch (d[[1]][[grep("^[(]0010,0010[)]$",names (d[[1]]))]],
-#                                  error = function (e) "")
-#       if (is.na( h$patient.name))  h$patient.name <- ""
-#       h$patient.name <- trimws( h$patient.name)
-#     }
-#   }
-#   
-#   if (correction$rtplan & upgrade.to.latest.version) {
-# 
-#     if (!is.null(d)){
-#       h_ <-.rtplan.beam.field(data=d[[1]])
-#       h$plan.info <- h_$plan.info
-#       h$presc.dose<- h_$presc.dose
-#       h$fraction.info <- h_$fraction.info
-#       h$fraction.beam <- h_$fraction.beam
-#       h$beam.info <- h_$beam.info
-#       h$beam.ctl.pt <- h_$beam.ctl.pt
-#     } else {
-#       n <- colnames(h$fraction.info )
-#       idx <- which(n=="planned.frac.nb")
-#       if (length(idx)!=0) n[idx] <- "nb.of.frac.planned"
-#       idx <- which(n=="beam.nb")  
-#       if (length(idx)!=0) n[idx] <- "nb.of.beam"  
-#       idx <- which(n=="brachy.app.nb")  
-#       if (length(idx)!=0) n[idx] <- "nb.of.brachy.app"  
-#       colnames(h$fraction.info ) <- n
-#     }
-#   }
-#   
-#   if (correction$acq.date & upgrade.to.latest.version & !is.null(d)) {
-#     h$acq.date <-  tryCatch (d[[1]][[grep("^[(]0008,0023[)]$|^[(]3006,0008[)]$|^[(]300A,0006[)]$",
-#                                               names (d[[1]]))]],
-#                                  error = function (e) "")
-#     
-#   }
-#   
-#   if (!address & !data) return(list(header=h, from.dcm=from.dcm,
-#                                     update.needed = update.needed))
-#   if (address & !data) return(list(header=h, address=a, from.dcm=from.dcm,
-#                                    update.needed = update.needed))
-#   if (!address & data) return(list(header=h, data=d, from.dcm=from.dcm,
-#                                    update.needed = update.needed))
-#   if (address & data) return(list(header=h, address=a, data=d, from.dcm=from.dcm,
-#                                   espadon.version=espadon.version,
-#                                   update.needed = update.needed))
-# }

@@ -50,7 +50,7 @@
 #' # close (zz)
 #' 
 #' @importFrom sodium hash
-#' @importFrom qs qserialize
+#' @importFrom qs2 qs_serialize
 dicom.raw.data.anonymizer <- function( dicom.raw.data, offset = 0 , new.PIN = "ANONYMOUS^Unknown",
                                         reset.private.tag = FALSE, new.UID = FALSE,
                                         UID.white.list = "UID", 
@@ -73,7 +73,7 @@ dicom.raw.data.anonymizer <- function( dicom.raw.data, offset = 0 , new.PIN = "A
                                          dicom.browser= dicom.df)
     linktab <- unique(UID.tab[,c("Value","Value")])
     linktab[,2] <- sapply( linktab[,1], function(uid) {
-      UID <- qserialize(list(uid,new.PIN,offset))
+      UID <- qs_serialize(list(uid,new.PIN,offset))
       le.esp <- nchar(.espadon.UID()) + 1
       return(paste(.espadon.UID(),
                     paste(as.numeric(hash(UID, key = NULL,  size = max(nchar(uid),16+le.esp)-le.esp)) %% 10, 

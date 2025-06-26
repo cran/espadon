@@ -39,13 +39,17 @@ In addition to the simplified use of the above-mentioned formats, espadon contai
 \item ... and 3D
 \itemize{
 \item production of mesh for the representation
+\item CT, MR or RTDose slices, RTstruct contours in 3D -space
 }
 \item for measurements
 \itemize{
 \item calculation of histograms (1D, 2D), DVH (integrating Monte-Carlo to simulate organ movements)
-\item Measurement of surfaces, radii of curvature (on the mesh) and volumes
+\item measurement of surfaces, radii of curvature (on the mesh) and volumes
+\item calculation of standard dosimetry indicators
+\item calculation of Spatial similarity metrics
+\item calculation of error metrics for comparison between 2 volumes (e.g. comparison of sCT and CT for chaue ROI)
 }
-\item measurement of standard dosimetry indicators
+\item export of your own objects to DICOM (CT, MR, RTDose, RTStruct)
 }
 
 In the calculation flow, various objects are created and accessible to the developer for his own use.

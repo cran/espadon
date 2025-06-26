@@ -25,7 +25,7 @@
 #' # Cleaning  temporary directory
 #' unlink (pat.dir, recursive = TRUE)
 
-#' @import qs
+#' @importFrom qs2 qs_serialize
 #' @importFrom methods is
 #' @export
 save.T.MAT <- function (T.MAT, dirname) {
@@ -98,9 +98,9 @@ save.T.MAT <- function (T.MAT, dirname) {
       ok[idx] <- TRUE
     }else {
       if (file.exists(T.MAT$reg.info$file$path[idx])) warning (paste(reg$file.basename, "already exists."))
-      h <- qserialize(c(obj$header,list(espadon.version=.espadon.version())))
+      h <- qs_serialize(c(obj$header,list(espadon.version=.espadon.version())))
       a <- numeric(0)
-      d <- qserialize(obj$data)
+      d <- qs_serialize(obj$data)
       zz <-  file(T.MAT$reg.info$file$path[idx], "wb")
       writeBin(length(h),zz,size=4, endian="little")
       writeBin(length(a),zz,size=4, endian="little")

@@ -35,8 +35,21 @@
 #' contain all their data such as \code{vol3D.data} or \code{roi.data}.
 #' @details It may be useful to impose a study number (tag '(0020,000D)'), serial 
 #' number (tag '(0020,000E)'), or your Image Type Attribute (tag '(0008,0008)'). 
-#' In this case, you need to add the arguments \code{'(0020,000D)' = your_study_UID}, 
-#' \code{'(0020,000E)' = your_serial_UID}, \code{'(0008,0008)' = your_image_type_attribute}.
+#' In this case, you need to add the arguments#' 
+#' \itemize{
+#' \item  \code{'(0020,000D)' = your_study_UID}, 
+#' \item  \code{'(0020,000E)' = your_serial_UID}, 
+#' \item  \code{'(0008,0008)' = your_image_type_attribute}.
+#' }
+#' For MRI, add the argument 
+#'\itemize{
+#'\item  \code{'(0018,0020)' = your_scanning_sequence}. It will be set to 'SE' otherwise
+#'\item  \code{'(0018,0021)' = your_sequence_variant}. It will be set to 'NONE' otherwise
+#'}
+#' You can change patient position by adding the argument :
+#'\itemize{
+#'\item  \code{'(0018,5100)' = your_patient_position}. It will be set to 'HFS' otherwise
+#'}
 #' @examples
 #' # First, save toy patient objects to a temporary file pat.dir for testing.
 #' pat.dir <- file.path (tempdir(), "PM_Rdcm") 
@@ -99,6 +112,8 @@ export.img3Dplan.to.dicom <- function(obj, ref.obj.list = NULL, use.original.UIs
   serie.UID <- .ascii.to.hex (args[["(0020,000E)"]], tag.dictionary["(0020,000E)","VR"])
   sop.type <- .ascii.to.hex (args[["(0008,0008)"]], tag.dictionary["(0008,0008)","VR"])
   patient.position <- .ascii.to.hex (args[["(0018,5100)"]], tag.dictionary["(0018,5100)","VR"])
+  scanning.sequence <- .ascii.to.hex (args[["(0018,0020)"]], tag.dictionary["(0018,0020)","VR"])
+  sequence.variant <- .ascii.to.hex (args[["(0018,0021)"]], tag.dictionary["(0018,0021)","VR"])
   NAvalue <- args[["NAvalue"]]
  
   study.vect <- c("patient","frame.of.reference")
@@ -323,10 +338,41 @@ export.img3Dplan.to.dicom <- function(obj, ref.obj.list = NULL, use.original.UIs
                                unlist (.value.to.raw (length (new.raw), 2, T)),new.raw)
   
   ####################################
-  
   tag0018 <- c("(0018,0050)", "(0018,0060)", "(0018,1020)","(0018,5100)")
   L0018 <- lapply(tag0018,function(t) c())
   names(L0018) <- tag0018
+  if (tolower(obj$modality)=="mr" ) {
+    L0018 <- c(list("(0018,0020)" =NULL, "(0018,0021)"= NULL,"(0018,0022)"= NULL,"(0018,0023)"= NULL), L0018)
+    
+    if (length(scanning.sequence)==0) {
+      scanning.sequence <-.ascii.to.hex ('SE', tag.dictionary["(0018,0020)","VR"])
+      warning(c("scanning.sequence is set to 'SE'. Add the argument '(0018,0020)' if not"))
+    }
+    L0018[["(0018,0020)"]] <- c (.tag.to.hex("(0018,0020)"), charToRaw(tag.dictionary["(0018,0020)","VR"]),
+                                 unlist(.value.to.raw (length(scanning.sequence),2,TRUE)),scanning.sequence)
+    
+    if (length(sequence.variant)==0) {
+      sequence.variant <-.ascii.to.hex ('NONE', tag.dictionary["(0018,0021)","VR"])
+      warning(c("scanning.sequence is set to 'NONE'. Add the argument '(0018,0021)' if not"))
+    }
+    L0018[["(0018,0021)"]] <- c (.tag.to.hex("(0018,0021)"), charToRaw(tag.dictionary["(0018,0021)","VR"]),
+                                 unlist(.value.to.raw (length(sequence.variant),2,TRUE)),sequence.variant)
+    
+    
+    L0018[["(0018,0022)"]] <- c(.tag.to.hex("(0018,0022)"), charToRaw(tag.dictionary["(0018,0022)","VR"]),
+                                as.raw(c(0x00, 0x00)))
+    if (length(obj$k.idx)>1) {
+      new.raw <-.ascii.to.hex("3D" ,  tag.dictionary["(0018,0023)","VR"])
+    } else {
+      new.raw <-.ascii.to.hex("2D" ,  tag.dictionary["(0018,0023)","VR"])
+    }
+    L0018[["(0018,0023)"]] <- c (.tag.to.hex("(0018,0023)"), charToRaw(tag.dictionary["(0018,0023)","VR"]),
+                                 unlist(.value.to.raw (length(new.raw),2,TRUE)),new.raw)
+      
+    }
+    
+ 
+  
   
   slice.thickness <- obj$slice.thickness
   if (slice.thickness==0) slice.thickness<- c()
@@ -362,8 +408,8 @@ export.img3Dplan.to.dicom <- function(obj, ref.obj.list = NULL, use.original.UIs
   L0020[["(0020,0011)"]] <- c(.tag.to.hex("(0020,0011)"), charToRaw(tag.dictionary["(0020,0011)","VR"]),
                               as.raw(c(0x00, 0x00)))
   
-  L0020[["(0020,0013)"]] <- c(.tag.to.hex("(0020,0013)"), charToRaw(tag.dictionary["(0020,0013)","VR"]),
-                              as.raw(c(0x00, 0x00)))
+  # L0020[["(0020,0013)"]] <- c(.tag.to.hex("(0020,0013)"), charToRaw(tag.dictionary["(0020,0013)","VR"]),
+  #                             as.raw(c(0x00, 0x00)))
   
   
   new.raw <- .ascii.to.hex (paste(obj$orientation, collapse="\\"), tag.dictionary["(0020,0037)","VR"])
@@ -448,9 +494,14 @@ export.img3Dplan.to.dicom <- function(obj, ref.obj.list = NULL, use.original.UIs
     L0008[["(0008,0018)"]] <- c (.tag.to.hex ("(0008,0018)"), charToRaw (tag.dictionary["(0008,0018)","VR"]), 
                                  SOP_UID.1155[[sop.idx]])
     
+    new.raw <- .ascii.to.hex (as.character(sop.idx), tag.dictionary["(0020,0013)","VR"])
+    L0020[["(0020,0013)"]] <- c(.tag.to.hex("(0020,0013)"), charToRaw(tag.dictionary["(0020,0013)","VR"]),
+                                unlist(  .value.to.raw (length(new.raw),2,TRUE)), new.raw)
+    
     new.raw <- .ascii.to.hex (paste(obj$xyz0[sop.idx,], collapse="\\"), tag.dictionary["(0020,0032)","VR"])
     L0020[["(0020,0032)"]] <- c(.tag.to.hex("(0020,0032)"), charToRaw(tag.dictionary["(0020,0032)","VR"]),
                                 unlist(  .value.to.raw (length(new.raw),2,TRUE)), new.raw)
+
     
     new.raw <- .ascii.to.hex (paste(obj$xyz0[sop.idx,3], collapse="\\"), tag.dictionary["(0020,1041)","VR"])
     L0020[["(0020,1041)"]] <- c(.tag.to.hex("(0020,1041)"), charToRaw(tag.dictionary["(0020,1041)","VR"]),
@@ -771,13 +822,21 @@ export.rtstruct.to.dicom <- function(obj, ref.obj.list = NULL, use.original.UIs 
   L3006 <- lapply(tag3006,function(t) c())
   names(L3006) <- tag3006
   names(VR3006) <- tag3006
-  label <- obj$object.alias
-  le <- nchar(label)
-  if (grepl('[_]ref[[:digit:]]+',label) & grepl('[_]do[[:digit:]]+',label)){
-    label <- strsplit(obj$object.alias,"[_]")[[1]]
-    label <- paste0(label[grep("^ref",label)],"_", label[grep("^do",label)])
+
+
+  if (is.null(obj$object.alias)) {
+    label <- fn
+  } else {
+    label <- obj$object.alias
     le <- nchar(label)
+    if (le ==0){
+      label <-fn
+    } else if (grepl('[_]ref[[:digit:]]+',label) & grepl('[_]do[[:digit:]]+',label)){
+      label <- strsplit(obj$object.alias,"[_]")[[1]]
+      label <- paste0(label[grep("^ref",label)],"_", label[grep("^do",label)])
+    } 
   }
+  le <- nchar(label)
   new.raw <- .ascii.to.hex (substr(label,max(1,le-15),le) , VR3006["(3006,0002)"])
   
   L3006[["(3006,0002)"]] <- c(.tag.to.hex("(3006,0002)"), charToRaw(VR3006["(3006,0002)"]),
@@ -882,7 +941,7 @@ export.rtstruct.to.dicom <- function(obj, ref.obj.list = NULL, use.original.UIs 
     tot <- raw(0)
     if (!is.null(obj$roi.data[[i]])){
       L30060040loop <- unlist(lapply( 1:length(obj$roi.data[[i]]), function(j){
-        pt <- as.matrix(obj$roi.data[[i]][[j]]$pt)
+        pt <- round(as.matrix(obj$roi.data[[i]][[j]]$pt),10)# pour être sur que ça rentre sur 16octets
         le.pt <- nrow(pt)
         if (all(pt[1,]==pt[le.pt,])) {pt <- pt[-le.pt, ]; le.pt <- le.pt-1}
         tot_ <- NULL
@@ -1683,7 +1742,7 @@ create.SOPUID <- function(obj,size=64){
     nb_cut <- nrow(raw.mat)
   }
   
-  UID.base <- matrix(create.UID(obj, size = size-nc_nbcut),nrow=1, byrow = TRUE)
+  UID.base <- matrix(create.UID(obj, size = floor((size-nc_nbcut)/2)*2),nrow=1, byrow = TRUE)
   
   l1155 <- cbind( UID.base [rep(1,nb_cut),,drop=FALSE], raw.mat, as.raw(0))
   
@@ -1702,7 +1761,7 @@ create.SOPUID <- function(obj,size=64){
   return(list(l1150=l1150,l1155=l1155))     
   
 }
-
+#' @importFrom qs2 qs_serialize
 create.UID <- function(obj, el.name=NULL,supp.info.l=NULL, size=64){ #>44
   
   obj$ref.object.alias <- NULL
@@ -1711,9 +1770,9 @@ create.UID <- function(obj, el.name=NULL,supp.info.l=NULL, size=64){ #>44
   
   
   if (is.null(el.name)){
-    UID <- qserialize(list(obj,supp.info.l))
+    UID <- qs_serialize(list(obj,supp.info.l))
   }else {
-    UID <- qserialize(list(obj[el.name],supp.info.l))
+    UID <- qs_serialize(list(obj[el.name],supp.info.l))
   }
   le.esp <- nchar(.espadon.UID()) + 1
   espadon.UID <- charToRaw(paste0(.espadon.UID(),"."))

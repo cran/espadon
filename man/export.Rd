@@ -72,8 +72,21 @@ contain all their data such as \code{vol3D.data} or \code{roi.data}.
 
 It may be useful to impose a study number (tag '(0020,000D)'), serial
 number (tag '(0020,000E)'), or your Image Type Attribute (tag '(0008,0008)').
-In this case, you need to add the arguments \code{'(0020,000D)' = your_study_UID},
-\code{'(0020,000E)' = your_serial_UID}, \code{'(0008,0008)' = your_image_type_attribute}.
+In this case, you need to add the arguments#'
+\itemize{
+\item  \code{'(0020,000D)' = your_study_UID},
+\item  \code{'(0020,000E)' = your_serial_UID},
+\item  \code{'(0008,0008)' = your_image_type_attribute}.
+}
+For MRI, add the argument
+\itemize{
+\item  \code{'(0018,0020)' = your_scanning_sequence}. It will be set to 'SE' otherwise
+\item  \code{'(0018,0021)' = your_sequence_variant}. It will be set to 'NONE' otherwise
+}
+You can change patient position by adding the argument :
+\itemize{
+\item  \code{'(0018,5100)' = your_patient_position}. It will be set to 'HFS' otherwise
+}
 }
 \examples{
 # First, save toy patient objects to a temporary file pat.dir for testing.

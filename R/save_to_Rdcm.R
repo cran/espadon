@@ -30,7 +30,7 @@
 #' # Cleaning  temporary directory
 #' unlink (pat.dir, recursive = TRUE)
 
-#' @import qs
+#' @importFrom qs2 qs_serialize
 #' @export
 save.to.Rdcm <- function (obj, object.name = obj$object.alias, dirname = obj$file.dirname) {
   
@@ -106,9 +106,9 @@ save.to.Rdcm <- function (obj, object.name = obj$object.alias, dirname = obj$fil
           
           obj_$header <- obj
   )
-  h <- qserialize(c(obj_$header,list(espadon.version=.espadon.version())))
+  h <- qs_serialize(c(obj_$header,list(espadon.version=.espadon.version())))
   a <- numeric(0) #qserialize(obj_$address)
-  d <- qserialize(obj_$data)
+  d <- qs_serialize(obj_$data)
   zz <-  file(Rdcm.filename, "wb")
   writeBin(length(h),zz,size=4, endian="little")
   writeBin(length(a),zz,size=4, endian="little")

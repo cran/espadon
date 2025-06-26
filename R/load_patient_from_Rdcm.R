@@ -64,9 +64,18 @@ load.patient.from.Rdcm <- function (dirname, data = FALSE, dvh = FALSE,
   dicomlist <-lapply (lf,function(f) {
     d <- tryCatch(load.Rdcm.raw.data (f, data=data, address=FALSE,
                                       upgrade.to.latest.version = upgrade.to.latest.version),
-                  error = function (e) NULL)
+                  error = function (e) list(stopmessage= e$message))
+    if  (!is.null(d$stopmessage))  {
+      warning(d$stopmessage)
+      return(NULL)
+    }         
     return(d)
   })
+  
+  f <- !sapply(dicomlist, is.null)
+  dicomlist <- dicomlist[f]
+  if (length(dicomlist) == 0) return(NULL)
+  lf <- lf[f]
   
   ok <- sapply(dicomlist, function (l) {
     if (is.null(l)) return(FALSE)
@@ -110,22 +119,7 @@ load.patient.from.Rdcm <- function (dirname, data = FALSE, dvh = FALSE,
     }
   }
     
-    
-  dicomlist <- dicomlist [which(!sapply (dicomlist, is.null))]
   names(dicomlist) <- sapply(dicomlist, function(l) l$header$object.alias)
-  
-  # base.n <- do.call(rbind.data.frame, lapply(dicomlist, function(l) {
-  #   nb <- switch(l$header$modality, "rtstruct" =  l$header$nb.of.roi,  
-  #                "rtdose" = l$header$n.ijk[3], "ct" = l$header$n.ijk[3],
-  #                "ct1" = l$header$n.ijk[3], "mr" = l$header$n.ijk[3], 
-  #                "pt" = l$header$n.ijk[3], "binary" = l$header$n.ijk[3],
-  #                "reg" = l$header$nb.of.ref,  NA)
-  #   c(l$header$patient,as.character(l$header$patient.bd),l$header$patient.sex, l$header$modality, l$header$object.name, l$header$ref.pseudo,
-  #     tryCatch(l$header$object.info[[grep ("nb[.]of[.]subobj", names(l$header$object.info))]], error = function(e) NA),
-  #     l$header$description, nb,
-  #     tryCatch(l$header[[grep ("max[.]pixel", names(l$header))]], error = function(e) NA),
-  #     l$header$object.alias, l$header$file.basename)
-  # }))
   
   base.n <- do.call(rbind.data.frame, lapply(dicomlist, function(l) {
     nb <- switch(l$header$modality, "rtstruct" =  l$header$nb.of.roi,  
@@ -177,7 +171,7 @@ load.patient.from.Rdcm <- function (dirname, data = FALSE, dvh = FALSE,
   
   l$description.by.reg <- list ()
   
-  l$T.MAT <- suppressWarnings(load.T.MAT (dirname))
+  l$T.MAT <- suppressWarnings(load.T.MAT (lf))
   
   modality <- sort (unique (base.n$modality[base.n$modality!="reg"]))
   obj <- lapply(modality, function (m) {

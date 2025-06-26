@@ -49,9 +49,14 @@ Rdcm.upgrade <- function(Rdcm.files){
   pb <- progress_bar$new(format = " objects creation [:bar] :percent",
                          total = length(Rdcm.filenames),  width= 60)
   for(fn in Rdcm.filenames) {
-    obj <-load.Rdcm.raw.data(fn, address= TRUE, data=TRUE,
-                             upgrade.to.latest.version = TRUE)
-    if (obj$update.needed) .save.dicom.raw.data.to.Rdcm(obj, fn)
+    obj <-suppressWarnings(tryCatch(load.Rdcm.raw.data(fn, address= TRUE, data=TRUE,
+                             upgrade.to.latest.version = TRUE),
+                   error = function (e) list(stopmessage= e$message)))
+    if  (!is.null(obj$stopmessage)){
+      warning(paste(obj$stopmessage, basename(fn)," can not be upgraded."))
+    } else {
+      if (obj$update.needed) .save.dicom.raw.data.to.Rdcm(obj, fn)
+    }
     pb$tick ()
   }
 }

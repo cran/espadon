@@ -13,7 +13,7 @@
 
 #####################################################################################
 .espadon.version <- function(){
-  return ("1.11.0")
+  return ("1.11.1")
 }
 
 #####################################################################################
@@ -23,7 +23,7 @@
 }
 ######################################################
 #' @import progress
-#' @import qs
+#' @importFrom qs2 qs_save qs_read qs_serialize
 
 .create.Rdcm.object <- function (dcm.filenames,existing.obj = NULL, verbose = TRUE,
                                  update = FALSE, save.flag = TRUE, save.dir =NULL, 
@@ -150,7 +150,7 @@
       if ((update) | (df$SOP.label.nb[f.idx]=="" & !update)){
         tf <- tempfile(paste("qs",out.idx,"_",sep=""), tmpdir = tempqs.dir)
         df[f.idx, ]$file.idx <- basename(tf)
-        qsave(L, file = tf)
+        qs_save(L, file = tf)
         out.idx <- out.idx+1
       }
     }
@@ -305,7 +305,7 @@
     
     tempf <- file.path (tempqs.dir,  unlist(strsplit(object.df[obj.idx, ]$temp,";")))
     
-    data <- lapply(tempf,function(f) qread (f))
+    data <- lapply(tempf,function(f) qs_read (f))
     L <-.obj.save.by.modality (modality ,object.df[obj.idx, ], data, only.header, save.flag)
     
     if (is.null(L)) {
@@ -354,10 +354,10 @@
 }
 ################################################################################
 .save.dicom.raw.data.to.Rdcm <- function (obj, Rdcm.filename) {
-  h <- qserialize(c(obj$header,list(espadon.version=.espadon.version())))
+  h <- qs_serialize(c(obj$header,list(espadon.version=.espadon.version())))
   a <- numeric(0)
-  if (!is.null(obj$address)) a <- qserialize(obj$address)
-  d <- qserialize(obj$data)
+  if (!is.null(obj$address)) a <- qs_serialize(obj$address)
+  d <- qs_serialize(obj$data)
   zz <-  file(Rdcm.filename, "wb")
   writeBin(length(h),zz,size=4, endian="little")
   writeBin(length(a),zz,size=4, endian="little")
@@ -768,7 +768,7 @@
 .rtstruct.save <- function (object.info, data, only.header=FALSE, Rdcm.mode=FALSE){
   # if (object.info$temp!= ""){
   #   tempf <- file.path (OUTDIR, paste ("temp", unlist(strsplit(object.info$temp,";")), sep = ""))
-  #   data <- lapply(tempf,function(f) qread (f))
+  #   data <- lapply(tempf,function(f) qs_read (f))
   address.all <- lapply(data, function(l) l$address)
   data.all <- lapply(data, function(l) l$data)
   filename.all <- sapply (data, function(l) l$filename)
@@ -1413,7 +1413,7 @@
 .other.save <- function (object.info, data, only.header=FALSE, Rdcm.mode=FALSE){
   # if (object.info$temp!= ""){
   #   tempf <- file.path (OUTDIR, paste ("temp", unlist(strsplit(object.info$temp,";")), sep = ""))
-  #   data <- lapply(tempf,function(f) qread (f))
+  #   data <- lapply(tempf,function(f) qs_read (f))
   address <- lapply(data, function(l) l$address)
   filename <- sapply (data, function(l) l$filename)
   data <- lapply(data, function(l) l$data)
@@ -1513,7 +1513,7 @@
 .reg.save <- function (object.info, data, only.header=FALSE, Rdcm.mode=FALSE){
   # if (object.info$temp!= ""){
   #   tempf <- file.path (OUTDIR, paste ("temp", unlist(strsplit(object.info$temp,";")), sep = ""))
-  #   data <- lapply(tempf,function(f) qread (f))
+  #   data <- lapply(tempf,function(f) qs_read (f))
   address <- lapply(data, function(l) l$address)
   filename <- sapply (data, function(l) l$filename)
   data <- lapply(data, function(l) l$data)
@@ -1629,7 +1629,7 @@
 .rtdose.save <- function (object.info, data, only.header=FALSE, Rdcm.mode=FALSE) {
   # if (object.info$temp!= ""){
   #   tempf <- file.path (OUTDIR, paste ("temp", unlist(strsplit(object.info$temp,";")), sep = ""))
-  #   data <- lapply(tempf,function(f) qread (f))
+  #   data <- lapply(tempf,function(f) qs_read (f))
   sep <- "\\"
   address <- lapply(data, function(l) l$address)
   filename <- sapply (data, function(l) l$filename)
@@ -2081,7 +2081,7 @@
   
   # if (object.info$temp!= ""){
   #   tempf <- file.path (OUTDIR, paste ("temp", unlist(strsplit(object.info$temp,";")), sep = ""))
-  #   data <- lapply(tempf,function(f) qread (f))
+  #   data <- lapply(tempf,function(f) qs_read (f))
   sep <- "\\"
   address <- lapply(data, function(l) l$address)
   filename <- sapply (data, function(l) l$filename)
