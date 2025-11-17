@@ -21,7 +21,6 @@
 #' @param alias Character string, \code{$object.alias} of the created object.
 #' @param description Character string, describing the created object. If 
 #' \code{description = NULL} (default value), it will be set to Chi index setup.
-#' \loadmathjax
 #' @details The Chi index of a voxel \mjeqn{n}{ascii} was defined by \emph{Bakai and al} \strong{\[1\]}. 
 #' It is computed from the formulae:
 #' \mjdeqn{\chi_n = \frac{D_i-Dref_n}{\sqrt{{\Delta D}^2 + {\Delta r}^2~\cdot~\Vert \nabla Dref_n \Vert^2}}}{ascii}

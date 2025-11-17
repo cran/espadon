@@ -1,5 +1,4 @@
 #' Dosimetry, volume, conformity, homogeneity indices from RoI
-#' \loadmathjax
 #' @description The \code{rt.indices.from.roi} function calculates, from a "volume"
 #' class object of modality "rtdose", standard indicators of radiotherapy
 #' in relation to the target and healthy RoI, as long as their options are transmitted.

@@ -2,8 +2,7 @@
 % Please edit documentation in R/display_dV_dx.R
 \name{display.dV_dx}
 \alias{display.dV_dx}
-\title{Display of the volume density of a histogram
-\loadmathjax}
+\title{Display of the volume density of a histogram}
 \usage{
 display.dV_dx(
   histo,

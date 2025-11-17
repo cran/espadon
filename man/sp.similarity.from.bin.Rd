@@ -2,8 +2,7 @@
 % Please edit documentation in R/sp_similarity_from_bin.R
 \name{sp.similarity.from.bin}
 \alias{sp.similarity.from.bin}
-\title{Volume-based spatial similarity metrics calculated from binary modality 3D volumes.
-\loadmathjax}
+\title{Volume-based spatial similarity metrics calculated from binary modality 3D volumes.}
 \usage{
 sp.similarity.from.bin(
   vol.A,

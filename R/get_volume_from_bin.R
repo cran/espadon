@@ -1,5 +1,4 @@
 #' Volume selected by binary volume
-#' \loadmathjax
 #' @description The \code{get.volume.from.bin} function calculates the volume in
 #' \mjeqn{cm^3}{ascii} of the selection specified by a "volume" class object 
 #' of \code{"binary"} modality.

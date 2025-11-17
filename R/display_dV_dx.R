@@ -1,5 +1,4 @@
 #' Display of the volume density of a histogram
-#' \loadmathjax
 #' @description The \code{display.dV_dx} function displays the volume density
 #' of a "histo" class object. Y-units are \mjeqn{cm^3.Gy^{-1}}{ascii}.
 #' @param histo "histo" class object. See \link[espadon]{espadon.class} for class definitions.

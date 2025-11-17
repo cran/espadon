@@ -1,6 +1,13 @@
+# SIGNIFICANT USER-VISIBLE CHANGES IN espadon 1.11.3
+
+## BUG FIXES:
+
+* Corrections in RERERENCES.bib formatting
+
 # SIGNIFICANT USER-VISIBLE CHANGES IN espadon 1.11.1
 
 ## ENHANCEMENTS
+
 * The qs package, used to create Rdcm files, will soon be deprecated. The espadon 
 package now uses qs2, but allows loading of older *.Rdcm files, with load.T.MAT(),
 load.obj.from.Rdcm(), load.patient.from.Rdcm(), load.Rdcm.raw.data(). 

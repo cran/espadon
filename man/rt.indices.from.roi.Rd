@@ -2,8 +2,7 @@
 % Please edit documentation in R/rt_indices_from_roi.R
 \name{rt.indices.from.roi}
 \alias{rt.indices.from.roi}
-\title{Dosimetry, volume, conformity, homogeneity indices from RoI
-\loadmathjax}
+\title{Dosimetry, volume, conformity, homogeneity indices from RoI}
 \usage{
 rt.indices.from.roi(
   vol,

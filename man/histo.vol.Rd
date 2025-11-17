@@ -2,8 +2,7 @@
 % Please edit documentation in R/histo_vol.R
 \name{histo.vol}
 \alias{histo.vol}
-\title{Histogram of a volume
-\loadmathjax}
+\title{Histogram of a volume}
 \usage{
 histo.vol(vol, breaks = NULL, alias = "", description = NULL, weight = NULL)
 }

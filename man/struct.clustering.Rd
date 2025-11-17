@@ -2,8 +2,7 @@
 % Please edit documentation in R/struct_clustering.R
 \name{struct.clustering}
 \alias{struct.clustering}
-\title{Clustering volumes by RoI
-\loadmathjax}
+\title{Clustering volumes by RoI}
 \usage{
 struct.clustering(
   vol,

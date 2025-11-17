@@ -1,5 +1,4 @@
 #' Volume of a region of interest (RoI)
-#' \loadmathjax
 #' @description The \code{get.volume.from.roi} function extracts the volume
 #' in\mjeqn{cm^3}{ascii} of one or more RoI, from the \code{$roi.info} of the 
 #' "struct" class object.

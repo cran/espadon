@@ -51,8 +51,7 @@ to correspond to that found if the sensor was at the isocenter.}
 \item{alias}{Character string, \code{$object.alias} of the created object.}
 
 \item{description}{Character string, describing the created object. If
-\code{description = NULL} (default value), it will be set to Gamma index setup.
-\loadmathjax}
+\code{description = NULL} (default value), it will be set to Gamma index setup.}
 }
 \value{
 Returns a "volume" class object (see \link[espadon]{espadon.class}

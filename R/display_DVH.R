@@ -1,5 +1,4 @@
 #' Display of a DVH
-#' \loadmathjax
 #' @description The \code{display.DVH} function displays the
 #' Dose Volume Histogram of a "dvh" class object. Y-units are \mjeqn{cm^3}{ascii}.
 #' @param dvh "dvh" class object.

@@ -1,5 +1,4 @@
 #' Clustering volumes by RoI
-#' \loadmathjax
 #' @description The \code{struct.clustering} function creates a new volume 
 #' in which voxels are clustered and labeled by region of interest defined in an 
 #' rt-struct.

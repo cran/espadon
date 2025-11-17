@@ -2,8 +2,7 @@
 % Please edit documentation in R/sp_similarity_from_mesh.R
 \name{sp.similarity.from.mesh}
 \alias{sp.similarity.from.mesh}
-\title{Distance-based spatial similarity metrics calculated from the mesh.
-\loadmathjax}
+\title{Distance-based spatial similarity metrics calculated from the mesh.}
 \usage{
 sp.similarity.from.mesh(
   mesh1,

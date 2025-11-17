@@ -2,8 +2,7 @@
 % Please edit documentation in R/get_volume_from_bin.R
 \name{get.volume.from.bin}
 \alias{get.volume.from.bin}
-\title{Volume selected by binary volume
-\loadmathjax}
+\title{Volume selected by binary volume}
 \usage{
 get.volume.from.bin(bin)
 }

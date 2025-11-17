@@ -1,5 +1,4 @@
 #' Volume-based spatial similarity metrics calculated from binary modality 3D volumes.
-#' \loadmathjax
 #' @description The \code{sp.similarity.from.bin} function computes volumetric Dice 
 #' similarity coefficient, Dice-Jaccard coefficient and Dice surface similarity coefficient.
 #' @param vol.A,vol.B "volume" class objects, of \code{"binary"} modality. \code{vol.B} is the reference for MDC calculation.

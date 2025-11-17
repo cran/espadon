@@ -1,5 +1,4 @@
 #' Histogram of a volume
-#' \loadmathjax
 #' @description The \code{histo.vol} function calculates the voxel values  
 #' histogram of "volume" class object.
 #' @param vol "volume" class object.

@@ -2,8 +2,7 @@
 % Please edit documentation in R/display_DVH.R
 \name{display.DVH}
 \alias{display.DVH}
-\title{Display of a DVH
-\loadmathjax}
+\title{Display of a DVH}
 \usage{
 display.DVH(
   dvh,

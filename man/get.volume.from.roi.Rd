@@ -2,8 +2,7 @@
 % Please edit documentation in R/get_volume_from_roi.R
 \name{get.volume.from.roi}
 \alias{get.volume.from.roi}
-\title{Volume of a region of interest (RoI)
-\loadmathjax}
+\title{Volume of a region of interest (RoI)}
 \usage{
 get.volume.from.roi(struct, roi.name = NULL, roi.sname = NULL, roi.idx = NULL)
 }

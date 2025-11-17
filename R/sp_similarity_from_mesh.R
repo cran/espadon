@@ -1,5 +1,4 @@
 #' Distance-based spatial similarity metrics calculated from the mesh.
-#' \loadmathjax
 #' @description The \code{sp.similarity.from.mesh} function computes Hausdorff 
 #' distances and surface Dice similarity coefficient.
 #' @param mesh1,mesh2 espadon mesh class objects

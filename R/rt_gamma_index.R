@@ -23,7 +23,6 @@
 #' @param alias Character string, \code{$object.alias} of the created object.
 #' @param description Character string, describing the created object. If 
 #' \code{description = NULL} (default value), it will be set to Gamma index setup.
-#' \loadmathjax
 #' @details The Gamma index of a voxel \mjeqn{n}{ascii} was defined by \emph{Low and al} \strong{\[1\]}. 
 #' It is computed from the formulae:
 #' \mjdeqn{\gamma_n = min \left( \sqrt{\frac{(D_i-Dref_n)^2}{{\Delta D}^2} + \frac{{r_i}^2}{{\Delta r}^2}}\right)}{ascii}
